@@ -1,0 +1,50 @@
+{{
+  description = "A Nix flake for {package_name} {package_version} Python package";
+
+  inputs = {{
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-22.11";
+    flake-utils.url = "github:numtide/flake-utils";
+{native_build_inputs_flakes_declaration}
+{propagated_build_inputs_flakes_declaration}
+{build_inputs_flakes_declaration}
+  }};
+
+  outputs = inputs:
+    with inputs;
+    flake-utils.lib.eachDefaultSystem (system:
+      let
+        pkgs = nixpkgs.legacyPackages.${{system}};
+        python = pkgs.python3;
+        pythonPackages = python.pkgs;
+      in rec {{
+        packages = {{
+          {package_name}-{package_version_with_underscores} = (import ./{package_name}-{package_version}.nix) {{
+            inherit (pythonPackages) buildPythonPackage fetchPypi setuptools;
+            inherit (pkgs) lib;
+            {native_build_inputs_not_flakes_with_newlines}
+            {propagated_build_inputs_not_flakes_with_newlines}
+            {build_inputs_not_flakes_with_newlines}
+            {native_build_inputs_flakes_with_newlines}
+            {propagated_build_inputs_flakes_with_newlines}
+            {build_inputs_flakes_with_newlines}
+          }};
+          {package_name} = packages.{package_name}-{package_version_with_underscores};
+          default = packages.{package_name};
+          meta = with lib; {{
+            description = ''
+{package_description}
+'';
+            license = licenses.{package_license};
+            homepage = "{package_repo}";
+            maintainers = with maintainers; [ ];
+          }};
+        }};
+        defaultPackage = packages.default;
+        devShell = pkgs.mkShell {{
+          buildInputs = with pkgs.python3Packages; [ packages.default ];
+        }};
+        shell = flake-utils.lib.mkShell {{
+          packages = system: [ self.packages.${{system}}.default ];
+        }};
+      }});
+}}

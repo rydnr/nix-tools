@@ -1,0 +1,29 @@
+{{ buildPythonPackage, fetchFromGitHub, lib, setuptools{native_build_inputs_declaration}{propagated_build_inputs_declaration}{build_inputs_declaration} }}:
+
+buildPythonPackage rec {{
+  pname = "{package_name}";
+  version = "{package_version}";
+  format = "pyproject";
+
+  src = fetchFromGitHub {{
+    owner = "{repo_owner}";
+    repo = "{repo_name}";
+    rev = "{repo_rev};
+    hash = "{package_hash}";
+  }};
+
+  nativeBuildInputs = [ setuptools {native_build_inputs_with_blanks} ];
+
+  propagatedBuildInputs = [ {propagated_build_inputs_with_blanks} ];
+
+  buildInputs = [ {build_inputs_with_blanks} ];
+
+  meta = with lib; {{
+    description = ''
+{package_description}
+'';
+    license = licenses.{package_license};
+    homepage = "{package_repo}";
+    maintainers = with maintainers; [ ];
+  }};
+}}

@@ -1,0 +1,50 @@
+{{ fetchFromGitHub, lib, mkPoetryApplication, poetry, python, setuptools{native_build_inputs_declaration}{propagated_build_inputs_declaration}{build_inputs_declaration} }}:
+
+let
+  project = fetchFromGitHub {{
+    owner = "{repo_owner}";
+    repo = "{repo_name}";
+    rev = "{package_rev}";
+    sha256 = "{package_hash}";
+  }};
+
+  projectSrc = mkPoetryApplication {{
+    projectDir = project;
+    pname = "{repo_name}";
+    version = "{package_version}";
+    pyModule = "{repo_name}";
+  }};
+
+  customPython = python.override {{
+    packageOverrides = self: super: {{
+      # additional dependencies, if any
+    }};
+  }};
+in customPython.pkgs.buildPythonApplication rec {{
+  pname = "{repo_name}";
+  version = "{package_version}";
+  format = "pyproject";
+  src = projectSrc;
+
+  nativeBuildInputs = with customPython.pkgs; [
+    {native_build_inputs_with_blanks}
+  ];
+
+  propagatedBuildInputs = with customPython.pkgs; [
+    {propagated_build_inputs_with_blanks}
+  ];
+
+  buildInputs = with customPython.pkgs; [
+    {build_inputs_with_blanks}
+  ];
+
+  pythonImportsCheck = [ "{repo_name}" ];
+  meta = with lib; {{
+    description = ''
+{package_description}
+'';
+    license = licenses.{package_license};
+    homepage = "{package_repo}";
+    maintainers = with maintainers; [ ];
+  }};
+}}
