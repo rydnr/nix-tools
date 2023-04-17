@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
-import json
+from descriptionutils import extract_description
+from resourcesutils import read_resource_json
+import logging
 from packaging.specifiers import SpecifierSet
 import re
 import requests
@@ -13,7 +15,7 @@ def get_pypi_info(package_name: str, version_spec: str) -> Dict[str, str]:
 
     specifier_set = SpecifierSet(version_spec)
 
-    print(f"Retrieving {package_name}{version_spec} info from https://pypi.org/pypi/{package_name}/json")
+    logging.debug(f"Retrieving {package_name}{version_spec} info from https://pypi.org/pypi/{package_name}/json")
     package_data = requests.get(f"https://pypi.org/pypi/{package_name}/json").json()
     versions = package_data["releases"].keys()
 
@@ -35,8 +37,9 @@ def get_pypi_info(package_name: str, version_spec: str) -> Dict[str, str]:
 
     description = extract_description(package_info["description"], package_info["description_content_type"])
 
-    with open("metadata.json", "r") as file:
-        config = json.load(file)
+    config = read_resource_json("metadata.json")
+
+    package_metadata_all_versions = []
 
     if config:
         package_metadata_all_versions = config.get(package_name, None)

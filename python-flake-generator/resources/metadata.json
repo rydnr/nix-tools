@@ -1,0 +1,20 @@
+{
+  "aioboto3": [
+    {
+      "version": "10.4.0",
+      "type": "poetry",
+      "hash": "sha256-lPCkaxbGxXL7pBf6sM082Q+fB5CwnaklaAfZwggkqHI="
+    }
+  ],
+  "faiss-cpu": [
+    {
+      "version": "1.7.3",
+      "github_url": "https://github.com/kyamagu/faiss-wheels",
+      "type": "setuptools",
+      "hash": "sha256-y3H+Pyk0cy0VfZ2M+27S3UAgoAZVcchIQv9qPwvqsxA=",
+      "native_build_inputs": [
+        { "name": "pkgs.swig4" }
+      ]
+    }
+  ]
+}

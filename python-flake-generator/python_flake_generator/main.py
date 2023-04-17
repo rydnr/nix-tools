@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 from typing import Dict, List
+import logging
 
 from pypiutils import get_pypi_info
 from nixutils import get_nix_prefetch_git_hash, extract_name_from_nixpkgs_package, is_python_package_in_nixpkgs
 from githubutils import get_github_info, extract_owner_and_repo_name
 from licenseutils import pypi_license_to_nix_license
 from poetryutils import load_poetry_lock
-from descriptionutils import extract_html_description, extract_markdown_description, extract_description
 from templateutils import create_flake_nix_file, create_package_nix_file
 from cliutils import cli_args
 
@@ -25,6 +25,8 @@ def extract_package_names(poetry_lock) -> List[str]:
     return package_names
 
 def main():
+    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+
     args = cli_args()
 
     poetry_lock = load_poetry_lock(args.poetryLockFile)
