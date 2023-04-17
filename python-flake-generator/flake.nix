@@ -4,27 +4,32 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-22.11";
     flake-utils.url = "github:numtide/flake-utils";
+    poetry2nix.url = "github:nix-community/poetry2nix";
   };
   outputs = inputs:
     with inputs;
     flake-utils.lib.eachDefaultSystem (system:
       let
-        pkgs = nixpkgs.legacyPackages.${system};
+        pkgs = import nixpkgs {
+          inherit system;
+          overlays = [ poetry2nix.overlay ];
+        };
         python = pkgs.python3;
         pythonPackages = python.pkgs;
       in rec {
         packages = {
           python_flake_generator-0_0_1 =
             (import ./python_flake_generator-0.0.1.nix) {
-              inherit (pythonPackages) buildPythonPackage setuptools;
+              inherit (pythonPackages) buildPythonApplication;
               inherit (pkgs) lib;
+              mkPoetryApplication = pkgs.poetry2nix.mkPoetryApplication;
             };
           python_flake_generator = packages.python_flake_generator-0_0_1;
           default = packages.python_flake_generator;
           meta = with lib; {
             description =
               "A Python CLI application to generate flakes for Python packages";
-            license = licenses.gplv3;
+            license = licenses.gpl3;
             homepage = "https://github.com/rydnr/nix-tools";
             maintainers = with maintainers; [ ];
           };

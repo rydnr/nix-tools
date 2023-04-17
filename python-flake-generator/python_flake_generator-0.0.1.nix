@@ -1,4 +1,4 @@
-{ fetchFromGitHub, lib, mkPoetryApplication, poetry, python, setuptools }:
+{ buildPythonApplication, lib, mkPoetryApplication }:
 
 let
   projectSrc = mkPoetryApplication {
@@ -8,7 +8,7 @@ let
     pyModule = "python_flake_generator";
   };
 
-in python.pkgs.buildPythonApplication rec {
+in buildPythonApplication rec {
   pname = "python_flake_generator";
   version = "0.0.1";
   format = "pyproject";
@@ -30,7 +30,7 @@ in python.pkgs.buildPythonApplication rec {
   meta = with lib; {
     description =
       "A Python CLI application to generate flakes for Python packages";
-    license = licenses.gplv3;
+    license = licenses.gpl3;
     homepage = "https://github.com/rydnr/nix-tools";
     maintainers = with maintainers; [ ];
   };
