@@ -1,30 +1,16 @@
 { buildPythonApplication, lib, mkPoetryApplication }:
 
-let
-  projectSrc = mkPoetryApplication {
-    projectDir = ./.;
-    pname = "python_flake_generator";
-    version = "0.0.1";
-    pyModule = "python_flake_generator";
-  };
-
-in buildPythonApplication rec {
+mkPoetryApplication rec {
   pname = "python_flake_generator";
   version = "0.0.1";
   format = "pyproject";
-  src = projectSrc;
+  projectDir = ./.;
 
-  nativeBuildInputs = [
+  nativeBuildInputs = [ ];
 
-  ];
+  propagatedBuildInputs = [ ];
 
-  propagatedBuildInputs = [
-
-  ];
-
-  buildInputs = [
-
-  ];
+  buildInputs = [ ];
 
   pythonImportsCheck = [ "python_flake_generator" ];
   meta = with lib; {
