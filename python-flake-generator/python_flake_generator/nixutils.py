@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
 import subprocess
+import re
 
 def get_nix_prefetch_git_hash(url, tag):
     # Use nix-prefetch-git to compute the hash
-    result = subprocess.run(['nix-prefetch-git', url, tag], check=True, capture_output=True, text=True)
+    result = subprocess.run(['nix-prefetch-git', '--deepClone', f'{url}/tree/{tag}'], check=True, capture_output=True, text=True)
     output = result.stdout
 
     return output.splitlines()[-1]

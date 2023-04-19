@@ -3,11 +3,14 @@
 
   inputs = {{
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-22.11";
-    flake-utils.url = "github:numtide/flake-utils";
-    poetry2nix.url = "github:nix-community/poetry2nix";
-    {native_build_inputs_flakes_declaration}
-    {propagated_build_inputs_flakes_declaration}
-    {build_inputs_flakes_declaration}
+    flake-utils = {{
+      url = "github:numtide/flake-utils";
+    }};
+    poetry2nix = {{
+      url = "github:nix-community/poetry2nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    }};
+    {flake_dependencies_declaration}
   }};
 
   outputs = inputs:
@@ -21,14 +24,11 @@
         packages = {{
           {package_name}-{package_version_with_underscores} = (import ./{package_name}-{package_version}.nix) {{
             python = python;
-            inherit (pkgs) lib poetry fetchFromGitHub setuptools;
+            pkgs = pkgs;
+            inherit (pkgs) lib poetry fetchgit;
             inherit (poetry2nix.legacyPackages.${{system}}) mkPoetryApplication;
-            {native_build_inputs_not_flakes_with_newlines}
-            {propagated_build_inputs_not_flakes_with_newlines}
-            {build_inputs_not_flakes_with_newlines}
-            {native_build_inputs_flakes_with_newlines}
-            {propagated_build_inputs_flakes_with_newlines}
-            {build_inputs_flakes_with_newlines}
+            {not_flake_dependencies_with_newlines}
+            {flake_dependencies_with_newlines}
           }};
           {package_name} = packages.{package_name}-{package_version_with_underscores};
           default = packages.{package_name};
@@ -37,7 +37,7 @@
 {package_description}
 '';
             license = licenses.{package_license};
-            homepage = "{package_repo}";
+            homepage = "{github_url}";
             maintainers = with maintainers; [ ];
           }};
         }};

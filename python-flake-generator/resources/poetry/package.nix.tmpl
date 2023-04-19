@@ -1,41 +1,33 @@
-{{ fetchFromGitHub, lib, mkPoetryApplication, poetry, python, setuptools{native_build_inputs_declaration}{propagated_build_inputs_declaration}{build_inputs_declaration} }}:
+{{ pkgs, fetchgit, lib, mkPoetryApplication, poetry, python{dependencies_declaration} }}:
 
 let
-  project = fetchFromGitHub {{
-    owner = "{repo_owner}";
-    repo = "{repo_name}";
+  project = fetchgit {{
+    url = "{github_url}";
     rev = "{package_rev}";
-    sha256 = "{package_hash}";
+    sha256 = "{package_github_hash}";
   }};
 
-  projectSrc = mkPoetryApplication {{
-    projectDir = project;
-    pname = "{repo_name}";
-    version = "{package_version}";
-    pyModule = "{repo_name}";
-  }};
-
-  customPython = python.override {{
-    packageOverrides = self: super: {{
-      # additional dependencies, if any
-    }};
-  }};
-in customPython.pkgs.buildPythonApplication rec {{
-  pname = "{repo_name}";
+in mkPoetryApplication {{
+  projectDir = project;
+  pname = "{package_name}";
   version = "{package_version}";
-  format = "pyproject";
-  src = projectSrc;
+  pyModule = "{package_name}";
+  python = python;
 
-  nativeBuildInputs = with customPython.pkgs; [
-    {native_build_inputs_with_blanks}
+  overrides = pkgs.poetry2nix.overrides.withDefaults (self: super: {{
+    {dependencies_overrides}
+  }});
+
+  nativeBuildInputs = with python.pkgs; [
+    {native_build_inputs_with_newlines}
   ];
 
-  propagatedBuildInputs = with customPython.pkgs; [
-    {propagated_build_inputs_with_blanks}
+  propagatedBuildInputs = with python.pkgs; [
+    {propagated_build_inputs_with_newlines}
   ];
 
-  buildInputs = with customPython.pkgs; [
-    {build_inputs_with_blanks}
+  buildInputs = with python.pkgs; [
+    {build_inputs_with_newlines}
   ];
 
   pythonImportsCheck = [ "{repo_name}" ];
@@ -44,7 +36,7 @@ in customPython.pkgs.buildPythonApplication rec {{
 {package_description}
 '';
     license = licenses.{package_license};
-    homepage = "{package_repo}";
+    homepage = "{github_url}";
     maintainers = with maintainers; [ ];
   }};
 }}

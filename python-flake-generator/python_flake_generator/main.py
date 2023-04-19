@@ -2,6 +2,7 @@
 from typing import Dict, List
 import logging
 
+from packagetypeutils import get_package_type
 from pypiutils import get_pypi_info
 from nixutils import get_nix_prefetch_git_hash, extract_name_from_nixpkgs_package, is_python_package_in_nixpkgs
 from githubutils import get_github_info, extract_owner_and_repo_name
@@ -44,8 +45,11 @@ def main():
     for package_name, version_spec in missing_packages.items():
         package_info = get_pypi_info(package_name, version_spec)
         github_info = get_github_info(args.githubToken, package_info["github_url"], package_info["rev"])
-        create_flake_nix_file(args.baseFolder, package_info, github_info)
-        create_package_nix_file(args.baseFolder, package_info, github_info)
+        package_type = get_package_type(args.githubToken, package_info["github_url"], package_info["rev"])
+        logging.debug(f"package type: {package_type}")
+        create_flake_nix_file(args.baseFolder, package_type, package_info, github_info)
+        create_package_nix_file(args.baseFolder, package_type, package_info, github_info)
+        break
 
 if __name__ == "__main__":
     main()

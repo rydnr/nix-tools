@@ -62,12 +62,10 @@ def get_pypi_info(package_name: str, version_spec: str) -> Dict[str, str]:
         "name": package_name,
         "version": latest_version,
         "url": release_info["url"],
-        "sha256": sha256,
+        "hash": sha256,
         "github_url": github_url,
         "description": description,
         "license": package_info["license"],
-        "type": package_metadata.get("type", "setuptools"),
-        "hash": package_metadata.get("hash", ""),
         "rev": package_metadata.get("rev", f"v{latest_version}"),
         "metadata": package_metadata
     }
