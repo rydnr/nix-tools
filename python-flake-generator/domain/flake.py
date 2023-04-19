@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-from descriptionutils import extract_description
-from licenseutils import pypi_license_to_nix_license
-from resourcesutils import read_resource_file
-from githubutils import extract_owner_and_repo_name
-from nixutils import extract_name_from_nixpkgs_package
+from description import extract_description
+from license import pypi_license_to_nix_license
+from resource import read_resource_file
+from github import extract_owner_and_repo_name
+from nix import extract_name_from_nixpkgs_package
 
 import os
 from pathlib import Path

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-from githubutils import get_file_contents_in_github_repo, file_exists_in_github_repo
+from github import get_file_contents_in_github_repo, file_exists_in_github_repo
+
 from typing import Dict
 import logging
 

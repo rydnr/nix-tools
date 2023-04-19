@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-from descriptionutils import extract_description
-from resourcesutils import read_resource_json
+from description import extract_description
+from resources import read_resource_json
+
 import logging
 from packaging.specifiers import SpecifierSet
 import re

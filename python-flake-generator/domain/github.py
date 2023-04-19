@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
+from description import extract_description
+from nix import get_nix_prefetch_git_hash
 import re
 import requests
 import base64
 from typing import Dict
-from descriptionutils import extract_description
-from nixutils import get_nix_prefetch_git_hash
 
 def get_github_info(github_token: str, github_url: str, rev: str) -> Dict[str, str]:
     if not github_url:

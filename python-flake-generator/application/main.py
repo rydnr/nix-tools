@@ -2,14 +2,14 @@
 from typing import Dict, List
 import logging
 
-from packagetypeutils import get_package_type
-from pypiutils import get_pypi_info
-from nixutils import get_nix_prefetch_git_hash, extract_name_from_nixpkgs_package, is_python_package_in_nixpkgs
-from githubutils import get_github_info, extract_owner_and_repo_name
-from licenseutils import pypi_license_to_nix_license
-from poetryutils import load_poetry_lock
-from templateutils import create_flake_nix_file, create_package_nix_file
-from cliutils import cli_args
+from package import get_package_type
+from pypi import get_pypi_info
+from nix import get_nix_prefetch_git_hash, extract_name_from_nixpkgs_package, is_python_package_in_nixpkgs
+from github import get_github_info, extract_owner_and_repo_name
+from license import pypi_license_to_nix_license
+from poetry import load_poetry_lock
+from flake import create_flake_nix_file, create_package_nix_file
+from cli import cli_args
 
 def get_missing_packages(poetry_lock, missing_packages_list):
     package_data = {}
