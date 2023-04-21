@@ -15,6 +15,7 @@ def attribute(func):
     @functools.wraps(func)
     def wrapper(self, *args, **kwargs):
         return func(self, *args, **kwargs)
+    return wrapper
 
 
 def primary_key_attribute(func):
@@ -26,7 +27,7 @@ def primary_key_attribute(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         return func(*args, **kwargs)
-
+    return wrapper
 
 def filter_attribute(func):
     key = inspect.getmodule(func).__name__
@@ -37,7 +38,7 @@ def filter_attribute(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         return func(*args, **kwargs)
-
+    return wrapper
 
 class Entity:
 

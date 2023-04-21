@@ -32,6 +32,8 @@ class CreateFlakeCli(PrimaryPort):
         parser = argparse.ArgumentParser(description="Generates a flake for a given Python package")
         parser.add_argument("packageName", help="The name of the Python package")
         parser.add_argument("packageVersion", help="The version of the Python package")
+        # TODO: Check how to avoid including flags from other cli handlers such as the following
+        parser.add_argument("-t", "--github_token", required=False, help="The github token")
         args, unknown_args = parser.parse_known_args()
 
         command = CreateFlake(args.packageName, args.packageVersion)

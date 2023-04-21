@@ -9,6 +9,7 @@ from ports import Ports
 from primary_port import PrimaryPort
 from create_flake_command import CreateFlake
 from flake_created_event import FlakeCreated
+from github_git_repo import GithubGitRepo
 
 from typing import Dict, List
 import logging
@@ -113,6 +114,9 @@ class PythonFlakeGenerator():
         else:
             print(f"Error in infrastructure/_log_config.py: configure_logging")
         return result
+
+    def accept_github_token(self, token: str):
+        GithubGitRepo.github_token(token)
 
 
 

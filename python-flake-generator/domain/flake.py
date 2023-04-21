@@ -2,7 +2,10 @@
 
 from create_flake_command import CreateFlake
 from flake_created_event import FlakeCreated
+from python_package import PythonPackage
 from python_package_repo import PythonPackageRepo
+from git_repo import GitRepo
+from git_repo_repo import GitRepoRepo
 from ports import Ports
 import os
 from pathlib import Path
@@ -11,14 +14,20 @@ import logging
 
 class Flake():
 
+    """
+    Represents a nix flake.
+    """
+    def __init__(self):
+        """Creates a new flake instance"""
+        super().__init__(id)
+
     @classmethod
     def create_flake(cls, command: CreateFlake) -> FlakeCreated:
         logger = logging.getLogger(__name__)
         # 1. check if flake exists already
-        pythonPackageRepo = Ports.instance().resolve(PythonPackageRepo)
-        logger.debug(f'pythonPackageRepo: {pythonPackageRepo}')
         # 2. obtain pypi info
-        # 3. parse pyproject.toml
+        pythonPackage = Ports.instance().resolve(PythonPackageRepo).find_by_name_and_version(command.packageName, command.packageVersion)
+        print(f'package-type: {pythonPackage.get_package_type()}')
         logger.debug(f'flake ({command.packageName}, {command.packageVersion}) created')
         return FlakeCreated(command.packageName, command.packageVersion)
 

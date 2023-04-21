@@ -1,8 +1,13 @@
 import sys
 sys.path.insert(0, "domain")
 from python_package_repo import PythonPackageRepo
+from python_package import PythonPackage
 
 from typing import Dict
+import re
+from packaging.specifiers import SpecifierSet
+import logging
+import requests
 
 class PypiRepo(PythonPackageRepo):
     """
@@ -13,67 +18,57 @@ class PypiRepo(PythonPackageRepo):
         super().__init__()
 
 
-    def find_by_name_and_version(package_name: str, version_spec: str) -> Dict[str, str]:
+    def find_by_name_and_version(self, package_name: str, package_version: str) -> Dict[str, str]:
         """
         Retrieves the PythonPackage matching given name and version.
         """
-        # If the version_spec is an exact version, add '==' before it
-        if re.match(r"^\d+(\.\d+)*(-?(rc|b)\d+)?$", version_spec):
-            version_spec = f"=={version_spec}"
+        # If the package_version is an exact version, add '==' before it
+        if re.match(r"^\d+(\.\d+)*(-?(rc|b)\d+)?$", package_version):
+            package_version = f"=={package_version}"
 
-            specifier_set = SpecifierSet(version_spec)
+        specifier_set = SpecifierSet(package_version)
 
-            logging.debug(f"Retrieving {package_name}{version_spec} info from https://pypi.org/pypi/{package_name}/json")
-            package_data = requests.get(f"https://pypi.org/pypi/{package_name}/json").json()
-            versions = package_data["releases"].keys()
+        logging.debug(f"Retrieving {package_name}{package_version} info from https://pypi.org/pypi/{package_name}/json")
+        package_data = requests.get(f"https://pypi.org/pypi/{package_name}/json").json()
+        versions = package_data["releases"].keys()
 
-            compatible_versions = [v for v in versions if v in specifier_set]
+        compatible_versions = [v for v in versions if v in specifier_set]
 
         if not compatible_versions:
-            raise Exception(f"No compatible versions found for {package_name} with spec {version_spec}")
+            raise Exception(f"No compatible versions found for {package_name} version {package_version}")
 
         latest_version = max(compatible_versions)
-        latest_release = len(package_data["releases"][latest_version]) - 1
-        release_info = package_data["releases"][latest_version][latest_release]
-        package_info = package_data["info"]
+        latest_release = len(package_data.get("releases", [])[latest_version]) - 1
+        release_info = package_data.get("releases", [[]])[latest_version][latest_release]
+        package_info = package_data.get("info", {})
         github_url = ""
-        project_urls = package_info["project_urls"]
+        project_urls = package_info.get("project_urls", "")
         sha256 = ""
-        digests = release_info["digests"]
+        digests = release_info.get("digests", [])
         if digests:
-            sha256 = digests["sha256"]
+            sha256 = digests.get("sha256", "")
 
-        description = extract_description(package_info["description"], package_info["description_content_type"])
+#        description = extract_description(package_info["description"], package_info["description_content_type"])
 
-        config = read_resource_json("metadata.json")
+#        config = read_resource_json("metadata.json")
 
-        package_metadata_all_versions = []
+#        package_metadata_all_versions = []
 
-        if config:
-            package_metadata_all_versions = config.get(package_name, None)
+#        if config:
+#            package_metadata_all_versions = config.get(package_name, None)
 
-        if not package_metadata_all_versions:
-            package_metadata_all_versions = []
+#        if not package_metadata_all_versions:
+#            package_metadata_all_versions = []
 
-        version_filter = lambda x: x.get("version", "") == latest_version
+#        version_filter = lambda x: x.get("version", "") == latest_version
 
-        matching_version = [x for x in package_metadata_all_versions if version_filter(x)]
+#        matching_version = [x for x in package_metadata_all_versions if version_filter(x)]
 
-        package_metadata = matching_version[0] if matching_version else {}
+#        package_metadata = matching_version[0] if matching_version else {}
 
-        github_url = package_metadata.get("github_url", "")
+#        github_url = package_metadata.get("github_url", "")
 
-        if not github_url and project_urls:
-            github_url = project_urls.get("Repository")
+#        if not github_url and project_urls:
+        github_url = project_urls.get("Repository")
 
-        return {
-            "name": package_name,
-            "version": latest_version,
-            "url": release_info["url"],
-            "hash": sha256,
-            "github_url": github_url,
-            "description": description,
-            "license": package_info["license"],
-            "rev": package_metadata.get("rev", f"v{latest_version}"),
-            "metadata": package_metadata
-        }
+        return PythonPackage(package_name, package_version, package_info,release_info)
