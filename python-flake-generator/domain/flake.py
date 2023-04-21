@@ -2,7 +2,8 @@
 
 from create_flake_command import CreateFlake
 from flake_created_event import FlakeCreated
-from _log_config import configure_logging
+from python_package_repo import PythonPackageRepo
+from ports import Ports
 import os
 from pathlib import Path
 from typing import Dict, List
@@ -10,8 +11,14 @@ import logging
 
 class Flake():
 
-    def create_flake(self, command: CreateFlake) -> FlakeCreated:
+    @classmethod
+    def create_flake(cls, command: CreateFlake) -> FlakeCreated:
         logger = logging.getLogger(__name__)
+        # 1. check if flake exists already
+        pythonPackageRepo = Ports.instance().resolve(PythonPackageRepo)
+        logger.debug(f'pythonPackageRepo: {pythonPackageRepo}')
+        # 2. obtain pypi info
+        # 3. parse pyproject.toml
         logger.debug(f'flake ({command.packageName}, {command.packageVersion}) created')
         return FlakeCreated(command.packageName, command.packageVersion)
 

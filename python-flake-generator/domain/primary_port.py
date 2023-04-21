@@ -1,4 +1,6 @@
-class PrimaryPort:
+from port import Port
+
+class PrimaryPort(Port):
 
     def priority(self) -> int:
         """Must be implemented by subclasses"""

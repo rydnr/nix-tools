@@ -4,7 +4,8 @@ sys.path.insert(0, "domain")
 sys.path.insert(0, "infrastructure")
 
 from flake import Flake
-from repo import Repo
+from port import Port
+from ports import Ports
 from primary_port import PrimaryPort
 from create_flake_command import CreateFlake
 from flake_created_event import FlakeCreated
@@ -22,8 +23,8 @@ for folder in os.scandir("infrastructure"):
     if folder.is_dir():
         sys.path.insert(0, folder.path)
 
-def get_repo_interfaces():
-    return get_domain_interfaces(Repo)
+def get_port_interfaces():
+    return get_domain_interfaces(Port)
 
 def get_domain_interfaces(iface):
     matches = []
@@ -65,15 +66,7 @@ class PythonFlakeGenerator():
     _singleton = None
 
     def __init__(self):
-        self._repos = {}
         self._primaryPorts = []
-
-
-    def get_repo(self, cls):
-        result = None
-        if cls in self._repos:
-            result = self._repos[cls]
-        return result
 
 
     def get_primary_ports(self):
@@ -83,8 +76,10 @@ class PythonFlakeGenerator():
     @classmethod
     def initialize(cls):
         cls._singleton = PythonFlakeGenerator()
-        for repo in get_repo_interfaces():
-            cls._singleton._repos[repo] = get_implementations(repo)[0]()
+        mappings = {}
+        for port in get_port_interfaces():
+            mappings.update({ port: get_implementations(port)[0]() })
+        Ports.initialize(mappings)
         cls._singleton._primaryPorts = get_implementations(PrimaryPort)
 
     @classmethod
@@ -99,7 +94,7 @@ class PythonFlakeGenerator():
             primaryPort().accept(self)
 
     def accept_create_flake(self, command: CreateFlake) -> FlakeCreated:
-        return Flake().create_flake(command)
+        return Flake.create_flake(command)
 
     def accept_configure_logging(self, logConfig: Dict[str, bool]):
         for module_functions in self.get_log_configs():

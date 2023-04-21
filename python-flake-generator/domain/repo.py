@@ -1,7 +1,8 @@
-class Repo:
+from port import Port
+
+class Repo(Port):
     def __init__(self, entity_class):
         self._entity_class = entity_class
-
 
     @property
     def entity_class(self):
