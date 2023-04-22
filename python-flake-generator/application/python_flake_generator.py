@@ -10,6 +10,7 @@ from primary_port import PrimaryPort
 from create_flake_command import CreateFlake
 from flake_created_event import FlakeCreated
 from github_git_repo import GithubGitRepo
+from folder_flake_repo import FolderFlakeRepo
 
 from typing import Dict, List
 import logging
@@ -117,6 +118,12 @@ class PythonFlakeGenerator():
 
     def accept_github_token(self, token: str):
         GithubGitRepo.github_token(token)
+
+    def accept_flakes_folder(self, folder: str):
+        FolderFlakeRepo.repo_folder(folder)
+
+    def accept_flakes_url(self, url: str):
+        FolderFlakeRepo.flakes_url(url)
 
 
 

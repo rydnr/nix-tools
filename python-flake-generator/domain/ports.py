@@ -28,3 +28,6 @@ class Ports():
 
     def resolvePythonPackageRepo(self):
         return self.resolveByModuleName("python_package_repo", "PythonPackageRepo")
+
+    def resolveFlakeRepo(self):
+        return self.resolveByModuleName("flake_repo", "FlakeRepo")

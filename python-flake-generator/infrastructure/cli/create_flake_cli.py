@@ -34,6 +34,8 @@ class CreateFlakeCli(PrimaryPort):
         parser.add_argument("packageVersion", help="The version of the Python package")
         # TODO: Check how to avoid including flags from other cli handlers such as the following
         parser.add_argument("-t", "--github_token", required=False, help="The github token")
+        parser.add_argument("-f", "--flakes_folder", required=False, help="The flakes folder")
+        parser.add_argument("-u", "--flakes_url", required=False, help="The flakes url")
         args, unknown_args = parser.parse_known_args()
 
         command = CreateFlake(args.packageName, args.packageVersion)

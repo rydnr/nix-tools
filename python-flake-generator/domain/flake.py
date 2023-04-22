@@ -33,7 +33,17 @@ class Flake():
         for dep in list(set(pythonPackage.get_native_build_inputs()) | set(pythonPackage.get_propagated_build_inputs()) | set(pythonPackage.get_optional_build_inputs())):
             nixPythonPackages = nixPythonPackageRepo.find_by_name(dep.name)
             for nixPythonPackage in nixPythonPackages:
+                # TODO: check if nixpkgs packages satisfies the version spec
                 print(f'dependency: {dep.name}-{dep.version} found on nixpkgs: {nixPythonPackage.name}-{nixPythonPackage.version}')
+            if True: # (len(nixPythonPackages) == 0):
+                # check if there's a flake for the dependency
+                flake = Ports.instance().resolveFlakeRepo().find_by_name_and_version(dep.name, dep.version)
+                if flake:
+                    logging.debug(f'Flake found for {dep.name}-{dep.version}')
+                else:
+                    logging.info(f'Requesting new flake for {dep.name}-{dep.version}')
+                    flakeCreated = cls.create_flake(CreateFlake(dep.name, dep.version))
+                    logging.info(f'Flake created for {dep.name}-{dep.version} (triggered by {command.packageName, command.packageVersion})')
 
         logger.debug(f'flake ({command.packageName}, {command.packageVersion}) created')
         return FlakeCreated(command.packageName, command.packageVersion)
