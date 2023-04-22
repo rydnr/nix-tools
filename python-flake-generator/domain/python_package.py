@@ -51,24 +51,26 @@ class PythonPackage(Entity):
             result = Ports.instance().resolve(GitRepoRepo).find_by_url_and_rev(repo_url, self._info["version"])
         return result
 
-    def _parse_toml(self, contents: str):
+    def _parse_toml(self, contents: str) -> Dict:
         return toml.loads(contents)
 
-    def _read_pyproject_toml(self):
-        pyprojecttoml_contents = self._git_repo.pyproject_toml()
+    def _read_pyproject_toml(self) -> Dict:
+        result = {}
+        if self._git_repo:
+            pyprojecttoml_contents = self._git_repo.pyproject_toml()
 
-        if pyprojecttoml_contents:
-            return self._parse_toml(pyprojecttoml_contents)
-        else:
-            return None
+            if pyprojecttoml_contents:
+                result = self._parse_toml(pyprojecttoml_contents)
+        return result
 
-    def _read_poetry_lock(self):
-        poetrylock_contents = self._git_repo.poetry_lock()
+    def _read_poetry_lock(self) -> Dict:
+        result = {}
+        if self._git_repo:
+            poetrylock_contents = self._git_repo.poetry_lock()
 
-        if poetrylock_contents:
-            return self._parse_toml(poetrylock_contents)
-        else:
-            return None
+            if poetrylock_contents:
+                result = self._parse_toml(poetrylock_contents)
+        return result
 
     def get_package_type(self) -> str:
         result = "setuptools"
@@ -132,3 +134,7 @@ class PythonPackage(Entity):
 
     def get_optional_build_inputs_poetry(self) -> List:
         return self.get_poetry_deps("extras")
+
+    def satisfies_spec(self, version: str):
+        # TODO: check if nixpkgs packages satisfies the version spec
+        return True

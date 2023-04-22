@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from entity import Entity, primary_key_attribute, attribute
 from create_flake_command import CreateFlake
 from flake_created_event import FlakeCreated
 from python_package import PythonPackage
@@ -13,41 +14,105 @@ from pathlib import Path
 from typing import Dict, List
 import logging
 
-class Flake():
+class Flake(Entity):
 
     """
     Represents a nix flake.
     """
-    def __init__(self):
+    def __init__(self, name: str, version: str, nativeBuildInputs: List, propagatedBuildInputs: List, optionalBuildInputs: List, dependenciesInNixpkgs: List):
         """Creates a new flake instance"""
         super().__init__(id)
+        self._name = name
+        self._version = version
+        self._native_build_inputs = nativeBuildInputs
+        self._propagated_build_inputs = propagatedBuildInputs
+        self._optional_build_inputs = optionalBuildInputs
+        self._dependencies_in_nixpkgs = dependenciesInNixpkgs
+
+    @property
+    @primary_key_attribute
+    def name(self) -> str:
+        return self._name
+
+    @property
+    @primary_key_attribute
+    def version(self) -> str:
+        return self._version
+
+    @property
+    @attribute
+    def native_build_inputs(self) -> List:
+        return self._native_build_inputs
+
+    @property
+    @attribute
+    def propagated_build_inputs(self) -> List:
+        return self._propagated_build_inputs
+
+    @property
+    @attribute
+    def optional_build_inputs(self) -> List:
+        return self._optional_build_inputs
+
+    @property
+    @attribute
+    def dependencies_in_nixpkgs(self) -> List:
+        return self._dependencies_in_nixpkgs
 
     @classmethod
     def create_flake(cls, command: CreateFlake) -> FlakeCreated:
+        result = None
         logger = logging.getLogger(__name__)
+        logger.info(f'Received create-flake ({command.packageName}, {command.packageVersion})')
+        flakeRepo = Ports.instance().resolveFlakeRepo()
         # 1. check if flake exists already
-        # 2. obtain pypi info
-        pythonPackage = Ports.instance().resolve(PythonPackageRepo).find_by_name_and_version(command.packageName, command.packageVersion)
+        existingFlake = flakeRepo.find_by_name_and_version(command.packageName, command.packageVersion)
+        if existingFlake:
+            logger.info(f'flake ({command.packageName}, {command.packageVersion}) already exists')
+        else:
+            # 2. obtain pypi info
+            pythonPackage = Ports.instance().resolve(PythonPackageRepo).find_by_name_and_version(command.packageName, command.packageVersion)
 
-        nixPythonPackageRepo = Ports.instance().resolve(NixPythonPackageRepo)
-        for dep in list(set(pythonPackage.get_native_build_inputs()) | set(pythonPackage.get_propagated_build_inputs()) | set(pythonPackage.get_optional_build_inputs())):
-            nixPythonPackages = nixPythonPackageRepo.find_by_name(dep.name)
-            for nixPythonPackage in nixPythonPackages:
-                # TODO: check if nixpkgs packages satisfies the version spec
-                print(f'dependency: {dep.name}-{dep.version} found on nixpkgs: {nixPythonPackage.name}-{nixPythonPackage.version}')
-            if True: # (len(nixPythonPackages) == 0):
+            nixPythonPackageRepo = Ports.instance().resolve(NixPythonPackageRepo)
+            nativeBuildInputs = pythonPackage.get_native_build_inputs()
+            propagatedBuildInputs = pythonPackage.get_propagated_build_inputs()
+            optionalBuildInputs = pythonPackage.get_optional_build_inputs()
+            dependenciesInNixpkgs = []
+            for dep in list(set(nativeBuildInputs) | set(propagatedBuildInputs) | set(optionalBuildInputs)):
+                depName = dep.name
+                depVersion = dep.version
+                nixPythonPackages = nixPythonPackageRepo.find_by_name(dep.name)
+                if len(nixPythonPackages) > 0:
+                    nixPythonPackage = nixPythonPackages[len(nixPythonPackages) - 1]
+                    if pythonPackage.satisfies_spec(nixPythonPackage.version):
+                        dependenciesInNixpkgs.append(pythonPackage)
+                        depName = nixPythonPackage.name
+                        depVersion = nixPythonPackage.version
                 # check if there's a flake for the dependency
-                flake = Ports.instance().resolveFlakeRepo().find_by_name_and_version(dep.name, dep.version)
-                if flake:
-                    logging.debug(f'Flake found for {dep.name}-{dep.version}')
+                depFlake = flakeRepo.find_by_name_and_version(depName, depVersion)
+                if depFlake:
+                    logger.debug(f'Flake found for {depName}-{depVersion}')
                 else:
-                    logging.info(f'Requesting new flake for {dep.name}-{dep.version}')
-                    flakeCreated = cls.create_flake(CreateFlake(dep.name, dep.version))
-                    logging.info(f'Flake created for {dep.name}-{dep.version} (triggered by {command.packageName, command.packageVersion})')
+                    flakeCreated = cls.create_flake(CreateFlake(depName, depVersion))
+                    logger.info(f'Flake created for {dep.name}-{dep.version} (triggered by {command.packageName, command.packageVersion})')
 
-        logger.debug(f'flake ({command.packageName}, {command.packageVersion}) created')
-        return FlakeCreated(command.packageName, command.packageVersion)
+            # 3. create flake
+            flake = Flake(command.packageName, command.packageVersion, nativeBuildInputs, propagatedBuildInputs, optionalBuildInputs, dependenciesInNixpkgs)
+            result = flakeRepo.create(flake, flake.flake_nix(), flake.package_nix())
+            if result:
+                logger.info(f'flake ({command.packageName}, {command.packageVersion}) created')
+            else:
+                logger.info(f'flake ({command.packageName}, {command.packageVersion}) could not be created')
 
+        return result
+
+    def flake_nix(self) -> str:
+        return "sample flake.nix"
+
+    def package_nix(self) -> str:
+        return f"sample {self.name}-{self.version}.nix"
+
+###
     def flake_nix_setuptools_template(package_name: str, package_version: str) -> Dict[str, str]:
         return { "contents": read_resource_file(os.path.join("setuptools", "flake.nix.tmpl")),
                  "folder": f"{package_name}-{package_version}",
