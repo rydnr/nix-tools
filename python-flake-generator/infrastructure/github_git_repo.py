@@ -38,8 +38,9 @@ class GithubGitRepo(GitRepoRepo):
         repo_info = requests.get(f"https://api.github.com/repos/{owner}/{repo_name}", headers=headers).json()
         pyproject_toml = self.get_file_contents_in_github_repo(url, rev, "pyproject.toml")
         pipfile = self.get_file_contents_in_github_repo(url, rev, "Pipfile")
+        poetry_lock = self.get_file_contents_in_github_repo(url, rev, "poetry.lock")
 
-        return GitRepo(url, rev, repo_info, { "pyproject.toml": pyproject_toml, "Pipfile": pipfile })
+        return GitRepo(url, rev, repo_info, { "pyproject.toml": pyproject_toml, "Pipfile": pipfile, "poetry.lock": poetry_lock })
 
     def revision_exists(self, url: str, rev: str) -> bool:
         headers = {"Authorization": f"token {self.__class__._github_token}", "Accept": "application/vnd.github+json"}

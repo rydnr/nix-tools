@@ -114,3 +114,20 @@ class Entity:
             if varName in [ x for x in _attributes[key] ]:
                 self._updated = datetime.now()
         super(Entity, self).__setattr__(varName, varValue)
+
+    def __eq__(self, other):
+        result = False
+        if isinstance(other, self.__class__):
+            result = True
+            for key in self.__class__.primary_key():
+                if getattr(self, key, None) != getattr(other, key, None):
+                    result = False
+                    break
+        return result
+
+    def __hash__(self):
+        attrs = []
+        for key in self.__class__.primary_key():
+            attrs.append(getattr(self, key, None))
+
+        return hash(tuple(attrs))

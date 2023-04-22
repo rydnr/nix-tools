@@ -6,6 +6,7 @@ from python_package import PythonPackage
 from python_package_repo import PythonPackageRepo
 from git_repo import GitRepo
 from git_repo_repo import GitRepoRepo
+from nix_python_package_repo import NixPythonPackageRepo
 from ports import Ports
 import os
 from pathlib import Path
@@ -27,7 +28,13 @@ class Flake():
         # 1. check if flake exists already
         # 2. obtain pypi info
         pythonPackage = Ports.instance().resolve(PythonPackageRepo).find_by_name_and_version(command.packageName, command.packageVersion)
-        print(f'package-type: {pythonPackage.get_package_type()}')
+
+        nixPythonPackageRepo = Ports.instance().resolve(NixPythonPackageRepo)
+        for dep in list(set(pythonPackage.get_native_build_inputs()) | set(pythonPackage.get_propagated_build_inputs()) | set(pythonPackage.get_optional_build_inputs())):
+            nixPythonPackages = nixPythonPackageRepo.find_by_name(dep.name)
+            for nixPythonPackage in nixPythonPackages:
+                print(f'dependency: {dep.name}-{dep.version} found on nixpkgs: {nixPythonPackage.name}-{nixPythonPackage.version}')
+
         logger.debug(f'flake ({command.packageName}, {command.packageVersion}) created')
         return FlakeCreated(command.packageName, command.packageVersion)
 

@@ -1,6 +1,7 @@
 from entity import Entity, attribute
 
 from typing import Dict
+import subprocess
 
 class GitRepo(Entity):
     """
@@ -39,3 +40,14 @@ class GitRepo(Entity):
 
     def pipfile(self):
         return self._files.get("Pipfile", None)
+
+    def poetry_lock(self):
+        return self._files.get("poetry.lock", None)
+
+    @classmethod
+    def url_is_a_git_repo(cls, url: str) -> bool:
+        try:
+            subprocess.check_output(['git', 'ls-remote', url], stderr=subprocess.STDOUT)
+            return True
+        except subprocess.CalledProcessError:
+            return False

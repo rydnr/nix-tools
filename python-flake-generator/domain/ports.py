@@ -1,6 +1,8 @@
 from port import Port
 from typing import Dict
 
+import importlib
+
 class Ports():
 
     _singleton = None
@@ -18,3 +20,11 @@ class Ports():
 
     def resolve(self, port: Port) -> Port:
         return self._mappings.get(port, None)
+
+    def resolveByModuleName(self, module_name: str, port_name: str):
+        module = importlib.import_module(module_name)
+        port = getattr(module, port_name)
+        return self.resolve(port)
+
+    def resolvePythonPackageRepo(self):
+        return self.resolveByModuleName("python_package_repo", "PythonPackageRepo")
