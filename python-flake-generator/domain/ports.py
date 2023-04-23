@@ -37,3 +37,6 @@ class Ports():
 
     def resolveNixPythonPackageRepo(self):
         return self.resolveByModuleName("nix_python_package_repo", "NixPythonPackageRepo")
+
+    def resolveGitRepoRepo(self):
+        return self.resolveByModuleName("git_repo_repo", "GitRepoRepo")

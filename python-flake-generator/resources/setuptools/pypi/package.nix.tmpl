@@ -8,7 +8,7 @@ buildPythonPackage rec {{
 
   src = fetchPypi {{
     inherit pname version;
-    sha256 = "{package_hash}";
+    sha256 = "{package_sha256}";
   }};
 
   nativeBuildInputs = [ setuptools {native_build_inputs_with_blanks} ];

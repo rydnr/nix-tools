@@ -1,6 +1,7 @@
 from entity import Entity, primary_key_attribute, attribute
 from python_package import PythonPackage
 from license import License
+from ports import Ports
 
 from typing import Dict, List
 import logging
@@ -34,14 +35,6 @@ class NixTemplate(Entity):
     @attribute
     def contents(self) -> str:
         return self._contents
-
-    @classmethod
-    def get_nix_prefetch_git_hash(cls, url, tag):
-        # Use nix-prefetch-git to compute the hash
-        result = subprocess.run(['nix-prefetch-git', '--deepClone', f'{url}/tree/{tag}'], check=True, capture_output=True, text=True)
-        output = result.stdout
-
-        return output.splitlines()[-1]
 
     def extract_dep_templates(self, flake, inputs: List[PythonPackage]) -> Dict[str, str]:
         if inputs:
@@ -80,12 +73,12 @@ class NixTemplate(Entity):
         repo_name = ""
         repo_url = ""
         repo_rev = ""
-        repo_hash = ""
+        repo_sha256 = ""
         if flake.python_package.git_repo:
             repo_owner, repo_name = flake.python_package.git_repo.repo_owner_and_repo_name()
             repo_url=flake.python_package.git_repo.url
             repo_rev=flake.python_package.git_repo.rev
-            repo_hash=flake.python_package.git_repo.repo_info.get("hash", "")
+            repo_sha256=Ports.instance().resolveGitRepoRepo().repo_sha256(flake.python_package.git_repo)
         native_build_inputs = flake.native_build_inputs
         propagated_build_inputs = flake.propagated_build_inputs
         build_inputs = flake.propagated_build_inputs # TODO: find out whether build inputs can be inferred from the Python package
@@ -122,12 +115,12 @@ class NixTemplate(Entity):
             package_version_with_underscores=flake.version.replace(".", "_"),
             package_description=flake.python_package.info["description"],
             package_license=License.from_pypi(flake.python_package.info.get("license", "")).nix,
-            package_pypi_hash=flake.python_package.release.get("hash", ""),
+            package_sha256=flake.python_package.release.get("hash", ""),
             repo_url=repo_url,
             repo_rev=repo_rev,
             repo_owner=repo_owner,
             repo_name=repo_name,
-            repo_hash=repo_hash,
+            repo_sha256=repo_sha256,
             native_build_inputs_declaration=native_build_inputs_declaration,
             native_build_inputs_flakes_declaration=native_build_inputs_flakes_declaration,
             native_build_inputs_with_blanks=native_build_inputs_with_blanks,

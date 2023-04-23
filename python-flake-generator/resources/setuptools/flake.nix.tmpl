@@ -20,8 +20,8 @@
       in rec {{
         packages = {{
           {package_name}-{package_version_with_underscores} = (import ./{package_name}-{package_version}.nix) {{
-            inherit (pythonPackages) buildPythonPackage fetchPypi setuptools;
-            inherit (pkgs) lib;
+            inherit (pythonPackages) buildPythonPackage setuptools;
+            inherit (pkgs) lib fetchFromGitHub;
             {native_build_inputs_not_flakes_with_newlines}
             {propagated_build_inputs_not_flakes_with_newlines}
             {build_inputs_not_flakes_with_newlines}
