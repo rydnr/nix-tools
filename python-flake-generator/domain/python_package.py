@@ -138,3 +138,16 @@ class PythonPackage(Entity):
     def satisfies_spec(self, version: str):
         # TODO: check if nixpkgs packages satisfies the version spec
         return True
+
+    def in_nixpkgs(self):
+        return Ports.instance().resolveNixPythonPackageRepo().find_by_name_and_version(self.name, self.version) != None
+
+    def nixpkgs_package_name(self):
+        nixPythonPackage = Ports.instance().resolveNixPythonPackageRepo().find_by_name_and_version(self.name, self.version)
+        if nixPythonPackage:
+            return nixPythonPackage.nixpkgs_package_name()
+        else:
+            return None
+
+    def flake_url(self):
+        return Ports.instance().resolveFlakeRepo().url_for_flake(self.name, self.version)

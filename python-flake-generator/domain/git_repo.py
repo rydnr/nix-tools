@@ -2,6 +2,7 @@ from entity import Entity, attribute
 
 from typing import Dict
 import subprocess
+import re
 
 class GitRepo(Entity):
     """
@@ -44,6 +45,9 @@ class GitRepo(Entity):
     def poetry_lock(self):
         return self._files.get("poetry.lock", None)
 
+    def repo_owner_and_repo_name(self) -> tuple:
+        return self.__class__.extract_repo_owner_and_repo_name(self.url)
+
     @classmethod
     def url_is_a_git_repo(cls, url: str) -> bool:
         try:
@@ -51,3 +55,14 @@ class GitRepo(Entity):
             return True
         except subprocess.CalledProcessError:
             return False
+
+    @classmethod
+    def extract_repo_owner_and_repo_name(cls, url: str) -> tuple:
+        pattern = r"(?:https?://)?(?:www\.)?.*\.com/([^/]+)/([^/]+)"
+        try:
+            match = re.match(pattern, url)
+            owner, repo_name = match.groups()
+            return owner, repo_name
+
+        except:
+            print(f"Invalid repo: {url}")

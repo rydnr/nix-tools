@@ -68,6 +68,7 @@ class PythonFlakeGenerator():
     _singleton = None
 
     def __init__(self):
+        super().__init__()
         self._primaryPorts = []
 
 
@@ -124,23 +125,6 @@ class PythonFlakeGenerator():
 
     def accept_flakes_url(self, url: str):
         FolderFlakeRepo.flakes_url(url)
-
-
-
-#####
-    def get_missing_packages(poetry_lock, missing_packages_list):
-        package_data = {}
-        for package in poetry_lock["package"]:
-            package_name = package["name"]
-            if package_name in missing_packages_list:
-                package_data[package_name] = package["version"]
-        return package_data
-
-    def extract_package_names(poetry_lock) -> List[str]:
-        package_names = []
-        for package in poetry_lock["package"]:
-            package_names.append(package["name"])
-        return package_names
 
 if __name__ == "__main__":
     PythonFlakeGenerator.initialize()

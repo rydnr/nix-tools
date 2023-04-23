@@ -33,7 +33,7 @@ class GithubGitRepo(GitRepoRepo):
         if not self.revision_exists(url, rev):
             return None
 
-        owner, repo_name = self.extract_owner_and_repo_name(url)
+        owner, repo_name = GitRepo.extract_repo_owner_and_repo_name(url)
         headers = {"Authorization": f"token {self.__class__._github_token}"}
         repo_info = requests.get(f"https://api.github.com/repos/{owner}/{repo_name}", headers=headers).json()
         pyproject_toml = self.get_file_contents_in_github_repo(url, rev, "pyproject.toml")
@@ -45,25 +45,15 @@ class GithubGitRepo(GitRepoRepo):
     def revision_exists(self, url: str, rev: str) -> bool:
         headers = {"Authorization": f"token {self.__class__._github_token}", "Accept": "application/vnd.github+json"}
 
-        owner, repo_name = self.extract_owner_and_repo_name(url)
+        owner, repo_name = GitRepo.extract_repo_owner_and_repo_name(url)
         response = requests.get(f"https://api.github.com/repos/{owner}/{repo_name}/git/refs/tags/{rev}", headers=headers)
 
         return response.status_code == 200
 
-    def extract_owner_and_repo_name(self, url: str) -> tuple:
-        pattern = r"(?:https?://)?(?:www\.)?github\.com/([^/]+)/([^/]+)"
-        try:
-            match = re.match(pattern, url)
-            owner, repo_name = match.groups()
-            return owner, repo_name
-
-        except:
-            print(f"Invalid repo: {url}")
-
     def request_file_in_github_repo(self, url: str, rev: str, file: str) -> bool:
         headers = {"Authorization": f"token {self.__class__._github_token}", "Accept": "application/vnd.github+json"}
 
-        owner, repo_name = self.extract_owner_and_repo_name(url)
+        owner, repo_name = GitRepo.extract_repo_owner_and_repo_name(url)
         return requests.get(f"https://api.github.com/repos/{owner}/{repo_name}/contents/{file}?ref={rev}", headers=headers)
 
     def file_exists_in_github_repo(self, url: str, rev: str, file: str) -> bool:

@@ -8,8 +8,8 @@ buildPythonPackage rec {{
   src = fetchFromGitHub {{
     owner = "{repo_owner}";
     repo = "{repo_name}";
-    rev = "{repo_rev};
-    hash = "{package_hash}";
+    rev = "{repo_rev}";
+    hash = "{repo_hash}";
   }};
 
   nativeBuildInputs = [ setuptools {native_build_inputs_with_blanks} ];
@@ -23,7 +23,7 @@ buildPythonPackage rec {{
 {package_description}
 '';
     license = licenses.{package_license};
-    homepage = "{package_repo}";
+    homepage = "{repo_url}";
     maintainers = with maintainers; [ ];
   }};
 }}

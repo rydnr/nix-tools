@@ -31,3 +31,9 @@ class Ports():
 
     def resolveFlakeRepo(self):
         return self.resolveByModuleName("flake_repo", "FlakeRepo")
+
+    def resolveNixTemplateRepo(self):
+        return self.resolveByModuleName("nix_template_repo", "NixTemplateRepo")
+
+    def resolveNixPythonPackageRepo(self):
+        return self.resolveByModuleName("nix_python_package_repo", "NixPythonPackageRepo")

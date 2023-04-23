@@ -1,5 +1,7 @@
 from entity import Entity, primary_key_attribute
 
+import re
+
 class NixPythonPackage(Entity):
     """
     Represents a Python package in Nix.
@@ -21,3 +23,9 @@ class NixPythonPackage(Entity):
     def version(self) -> str:
         return self._version
 
+    def nixpkgs_package_name(self) -> str:
+        result = self.name
+        match = re.search(r'[^.]+$|$', self.name)
+        if match:
+            result = match.group()
+        return result

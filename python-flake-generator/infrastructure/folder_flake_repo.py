@@ -20,7 +20,6 @@ class FolderFlakeRepo(FlakeRepo):
     def repo_folder(cls, folder: str):
         cls._repo_folder = folder
 
-
     _flakes_url = None
 
     @classmethod
@@ -38,25 +37,31 @@ class FolderFlakeRepo(FlakeRepo):
 
         if os.path.exists(os.path.join(self.__class__._repo_folder, os.path.join(package_name, f'{package_name}-{package_version}.nix'))):
             # TODO: parse the flake and retrieve the dependencies
-            result = Flake(package_name, package_version, [], [], [], [])
+            result = Flake(package_name, package_version, None, [], [], [], [])
 
         return result
 
-    def create(self, flake: Flake, flake_nix: str, package_nix: str) -> FlakeCreated:
+    def create(self, flake: Flake, flake_nix: str, flake_nix_path: str, package_nix: str, package_nix_path: str) -> FlakeCreated:
         """Creates the flake"""
-        if not os.path.exists(os.path.join(self.__class__._repo_folder, flake.name)):
-            os.makedirs(os.path.join(self.__class__._repo_folder, flake.name))
+        if not os.path.exists(os.path.join(self.__class__._repo_folder, os.path.dirname(flake_nix_path))):
+            os.makedirs(os.path.join(self.__class__._repo_folder, os.path.dirname(flake_nix_path)))
+        if not os.path.exists(os.path.join(self.__class__._repo_folder, os.path.dirname(package_nix_path))):
+            os.makedirs(os.path.join(self.__class__._repo_folder, os.path.dirname(package_nix_path)))
 
-        if os.path.exists(os.path.join(self.__class__._repo_folder, os.path.join(flake.name, "flake.nix"))):
+        if os.path.exists(os.path.join(self.__class__._repo_folder, flake_nix_path)):
             return None
         else:
-            with open(os.path.join(self.__class__._repo_folder, os.path.join(flake.name, "flake.nix")), "w") as file:
+            with open(os.path.join(self.__class__._repo_folder, flake_nix_path), "w") as file:
                 file.write(flake_nix)
 
         if self.find_by_name_and_version(flake.name, flake.version):
             return None
         else:
-            with open(os.path.join(self.__class__._repo_folder, os.path.join(flake.name, f'{flake.name}-{flake.version}.nix')), "w") as file:
+            with open(os.path.join(self.__class__._repo_folder, package_nix_path), "w") as file:
                 file.write(package_nix)
 
         return FlakeCreated(flake.name, flake.version)
+
+    def url_for_flake(self, name: str, version: str) -> str:
+        """Retrieves the url of given flake"""
+        return f'{self.__class__._flakes_url}{name}-{version}'

@@ -2,9 +2,9 @@
 
 let
   project = fetchgit {{
-    url = "{github_url}";
-    rev = "{package_rev}";
-    sha256 = "{package_github_hash}";
+    url = "{repo_url}";
+    rev = "{repo_rev}";
+    sha256 = "{repo_hash}";
   }};
 
 in mkPoetryApplication {{
@@ -36,7 +36,7 @@ in mkPoetryApplication {{
 {package_description}
 '';
     license = licenses.{package_license};
-    homepage = "{github_url}";
+    homepage = "{repo_url}";
     maintainers = with maintainers; [ ];
   }};
 }}
