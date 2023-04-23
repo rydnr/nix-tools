@@ -39,7 +39,6 @@ class FileNixTemplateRepo(NixTemplateRepo):
         if not result:
             result = self.flake_nix_setuptools_template
 
-        logging.debug(f"{package_type} -> {result} ")
         return result(package_name, package_version)
 
     def package_nix_setuptools_pypi_template(self, package_name: str, package_version: str) -> str:
@@ -66,7 +65,6 @@ class FileNixTemplateRepo(NixTemplateRepo):
         if not result:
             result = self.package_nix_setuptools_github_template
 
-        logging.debug(f"{package_type} -> {result} ")
         return result(package_name, package_version)
 
     def find_flake_template_by_type(self, package_name: str, package_version: str, package_type: str) -> NixTemplate:

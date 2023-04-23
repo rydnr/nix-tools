@@ -1,5 +1,6 @@
 from entity import Entity, primary_key_attribute, attribute
 from python_package import PythonPackage
+from license import License
 
 from typing import Dict, List
 import logging
@@ -82,9 +83,9 @@ class NixTemplate(Entity):
         repo_hash = ""
         if flake.python_package.git_repo:
             repo_owner, repo_name = flake.python_package.git_repo.repo_owner_and_repo_name()
-            repo_url=flake.python_package.git_repo.url,
-            repo_rev=flake.python_package.git_repo.rev,
-            repo_hash=flake.python_package.git_repo.repo_info.get("hash", ""),
+            repo_url=flake.python_package.git_repo.url
+            repo_rev=flake.python_package.git_repo.rev
+            repo_hash=flake.python_package.git_repo.repo_info.get("hash", "")
         native_build_inputs = flake.native_build_inputs
         propagated_build_inputs = flake.propagated_build_inputs
         build_inputs = flake.propagated_build_inputs # TODO: find out whether build inputs can be inferred from the Python package
@@ -120,7 +121,7 @@ class NixTemplate(Entity):
             package_version=flake.version,
             package_version_with_underscores=flake.version.replace(".", "_"),
             package_description=flake.python_package.info["description"],
-            package_license=flake.python_package.info.get("license", ""),
+            package_license=License.from_pypi(flake.python_package.info.get("license", "")).nix,
             package_pypi_hash=flake.python_package.release.get("hash", ""),
             repo_url=repo_url,
             repo_rev=repo_rev,

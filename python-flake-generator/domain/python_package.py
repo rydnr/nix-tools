@@ -48,7 +48,7 @@ class PythonPackage(Entity):
         result = None
         repo_url = self._info["home_page"]
         if GitRepo.url_is_a_git_repo(repo_url):
-            result = Ports.instance().resolve(GitRepoRepo).find_by_url_and_rev(repo_url, self._info["version"])
+            result = Ports.instance().resolve(GitRepoRepo).find_by_url_and_rev(repo_url, self.version)
         return result
 
     def _parse_toml(self, contents: str) -> Dict:

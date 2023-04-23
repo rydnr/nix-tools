@@ -22,14 +22,14 @@ class PypiRepo(PythonPackageRepo):
         """
         Retrieves the PythonPackage matching given name and version.
         """
-        logging.debug(f"looking for {package_name} {package_version} in pypi.org")
+        logging.getLogger(__name__).debug(f"looking for {package_name} {package_version} in pypi.org")
         # If the package_version is an exact version, add '==' before it
         if re.match(r"^\d+(\.\d+)*(-?(rc|b)\d+)?$", package_version):
             package_version = f"=={package_version}"
 
         specifier_set = SpecifierSet(package_version)
 
-        logging.debug(f"Retrieving {package_name}{package_version} info from https://pypi.org/pypi/{package_name}/json")
+        logging.getLogger(__name__).debug(f"Retrieving {package_name}{package_version} info from https://pypi.org/pypi/{package_name}/json")
         package_data = requests.get(f"https://pypi.org/pypi/{package_name}/json").json()
         package_info = package_data.get("info", {})
         versions = package_data["releases"].keys()

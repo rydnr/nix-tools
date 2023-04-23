@@ -1,22 +1,48 @@
-#!/usr/bin/env python3
+from entity import Entity, primary_key_attribute
 
-class License():
-    def pypi_license_to_nix_license(pypi_license: str) -> str:
-        license_map = {
-            "Apache-2.0": "asl20",
-            "MIT": "mit",
-            "GPL-3.0": "gpl3",
-            "GPL-3.0+": "gpl3Plus",
-            "LGPL-3.0": "lgpl3",
-            "LGPL-3.0+": "lgpl3Plus",
-            "BSD-2-Clause": "bsd2",
-            "BSD-3-Clause": "bsd3",
-        }
+PYPI_TO_NIX_LICENSE_MAPPING = {
+    "Apache-2.0": "asl20",
+    "Apache 2.0": "asl20",
+    "MIT": "mit",
+    "GPL-3.0": "gpl3",
+    "GPL 3.0": "gpl3",
+    "GPL-3.0+": "gpl3Plus",
+    "GPL 3.0+": "gpl3Plus",
+    "LGPL-3.0": "lgpl3",
+    "LGPL 3.0": "lgpl3",
+    "LGPL-3.0+": "lgpl3Plus",
+    "LGPL 3.0+": "lgpl3Plus",
+    "BSD-2-Clause": "bsd2",
+    "BSD-2 Clause": "bsd2",
+    "BSD-3-Clause": "bsd3",
+    "BSD-3 Clause": "bsd3",
+}
 
-        nix_license = license_map.get(pypi_license)
+class License(Entity):
 
-        if not nix_license:
-            # raise ValueError(f"Unknown PyPI license: {pypi_license}")
-            nix_license = "mit"
+    """
+    Represents a License.
+    """
+    def __init__(self, pypi: str, nix: str):
+        """Creates a new License instance"""
+        super().__init__(id)
+        self._pypi = pypi
+        self._nix = nix
 
-        return nix_license
+    @property
+    @primary_key_attribute
+    def pypi(self) -> str:
+        return self._pypi
+
+    @property
+    @primary_key_attribute
+    def nix(self) -> str:
+        return self._nix
+
+    @classmethod
+    def from_pypi(cls, pypi: str):
+        nix = PYPI_TO_NIX_LICENSE_MAPPING.get(pypi, "")
+        if nix == "":
+            nix = "mit"
+
+        return License(pypi, nix)

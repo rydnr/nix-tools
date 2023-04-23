@@ -29,9 +29,8 @@ class GithubGitRepo(GitRepoRepo):
 
         if not self.revision_exists(url, rev):
             rev = f'v{rev}'
-
-        if not self.revision_exists(url, rev):
-            return None
+            if not self.revision_exists(url, rev):
+                return None
 
         owner, repo_name = GitRepo.extract_repo_owner_and_repo_name(url)
         headers = {"Authorization": f"token {self.__class__._github_token}"}
