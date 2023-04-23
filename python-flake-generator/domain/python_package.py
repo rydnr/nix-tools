@@ -5,6 +5,7 @@ from git_repo_repo import GitRepoRepo
 
 from typing import Dict, List
 import toml
+import re
 
 class PythonPackage(Entity):
     """
@@ -46,8 +47,8 @@ class PythonPackage(Entity):
 
     def analyze_repo(self) -> GitRepo:
         result = None
-        repo_url = self._info["home_page"]
-        if GitRepo.url_is_a_git_repo(repo_url):
+        repo_url = self._info.get("home_page", None)
+        if repo_url and GitRepo.url_is_a_git_repo(repo_url):
             result = Ports.instance().resolve(GitRepoRepo).find_by_url_and_rev(repo_url, self.version)
         return result
 
@@ -105,13 +106,43 @@ class PythonPackage(Entity):
     def get_native_build_inputs(self) -> List:
         result = []
         type = self.get_package_type()
+        pyproject_toml = self._read_pyproject_toml()
         if (type == "poetry"):
             result = self.get_native_build_inputs_poetry()
-        #TODO: Support the other build types
+        elif pyproject_toml:
+            result = self.get_native_build_inputs_pyproject_toml()
         return result
 
     def get_native_build_inputs_poetry(self) -> List:
         return self.get_poetry_deps("dev-dependencies")
+
+    def extract_requires(self, required_dep) -> tuple:
+        pattern = r"([a-zA-Z0-9-_]+)\[?([a-zA-Z0-9-_]+)?\]?([<>=!~]+)?([0-9.]+)?"
+        match = re.match(pattern, required_dep)
+
+        if match:
+            name = match.group(1)
+            extras = match.group(2) if match.group(2) else ""
+            constraint = match.group(3) if match.group(3) else ""
+            version = match.group(4) if match.group(4) else ""
+
+            full_constraint = constraint + version if version else ""
+
+            return name, extras, version, full_constraint
+
+        return None
+
+    def get_native_build_inputs_pyproject_toml(self) -> List:
+        result = []
+        pyproject_toml = self._read_pyproject_toml()
+        if pyproject_toml:
+            for dev_dependency in list(pyproject_toml.get("build-system", {}).get("requires", [])):
+                dep_name, _, dep_version, _ = self.extract_requires(dev_dependency)
+                pythonPackage = Ports.instance().resolvePythonPackageRepo().find_by_name_and_version(dep_name, dep_version)
+                if pythonPackage:
+                    result.append(pythonPackage)
+
+        return result
 
     def get_propagated_build_inputs(self) -> List:
         result = []
