@@ -1,4 +1,12 @@
-from port import Port
+import sys
+from pathlib import Path
+
+base_folder = str(Path(__file__).resolve().parent.parent)
+if base_folder not in sys.path:
+    sys.path.append(base_folder)
+
+from domain.port import Port
+
 from typing import Dict
 
 import importlib
@@ -31,6 +39,9 @@ class Ports():
 
     def resolveFlakeRepo(self):
         return self.resolveByModuleName("flake_repo", "FlakeRepo")
+
+    def resolveFlakeRecipeRepo(self):
+        return self.resolveByModuleName("flake_recipe_repo", "FlakeRecipeRepo")
 
     def resolveNixTemplateRepo(self):
         return self.resolveByModuleName("nix_template_repo", "NixTemplateRepo")

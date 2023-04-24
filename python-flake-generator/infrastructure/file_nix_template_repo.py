@@ -1,11 +1,15 @@
 import sys
+from pathlib import Path
 
-sys.path.insert(0, "domain")
-from nix_template_repo import NixTemplateRepo
-from nix_template import NixTemplate
-from flake_nix_template import FlakeNixTemplate
-from package_nix_template import PackageNixTemplate
-from resource_files import ResourceFiles
+base_folder = str(Path(__file__).resolve().parent.parent)
+if base_folder not in sys.path:
+    sys.path.append(base_folder)
+
+from domain.nix_template_repo import NixTemplateRepo
+from domain.nix_template import NixTemplate
+from domain.flake_nix_template import FlakeNixTemplate
+from domain.package_nix_template import PackageNixTemplate
+from domain.resource_files import ResourceFiles
 
 import logging
 import os

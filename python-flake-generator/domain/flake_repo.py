@@ -1,6 +1,15 @@
-from repo import Repo
-from flake import Flake
-from flake_created_event import FlakeCreated
+import sys
+from pathlib import Path
+
+base_folder = str(Path(__file__).resolve().parent.parent)
+if base_folder not in sys.path:
+    sys.path.append(base_folder)
+
+from domain.repo import Repo
+from domain.flake import Flake
+from domain.flake_created_event import FlakeCreated
+
+from typing import Dict, List
 
 class FlakeRepo(Repo):
     """
@@ -17,7 +26,7 @@ class FlakeRepo(Repo):
         """Retrieves a flake matching given name and version"""
         raise NotImplementedError("find_by_name_and_version() must be implemented by subclasses")
 
-    def create(self, flake: Flake, flake_nix: str, flake_nix_path: str, package_nix: str, package_nix_path: str) -> FlakeCreated:
+    def create(self, flake: Flake, content: List[Dict[str, str]]) -> FlakeCreated:
         """Creates the flake"""
         raise NotImplementedError("create() must be implemented by subclasses")
 

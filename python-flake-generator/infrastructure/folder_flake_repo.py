@@ -1,12 +1,16 @@
 import sys
+from pathlib import Path
 
-sys.path.insert(0, "domain")
-from flake_repo import FlakeRepo
-from flake import Flake
-from flake_created_event import FlakeCreated
+base_folder = str(Path(__file__).resolve().parent.parent)
+if base_folder not in sys.path:
+    sys.path.append(base_folder)
+
+from domain.flake_repo import FlakeRepo
+from domain.flake import Flake
+from domain.flake_created_event import FlakeCreated
 
 import logging
-from typing import List
+from typing import Dict, List
 import os
 
 class FolderFlakeRepo(FlakeRepo):
@@ -41,24 +45,21 @@ class FolderFlakeRepo(FlakeRepo):
 
         return result
 
-    def create(self, flake: Flake, flake_nix: str, flake_nix_path: str, package_nix: str, package_nix_path: str) -> FlakeCreated:
+    def create(self, flake: Flake, content: List[Dict[str, str]]) -> FlakeCreated:
+#    def create(self, flake: Flake, flake_nix: str, flake_nix_path: str, package_nix: str, package_nix_path: str) -> FlakeCreated:
         """Creates the flake"""
-        if not os.path.exists(os.path.join(self.__class__._repo_folder, os.path.dirname(flake_nix_path))):
-            os.makedirs(os.path.join(self.__class__._repo_folder, os.path.dirname(flake_nix_path)))
-        if not os.path.exists(os.path.join(self.__class__._repo_folder, os.path.dirname(package_nix_path))):
-            os.makedirs(os.path.join(self.__class__._repo_folder, os.path.dirname(package_nix_path)))
-
-        if os.path.exists(os.path.join(self.__class__._repo_folder, flake_nix_path)):
-            return None
-        else:
-            with open(os.path.join(self.__class__._repo_folder, flake_nix_path), "w") as file:
-                file.write(flake_nix)
-
         if self.find_by_name_and_version(flake.name, flake.version):
             return None
-        else:
-            with open(os.path.join(self.__class__._repo_folder, package_nix_path), "w") as file:
-                file.write(package_nix)
+
+        for item in content:
+            if os.path.exists(os.path.join(self.__class__._repo_folder, item["path"])):
+                return None
+
+            if not os.path.exists(os.path.join(self.__class__._repo_folder, os.path.dirname(item["path"]))):
+                os.makedirs(os.path.join(self.__class__._repo_folder, os.path.dirname(item["path"])))
+
+            with open(os.path.join(self.__class__._repo_folder, item["path"]), "w") as file:
+                file.write(item["contents"])
 
         return FlakeCreated(flake.name, flake.version)
 

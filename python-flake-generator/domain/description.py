@@ -1,3 +1,10 @@
+import sys
+from pathlib import Path
+
+base_folder = str(Path(__file__).resolve().parent.parent)
+if base_folder not in sys.path:
+    sys.path.append(base_folder)
+
 #!/usr/bin/env python3
 
 from bs4 import BeautifulSoup

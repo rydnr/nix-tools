@@ -1,18 +1,21 @@
-#!/usr/bin/env python3
-
-from entity import Entity, primary_key_attribute, attribute
-from create_flake_command import CreateFlake
-from flake_created_event import FlakeCreated
-from python_package import PythonPackage
-from python_package_repo import PythonPackageRepo
-from git_repo import GitRepo
-from git_repo_repo import GitRepoRepo
-from nix_python_package_repo import NixPythonPackageRepo
-from nix_template import NixTemplate
-from ports import Ports
-
-import os
+import sys
 from pathlib import Path
+
+base_folder = str(Path(__file__).resolve().parent.parent)
+if base_folder not in sys.path:
+    sys.path.append(base_folder)
+
+from domain.entity import Entity, primary_key_attribute, attribute
+from domain.create_flake_command import CreateFlake
+from domain.flake_created_event import FlakeCreated
+from domain.python_package import PythonPackage
+from domain.python_package_repo import PythonPackageRepo
+from domain.git_repo import GitRepo
+from domain.git_repo_repo import GitRepoRepo
+from domain.nix_python_package_repo import NixPythonPackageRepo
+from domain.nix_template import NixTemplate
+from domain.ports import Ports
+
 from typing import Dict, List
 import logging
 
@@ -106,9 +109,12 @@ class Flake(Entity):
 
             # 3. create flake
             flake = Flake(command.packageName, command.packageVersion, pythonPackage, nativeBuildInputs, propagatedBuildInputs, optionalBuildInputs, dependenciesInNixpkgs)
-            flake_nix = flake.flake_nix()
-            package_nix = flake.package_nix()
-            result = flakeRepo.create(flake, flake_nix["contents"], os.path.join(flake_nix["folder"], flake_nix["path"]), package_nix["contents"], os.path.join(package_nix["folder"], package_nix["path"]))
+            flakeRecipe = Ports.instance().resolveFlakeRecipeRepo().find_by_flake(flake)
+            if flakeRecipe:
+                result = flakeRecipe.process()
+            else:
+                logger.warn(f'No recipes available for {command.packageName}-{command.packageVersion}')
+
             if result:
                 logger.info(f'Flake {command.packageName}-{command.packageVersion}) created')
             else:
@@ -118,11 +124,3 @@ class Flake(Entity):
 
     def dependency_in_nixpkgs(self, dep: PythonPackage) -> bool:
         return Ports.instance().resolveNixPythonPackageRepo().find_by_name_and_version(dep.name, dep.version) == None
-
-    def flake_nix(self) -> str:
-        template = Ports.instance().resolveNixTemplateRepo().find_flake_template_by_type(self.name, self.version, self.python_package.get_package_type())
-        return { "contents": template.render(self), "folder": template.folder, "path": template.path }
-
-    def package_nix(self) -> str:
-        template = Ports.instance().resolveNixTemplateRepo().find_package_template_by_type(self.name, self.version, self.python_package.get_package_type())
-        return { "contents": template.render(self), "folder": template.folder, "path": template.path }

@@ -1,4 +1,11 @@
-from nix_template import NixTemplate
+import sys
+from pathlib import Path
+
+base_folder = str(Path(__file__).resolve().parent.parent)
+if base_folder not in sys.path:
+    sys.path.append(base_folder)
+
+from domain.nix_template import NixTemplate
 
 from typing import Dict
 

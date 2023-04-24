@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
 import sys
-sys.path.insert(0, "domain")
-sys.path.insert(0, "infrastructure")
+from pathlib import Path
 
-from flake import Flake
-from port import Port
-from ports import Ports
-from primary_port import PrimaryPort
-from create_flake_command import CreateFlake
-from flake_created_event import FlakeCreated
-from github_git_repo import GithubGitRepo
-from folder_flake_repo import FolderFlakeRepo
+base_folder = str(Path(__file__).resolve().parent.parent)
+if base_folder not in sys.path:
+    sys.path.append(base_folder)
+
+from domain.flake import Flake
+from domainport import Port
+from domainports import Ports
+from domainprimary_port import PrimaryPort
+from domaincreate_flake_command import CreateFlake
+from domainflake_created_event import FlakeCreated
+from domaingithub_git_repo import GithubGitRepo
+from domainfolder_flake_repo import FolderFlakeRepo
 
 from typing import Dict, List
 import logging
@@ -81,7 +84,11 @@ class PythonFlakeGenerator():
         cls._singleton = PythonFlakeGenerator()
         mappings = {}
         for port in get_port_interfaces():
-            mappings.update({ port: get_implementations(port)[0]() })
+            implementations = get_implementations(port)
+            if len(implementations) == 0:
+                logging.getLogger(__name__).critical(f'No implementations found for {port}')
+            else:
+                mappings.update({ port: implementations[0]() })
         Ports.initialize(mappings)
         cls._singleton._primaryPorts = get_implementations(PrimaryPort)
 

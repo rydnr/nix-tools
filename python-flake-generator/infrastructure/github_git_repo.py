@@ -1,9 +1,13 @@
-#!/usr/bin/env python3
+import sys
+from pathlib import Path
 
-from git_repo_repo import GitRepoRepo
-from git_repo import GitRepo
-#from description import extract_description
-#from nix import get_nix_prefetch_git_hash
+base_folder = str(Path(__file__).resolve().parent.parent)
+if base_folder not in sys.path:
+    sys.path.append(base_folder)
+
+from domain.git_repo_repo import GitRepoRepo
+from domain.git_repo import GitRepo
+
 import re
 import requests
 import base64

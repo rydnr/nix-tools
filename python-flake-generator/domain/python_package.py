@@ -1,7 +1,14 @@
-from entity import Entity, attribute, primary_key_attribute
-from ports import Ports
-from git_repo import GitRepo
-from git_repo_repo import GitRepoRepo
+import sys
+from pathlib import Path
+
+base_folder = str(Path(__file__).resolve().parent.parent)
+if base_folder not in sys.path:
+    sys.path.append(base_folder)
+
+from domain.entity import Entity, attribute, primary_key_attribute
+from domain.ports import Ports
+from domain.git_repo import GitRepo
+from domain.git_repo_repo import GitRepoRepo
 
 from typing import Dict, List
 import toml

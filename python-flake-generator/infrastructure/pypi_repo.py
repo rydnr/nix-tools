@@ -1,7 +1,12 @@
 import sys
-sys.path.insert(0, "domain")
-from python_package_repo import PythonPackageRepo
-from python_package import PythonPackage
+from pathlib import Path
+
+base_folder = str(Path(__file__).resolve().parent.parent)
+if base_folder not in sys.path:
+    sys.path.append(base_folder)
+
+from domain.python_package_repo import PythonPackageRepo
+from domain.python_package import PythonPackage
 
 from typing import Dict
 import re

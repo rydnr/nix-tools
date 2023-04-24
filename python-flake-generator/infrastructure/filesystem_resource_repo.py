@@ -1,9 +1,18 @@
 import sys
+from pathlib import Path
 
-sys.path.insert(0, "domain")
-from resource_repo import ResourceRepo
+base_folder = str(Path(__file__).resolve().parent.parent)
+if base_folder not in sys.path:
+    sys.path.append(base_folder)
+
+from domain.resource_repo import ResourceRepo
 
 class FilesystemResourceRepo(ResourceRepo):
+    """
+    A ResourceRepo that uses the filesystem as store
+    """
+    def __init__(self):
+        super().__init__()
 
     def find_by_path(filePath: str) -> str:
         base_dir = os.path.dirname(os.path.realpath(__file__))
