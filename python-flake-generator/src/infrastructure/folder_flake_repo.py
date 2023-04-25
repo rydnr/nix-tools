@@ -30,9 +30,6 @@ class FolderFlakeRepo(FlakeRepo):
     def flakes_url(cls, url: str):
         cls._flakes_url = url
 
-    def __init__(self):
-        super().__init__()
-
     def find_by_name_and_version(self, package_name: str, package_version: str) -> Flake:
         """
         Retrieves the Flake matching given name and version, if any.
@@ -66,3 +63,9 @@ class FolderFlakeRepo(FlakeRepo):
     def url_for_flake(self, name: str, version: str) -> str:
         """Retrieves the url of given flake"""
         return f'{self.__class__._flakes_url}{name}-{version}'
+
+import traceback
+
+def print_stack_trace():
+    stack_trace = traceback.format_stack()
+    print("".join(stack_trace))

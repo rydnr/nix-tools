@@ -72,4 +72,4 @@ class GitRepo(Entity):
             return owner, repo_name
 
         except:
-            print(f"Invalid repo: {url}")
+            logging.getLogger(cls.__name__).error(f"Invalid repo: {url}")

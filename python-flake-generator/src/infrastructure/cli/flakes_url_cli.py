@@ -1,11 +1,13 @@
 import sys
+from pathlib import Path
 
-sys.path.insert(0, "domain")
+base_folder = str(Path(__file__).resolve().parent.parent)
+if base_folder not in sys.path:
+    sys.path.append(base_folder)
 
-from primary_port import PrimaryPort
+from domain.primary_port import PrimaryPort
 
 import argparse
-
 
 class FlakesUrlCli(PrimaryPort):
 

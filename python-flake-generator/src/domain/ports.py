@@ -35,19 +35,19 @@ class Ports():
         return self.resolve(port)
 
     def resolvePythonPackageRepo(self):
-        return self.resolveByModuleName("python_package_repo", "PythonPackageRepo")
+        return self.resolveByModuleName("domain.python_package_repo", "PythonPackageRepo")
 
     def resolveFlakeRepo(self):
-        return self.resolveByModuleName("flake_repo", "FlakeRepo")
+        return self.resolveByModuleName("domain.flake_repo", "FlakeRepo")
 
     def resolveFlakeRecipeRepo(self):
-        return self.resolveByModuleName("flake_recipe_repo", "FlakeRecipeRepo")
+        return self.resolveByModuleName("domain.flake_recipe_repo", "FlakeRecipeRepo")
 
     def resolveNixTemplateRepo(self):
-        return self.resolveByModuleName("nix_template_repo", "NixTemplateRepo")
+        return self.resolveByModuleName("domain.nix_template_repo", "NixTemplateRepo")
 
     def resolveNixPythonPackageRepo(self):
-        return self.resolveByModuleName("nix_python_package_repo", "NixPythonPackageRepo")
+        return self.resolveByModuleName("domain.nix_python_package_repo", "NixPythonPackageRepo")
 
     def resolveGitRepoRepo(self):
-        return self.resolveByModuleName("git_repo_repo", "GitRepoRepo")
+        return self.resolveByModuleName("domain.git_repo_repo", "GitRepoRepo")

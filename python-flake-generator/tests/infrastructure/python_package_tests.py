@@ -1,9 +1,14 @@
 import sys
-sys.path.insert(0, "domain")
+from pathlib import Path
+
+base_folder = str(Path(__file__).resolve().parent.parent.parent / 'src')
+if base_folder not in sys.path:
+    sys.path.append(base_folder)
+
+import domain
+from domain.python_package import PythonPackage
 
 import unittest
-
-from python_package import PythonPackage
 
 class PythonPackageTests(unittest.TestCase):
     def test_extract_requires(self):

@@ -1,11 +1,14 @@
-#!/usr/bin/env python3
-import argparse
-
 import sys
-sys.path.insert(0, "domain")
-from primary_port import PrimaryPort
-from create_flake_command import CreateFlake
+from pathlib import Path
 
+base_folder = str(Path(__file__).resolve().parent.parent)
+if base_folder not in sys.path:
+    sys.path.append(base_folder)
+
+from domain.primary_port import PrimaryPort
+from domain.create_flake_command import CreateFlake
+
+import argparse
 import logging
 
 class CreateFlakeCli(PrimaryPort):

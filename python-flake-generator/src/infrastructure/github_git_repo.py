@@ -5,6 +5,7 @@ base_folder = str(Path(__file__).resolve().parent.parent)
 if base_folder not in sys.path:
     sys.path.append(base_folder)
 
+import domain
 from domain.git_repo_repo import GitRepoRepo
 from domain.git_repo import GitRepo
 

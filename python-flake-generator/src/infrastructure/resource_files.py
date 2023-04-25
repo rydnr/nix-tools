@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import json
 import os
 from typing import Dict
@@ -18,8 +17,8 @@ class ResourceFiles():
         return cls._singleton
 
     def read_resource_file(self, filePath: str) -> str:
-        base_dir = os.path.dirname(os.path.realpath(__file__))
-        resources_dir = os.path.join(base_dir, "..", "resources")
+        base_dir = os.path.dirname(os.path.realpath(__file__).parent.parent.parent)
+        resources_dir = os.path.join(base_dir, "resources")
         metadata_json = os.path.join(resources_dir, filePath)
 
         with open(metadata_json, "r") as file:
@@ -28,8 +27,8 @@ class ResourceFiles():
         return content
 
     def read_resource_json(self, filePath: str) -> Dict:
-        base_dir = os.path.dirname(os.path.realpath(__file__))
-        resources_dir = os.path.join(base_dir, "..", "resources")
+        base_dir = os.path.dirname(os.path.realpath(__file__).parent.parent.parent)
+        resources_dir = os.path.join(base_dir, "resources")
         json_file = os.path.join(resources_dir, filePath)
 
         with open(json_file, "r") as file:

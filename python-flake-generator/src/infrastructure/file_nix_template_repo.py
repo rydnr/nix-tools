@@ -9,7 +9,7 @@ from domain.nix_template_repo import NixTemplateRepo
 from domain.nix_template import NixTemplate
 from domain.flake_nix_template import FlakeNixTemplate
 from domain.package_nix_template import PackageNixTemplate
-from domain.resource_files import ResourceFiles
+from infrastructure.resource_files import ResourceFiles
 
 import logging
 import os

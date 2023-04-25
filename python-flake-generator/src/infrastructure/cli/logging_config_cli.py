@@ -1,7 +1,11 @@
 import sys
-sys.path.insert(0, "domain")
+from pathlib import Path
 
-from primary_port import PrimaryPort
+base_folder = str(Path(__file__).resolve().parent.parent)
+if base_folder not in sys.path:
+    sys.path.append(base_folder)
+
+from domain.primary_port import PrimaryPort
 
 import argparse
 

@@ -22,13 +22,13 @@ class BaseFlakeRecipe(FlakeRecipe):
 
     @classmethod
     def matches(cls, flake):
-        return false
+        return True
 
     def process(self) -> FlakeCreated:
-        flake_nix = self.flake_nix(flake)
-        package_nix = self.package_nix(flake)
+        flake_nix = self.flake_nix(self.flake)
+        package_nix = self.package_nix(self.flake)
         return Ports.instance().resolveFlakeRepo().create(
-            flake,
+            self.flake,
             [
                 {
                     "contents": flake_nix["contents"],

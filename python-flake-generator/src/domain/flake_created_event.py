@@ -1,16 +1,9 @@
-import sys
-from pathlib import Path
-
-base_folder = str(Path(__file__).resolve().parent.parent)
-if base_folder not in sys.path:
-    sys.path.append(base_folder)
-
-class CreateFlake():
+class FlakeCreated():
     """
-    Represents the command to create a Nix flake for a Python package
+    Represents the event when a Nix flake for a Python package has been created
     """
     def __init__(self, packageName: str, packageVersion: str):
-        """Creates a new CreateFlake instance"""
+        """Creates a new CreateFlakeCommand instance"""
         self._packageName = packageName
         self._packageVersion = packageVersion
 

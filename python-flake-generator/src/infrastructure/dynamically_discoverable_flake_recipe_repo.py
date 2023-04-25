@@ -7,8 +7,8 @@ from pathlib import Path
 base_folder = str(Path(__file__).resolve().parent.parent)
 if base_folder not in sys.path:
     sys.path.append(base_folder)
-import domain.recipes
 
+import domain
 from domain.flake_recipe_repo import FlakeRecipeRepo
 from domain.flake_recipe import FlakeRecipe
 from domain.base_flake_recipe import BaseFlakeRecipe
@@ -20,6 +20,7 @@ def discover_modules(package):
     for module_info in pkgutil.walk_packages(package.__path__, prefix=package.__name__ + "."):
         module = importlib.import_module(module_info.name)
 
+import domain.recipes
 discover_modules(domain.recipes)
 
 def discover_recipes(package):
@@ -54,9 +55,9 @@ class DynamicallyDiscoverableFlakeRecipeRepo(FlakeRecipeRepo):
                     generic_matches.append(recipe_class)
 
         if specific_matches:
-            result = specific_matches[0]
+            result = specific_matches[0](flake)
         elif generic_matches:
-            result = generic_matches[0]
+            result = generic_matches[0](flake)
         else:
             result = None
 

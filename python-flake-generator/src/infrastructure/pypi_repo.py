@@ -5,6 +5,7 @@ base_folder = str(Path(__file__).resolve().parent.parent)
 if base_folder not in sys.path:
     sys.path.append(base_folder)
 
+import domain
 from domain.python_package_repo import PythonPackageRepo
 from domain.python_package import PythonPackage
 
