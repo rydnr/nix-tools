@@ -1,24 +1,30 @@
-import sys
+import logging
+import os
 from pathlib import Path
+from typing import Dict
+import sys
 
 base_folder = str(Path(__file__).resolve().parent.parent)
 if base_folder not in sys.path:
     sys.path.append(base_folder)
 
+from domain.flake_nix_template import FlakeNixTemplate
+from domain.flake_recipe import FlakeRecipe
 from domain.nix_template_repo import NixTemplateRepo
 from domain.nix_template import NixTemplate
-from domain.flake_nix_template import FlakeNixTemplate
 from domain.package_nix_template import PackageNixTemplate
 from infrastructure.resource_files import ResourceFiles
-
-import logging
-import os
-from typing import Dict
 
 class FileNixTemplateRepo(NixTemplateRepo):
     """
     A NixTemplateRepo using files.
     """
+
+    _recipes_folder = None
+
+    @classmethod
+    def recipes_folder(cls, folder: str):
+        cls._recipes_folder = folder
 
     def __init__(self):
         super().__init__()
@@ -71,12 +77,13 @@ class FileNixTemplateRepo(NixTemplateRepo):
 
         return result(package_name, package_version)
 
-    def find_flake_template_by_type(self, package_name: str, package_version: str, package_type: str) -> NixTemplate:
-        """Retrieves the flake template of given type"""
-        metadata = self.resolve_flake_nix_template(package_name, package_version, package_type)
-        return FlakeNixTemplate(metadata["folder"], metadata["path"], metadata["contents"])
-
-    def find_package_template_by_type(self, package_name: str, package_version: str, package_type: str) -> NixTemplate:
-        """Retrieves the package template of given type"""
-        metadata = self.resolve_package_nix_template(package_name, package_version, package_type)
-        return PackageNixTemplate(metadata["folder"], metadata["path"], metadata["contents"])
+    def find_flake_templates_by_recipe(self, recipe: FlakeRecipe) -> Dict[str, NixTemplate]:
+        """Retrieves the flake templates for given recipe"""
+        result = {}
+        recipes_folder_path = Path(self.__class__._recipes_folder)
+        for tmpl_file in recipes_folder_path.resolve().glob('**/*.tmpl'):
+            if tmpl_file.is_file():
+                relative_path = tmpl_file.relative_to(recipes_folder_path).with_suffix('')
+                result[tmpl_file.stem] = relative_path
+        print(f'templates of recipe {recipe} -> {result}')
+        return result

@@ -1,31 +1,32 @@
 #!/usr/bin/env python3
-import sys
+import importlib
+import importlib.util
+import inspect
+import logging
+import os
 from pathlib import Path
+import pkgutil
+import sys
+from typing import Dict, List
+import warnings
 
 base_folder = str(Path(__file__).resolve().parent.parent)
 if base_folder not in sys.path:
     sys.path.append(base_folder)
 
 import domain
+from domain.create_flake_command import CreateFlake
 from domain.flake import Flake
+from domain.flake_created_event import FlakeCreated
 from domain.port import Port
 from domain.ports import Ports
 from domain.primary_port import PrimaryPort
-from domain.create_flake_command import CreateFlake
-from domain.flake_created_event import FlakeCreated
 
 import infrastructure
-from infrastructure.github_git_repo import GithubGitRepo
+from infrastructure.dynamically_discoverable_flake_recipe_repo import DynamicallyDiscoverableFlakeRecipeRepo
+from infrastructure.file_nix_template_repo import FileNixTemplateRepo
 from infrastructure.folder_flake_repo import FolderFlakeRepo
-
-from typing import Dict, List
-import logging
-import os
-import inspect
-import pkgutil
-import importlib
-import importlib.util
-import warnings
+from infrastructure.github_git_repo import GithubGitRepo
 
 for folder in os.scandir(os.path.join("src", "infrastructure")):
     if folder.is_dir():
@@ -50,8 +51,6 @@ def iter_submodules(package):
 
 def get_domain_interfaces(iface):
     matches = []
-#    for module_info in pkgutil.walk_packages(domain.__path__, prefix=domain.__name__ + "."):
-#    for module_info in pkgutil.iter_modules(domain.__path__, prefix=domain.__name__ + "."):
     for module in iter_submodules(domain):
         try:
             with warnings.catch_warnings():
@@ -150,6 +149,12 @@ class PythonFlakeGenerator():
 
     def accept_flakes_folder(self, folder: str):
         FolderFlakeRepo.repo_folder(folder)
+
+    def accept_recipes_folder(self, folder: str):
+        print(f'Setting recipes_folder to {folder}')
+        FileNixTemplateRepo.recipes_folder(folder)
+        DynamicallyDiscoverableFlakeRecipeRepo.recipes_folder(folder)
+        DynamicallyDiscoverableFlakeRecipeRepo.initialize()
 
     def accept_flakes_url(self, url: str):
         FolderFlakeRepo.flakes_url(url)

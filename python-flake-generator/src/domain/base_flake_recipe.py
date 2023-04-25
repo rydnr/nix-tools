@@ -40,9 +40,9 @@ class BaseFlakeRecipe(FlakeRecipe):
             ])
 
     def flake_nix(self, flake: Flake) -> str:
-        template = Ports.instance().resolveNixTemplateRepo().find_flake_template_by_type(flake.name, flake.version, flake.python_package.get_package_type())
+        template = Ports.instance().resolveNixTemplateRepo().find_flake_template_by_recipe(self)
         return { "contents": template.render(flake), "folder": template.folder, "path": template.path }
 
     def package_nix(self, flake: Flake) -> str:
-        template = Ports.instance().resolveNixTemplateRepo().find_package_template_by_type(flake.name, flake.version, flake.python_package.get_package_type())
+        template = Ports.instance().resolveNixTemplateRepo().find_package_template_by_recipe(recipe)
         return { "contents": template.render(flake), "folder": template.folder, "path": template.path }

@@ -6,7 +6,10 @@ if base_folder not in sys.path:
     sys.path.append(base_folder)
 
 from domain.repo import Repo
+from domain.flake_recipe import FlakeRecipe
 from domain.nix_template import NixTemplate
+
+from typing import Dict
 
 class NixTemplateRepo(Repo):
     """
@@ -19,14 +22,8 @@ class NixTemplateRepo(Repo):
         """
         super().__init__(NixTemplate)
 
-    def find_flake_template_by_type(self, package_name: str, package_version: str, package_type: str) -> NixTemplate:
-        """Retrieves the flake template of given type"""
+    def find_flake_templates_by_recipe(self, recipe: FlakeRecipe) -> Dict[str, NixTemplate]:
+        """Retrieves the flake templates associated to given recipe"""
         raise NotImplementedError(
-            "find_flake_template_by_type() must be implemented by subclasses"
-        )
-
-    def find_package_template_by_type(self, package_name: str, package_version: str, package_type: str) -> NixTemplate:
-        """Retrieves the package template of given type"""
-        raise NotImplementedError(
-            "find_package_template_by_type() must be implemented by subclasses"
+            "find_flake_templates_by_recipe() must be implemented by subclasses"
         )
