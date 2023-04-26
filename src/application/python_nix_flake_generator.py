@@ -87,7 +87,7 @@ def resolve_port_implementations():
             mappings.update({ port: implementations[0]() })
     return mappings
 
-class PythonFlakeGenerator():
+class PythonNixFlakeGenerator():
 
     _singleton = None
 
@@ -101,7 +101,7 @@ class PythonFlakeGenerator():
 
     @classmethod
     def initialize(cls):
-        cls._singleton = PythonFlakeGenerator()
+        cls._singleton = PythonNixFlakeGenerator()
         mappings = {}
         for port in get_port_interfaces():
             implementations = get_implementations(port)
@@ -120,7 +120,7 @@ class PythonFlakeGenerator():
         return primaryPort().priority()
 
     def accept_commands(self):
-        for primaryPort in sorted(self.get_primary_ports(), key=PythonFlakeGenerator.delegate_priority):
+        for primaryPort in sorted(self.get_primary_ports(), key=PythonNixFlakeGenerator.delegate_priority):
             primaryPort().accept(self)
 
     def accept_create_flake(self, command: CreateFlake) -> FlakeCreated:
@@ -159,5 +159,5 @@ class PythonFlakeGenerator():
         FolderFlakeRepo.flakes_url(url)
 
 if __name__ == "__main__":
-    PythonFlakeGenerator.initialize()
-    PythonFlakeGenerator.instance().accept_commands()
+    PythonNixFlakeGenerator.initialize()
+    PythonNixFlakeGenerator.instance().accept_commands()
