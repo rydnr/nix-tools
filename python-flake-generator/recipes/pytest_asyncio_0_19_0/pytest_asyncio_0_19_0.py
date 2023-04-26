@@ -1,16 +1,7 @@
-import sys
-from pathlib import Path
-
-base_folder = str(Path(__file__).resolve().parent.parent.parent.parent)
-if base_folder not in sys.path:
-    sys.path.append(base_folder)
-
-from domain.base_flake_recipe import BaseFlakeRecipe
-from domain.specific_flake_recipe import SpecificFlakeRecipe
 from domain.flake import Flake
-from domain.ports import Ports
+from domain.recipe.base_flake_recipe import BaseFlakeRecipe
 
-class PytestAsyncio_0_19_0(BaseFlakeRecipe, SpecificFlakeRecipe):
+class PytestAsyncio_0_19_0(BaseFlakeRecipe):
 
     """
     Represents a nix flake recipe for pytest-asyncio-0.19.0

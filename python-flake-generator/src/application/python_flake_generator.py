@@ -116,7 +116,7 @@ class PythonFlakeGenerator():
     def instance(cls):
         return cls._singleton
 
-    def delegate_priority(primaryPort):
+    def delegate_priority(primaryPort: PrimaryPort) -> int:
         return primaryPort().priority()
 
     def accept_commands(self):

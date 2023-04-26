@@ -1,4 +1,5 @@
 import importlib
+import logging
 import os
 from pathlib import Path
 import pkgutil
@@ -8,15 +9,16 @@ base_folder = str(Path(__file__).resolve().parent.parent)
 if base_folder not in sys.path:
     sys.path.append(base_folder)
 
-import domain
-from domain.flake_recipe_repo import FlakeRecipeRepo
-from domain.flake_recipe import FlakeRecipe
-from domain.base_flake_recipe import BaseFlakeRecipe
-from domain.specific_flake_recipe import SpecificFlakeRecipe
 from domain.flake import Flake
-
+from domain.flake_recipe import FlakeRecipe
+from domain.flake_recipe_repo import FlakeRecipeRepo
+from domain.recipe.base_flake_recipe import BaseFlakeRecipe
 
 class DynamicallyDiscoverableFlakeRecipeRepo(FlakeRecipeRepo):
+
+    """
+    Repository than dynamically discovers flake recipes under a given folder.
+    """
 
     _recipes_folder = None
     _recipe_classes = {}
@@ -46,6 +48,7 @@ class DynamicallyDiscoverableFlakeRecipeRepo(FlakeRecipeRepo):
             for name, obj in module.__dict__.items():
                 if all(obj != recipeClass and isinstance(obj, type) and issubclass(obj, recipeClass) for recipeClass in [ FlakeRecipe, BaseFlakeRecipe ]):
                     recipe_classes.append(obj)
+                    obj.initialize()
         return recipe_classes
 
     @classmethod
@@ -61,6 +64,12 @@ class DynamicallyDiscoverableFlakeRecipeRepo(FlakeRecipeRepo):
         cls.discover_modules(module)
         cls._recipe_classes = cls.discover_recipes(module)
 
+    @classmethod
+    def delegate_similarity(cls, recipeClass, flake: Flake) -> float:
+        result = recipeClass.similarity(flake)
+        logging.getLogger(cls.__name__).debug(f'Similarity between {recipeClass} and flake {flake.name}-{flake.version}: {result}')
+        return result
+
     """
     A FlakeRecipeRepo that discovers recipes dynamically.
     """
@@ -69,21 +78,11 @@ class DynamicallyDiscoverableFlakeRecipeRepo(FlakeRecipeRepo):
         Retrieves the recipe matching given flake, if any.
         """
         result = None
-        specific_matches = []
-        generic_matches = []
-
-        for recipe_class in self.__class__._recipe_classes:
-            if recipe_class.matches(flake):
-                if issubclass(recipe_class, SpecificFlakeRecipe):
-                    specific_matches.append(recipe_class)
-                else:
-                    generic_matches.append(recipe_class)
-
-        if specific_matches:
-            result = specific_matches[0](flake)
-        elif generic_matches:
-            result = generic_matches[0](flake)
-        else:
-            result = None
+        similarities = {}
+        for recipeClass in self.__class__._recipe_classes:
+            similarities[recipeClass] = self.__class__.delegate_similarity(recipeClass, flake)
+        matches = sorted([aux for aux in similarities.keys() if similarities[aux] != 0.0], key=lambda recipeClass: similarities[recipeClass], reverse=True)
+        if matches and len(matches) > 0:
+            result = matches[0](flake)
 
         return result

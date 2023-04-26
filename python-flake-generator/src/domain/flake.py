@@ -116,9 +116,9 @@ class Flake(Entity):
                 logger.warn(f'No recipes available for {command.packageName}-{command.packageVersion}')
 
             if result:
-                logger.info(f'Flake {command.packageName}-{command.packageVersion}) created')
+                logger.info(f'Flake {command.packageName}-{command.packageVersion} created')
             else:
-                logger.info(f'Flake {command.packageName}-{command.packageVersion}) could not be created')
+                logger.info(f'Flake {command.packageName}-{command.packageVersion} could not be created')
 
         return result
 

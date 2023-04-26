@@ -16,14 +16,20 @@ class BaseFlakeRecipe(FlakeRecipe):
     """
     Represents a base nix flake recipe.
     """
+
+    @classmethod
+    def should_initialize(cls) -> bool:
+        return cls != BaseFlakeRecipe and super().should_initialize()
+
     def __init__(self, flake: Flake):
         """Creates a new base nix flake recipe instance"""
         super().__init__(id)
         self._flake = flake
 
     @classmethod
-    def matches(cls, flake):
-        return True
+    def supports(cls, flake: Flake) -> bool:
+        "Checks if the recipe class supports given flake"
+        return False
 
     def process(self) -> FlakeCreated:
         result = None
