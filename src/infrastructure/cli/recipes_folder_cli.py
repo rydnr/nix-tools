@@ -1,14 +1,8 @@
-import os
-from pathlib import Path
-import sys
-
-base_folder = str(Path(__file__).resolve().parent.parent)
-if base_folder not in sys.path:
-    sys.path.append(base_folder)
-
 from domain.primary_port import PrimaryPort
 
 import argparse
+import os
+from pathlib import Path
 
 class RecipesFolderCli(PrimaryPort):
 

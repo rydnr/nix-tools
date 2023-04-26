@@ -1,22 +1,16 @@
-import logging
-import os
-from pathlib import Path
-from typing import Dict, List
-import sys
-
-base_folder = str(Path(__file__).resolve().parent.parent)
-if base_folder not in sys.path:
-    sys.path.append(base_folder)
-
 from domain.flake_recipe import FlakeRecipe
 from domain.nix_template_repo import NixTemplateRepo
 from domain.nix_template import NixTemplate
+
+import os
+from pathlib import Path
+import sys
+from typing import Dict, List
 
 class FileNixTemplateRepo(NixTemplateRepo):
     """
     A NixTemplateRepo using files.
     """
-
     _recipes_folder = None
 
     @classmethod

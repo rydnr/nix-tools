@@ -1,17 +1,10 @@
-import sys
-from pathlib import Path
-
-base_folder = str(Path(__file__).resolve().parent.parent)
-if base_folder not in sys.path:
-    sys.path.append(base_folder)
-
-from domain.nix_python_package_repo import NixPythonPackageRepo
 from domain.nix_python_package import NixPythonPackage
+from domain.nix_python_package_repo import NixPythonPackageRepo
 
+import ast
+import json
 import logging
 import subprocess
-import json
-import ast
 from typing import List
 
 def get_python3_packages() -> List[NixPythonPackage]:

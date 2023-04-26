@@ -1,10 +1,3 @@
-import sys
-from pathlib import Path
-
-base_folder = str(Path(__file__).resolve().parent.parent)
-if base_folder not in sys.path:
-    sys.path.append(base_folder)
-
 from domain.entity import Entity, primary_key_attribute, attribute
 from domain.create_flake_command import CreateFlake
 from domain.flake_created_event import FlakeCreated
@@ -109,17 +102,32 @@ class Flake(Entity):
 
             # 3. create flake
             flake = Flake(command.packageName, command.packageVersion, pythonPackage, nativeBuildInputs, propagatedBuildInputs, optionalBuildInputs, dependenciesInNixpkgs)
-            flakeRecipe = Ports.instance().resolveFlakeRecipeRepo().find_by_flake(flake)
+            flakeRecipe = cls.find_recipe_by_flake(flake)
             if flakeRecipe:
                 result = flakeRecipe.process()
             else:
-                logger.warn(f'No recipes available for {command.packageName}-{command.packageVersion}')
+                logger.warn(f'No recipe available for {command.packageName}-{command.packageVersion}')
 
             if result:
                 logger.info(f'Flake {command.packageName}-{command.packageVersion} created')
             else:
                 logger.info(f'Flake {command.packageName}-{command.packageVersion} could not be created')
 
+        return result
+
+    @classmethod
+    def find_recipe_by_flake(cls, flake):
+        """
+        Retrieves the best recipe for given Flake
+        """
+        result = None
+        flakeRecipeClasses = Ports.instance().resolveFlakeRecipeRepo().find_recipe_classes_by_flake(flake)
+        similarities = {}
+        for recipeClass in flakeRecipeClasses:
+            similarities[recipeClass] = self.__class__.delegate_similarity(recipeClass, flake)
+        matches = sorted([aux for aux in similarities.keys() if similarities[aux] != 0.0], key=lambda recipeClass: similarities[recipeClass], reverse=True)
+        if matches and len(matches) > 0:
+            result = matches[0](flake)
         return result
 
     def dependency_in_nixpkgs(self, dep: PythonPackage) -> bool:

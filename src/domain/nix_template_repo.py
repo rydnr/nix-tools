@@ -1,13 +1,6 @@
-import sys
-from pathlib import Path
-
-base_folder = str(Path(__file__).resolve().parent.parent)
-if base_folder not in sys.path:
-    sys.path.append(base_folder)
-
-from domain.repo import Repo
-from domain.flake_recipe import FlakeRecipe
 from domain.nix_template import NixTemplate
+from domain.flake_recipe import FlakeRecipe
+from domain.repo import Repo
 
 from typing import Dict
 

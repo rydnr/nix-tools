@@ -1,8 +1,6 @@
 # log_config.py
 import logging
 import sys
-import pkgutil
-import warnings
 
 def configure_logging(verbose: bool, trace: bool, quiet: bool):
     level = logging.WARNING

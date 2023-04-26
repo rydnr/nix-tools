@@ -1,19 +1,12 @@
-import sys
-from pathlib import Path
-
-base_folder = str(Path(__file__).resolve().parent.parent)
-if base_folder not in sys.path:
-    sys.path.append(base_folder)
-
 from domain.entity import Entity, primary_key_attribute, attribute
 from domain.python_package import PythonPackage
 from domain.license import License
 from domain.ports import Ports
 
-from typing import Dict, List
 import logging
-import subprocess
 import re
+import subprocess
+from typing import Dict, List
 
 class NixTemplate(Entity):
 

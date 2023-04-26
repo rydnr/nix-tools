@@ -1,15 +1,7 @@
-import sys
-from pathlib import Path
-
-base_folder = str(Path(__file__).resolve().parent.parent)
-if base_folder not in sys.path:
-    sys.path.append(base_folder)
-
 from domain.port import Port
 
-from typing import Dict
-
 import importlib
+from typing import Dict
 
 class Ports():
 
@@ -29,25 +21,25 @@ class Ports():
     def resolve(self, port: Port) -> Port:
         return self._mappings.get(port, None)
 
-    def resolveByModuleName(self, module_name: str, port_name: str):
+    def resolve_by_module_name(self, module_name: str, port_name: str):
         module = importlib.import_module(module_name)
         port = getattr(module, port_name)
         return self.resolve(port)
 
     def resolvePythonPackageRepo(self):
-        return self.resolveByModuleName("domain.python_package_repo", "PythonPackageRepo")
+        return self.resolve_by_module_name("domain.python_package_repo", "PythonPackageRepo")
 
     def resolveFlakeRepo(self):
-        return self.resolveByModuleName("domain.flake_repo", "FlakeRepo")
+        return self.resolve_by_module_name("domain.flake_repo", "FlakeRepo")
 
     def resolveFlakeRecipeRepo(self):
-        return self.resolveByModuleName("domain.flake_recipe_repo", "FlakeRecipeRepo")
+        return self.resolve_by_module_name("domain.flake_recipe_repo", "FlakeRecipeRepo")
 
     def resolveNixTemplateRepo(self):
-        return self.resolveByModuleName("domain.nix_template_repo", "NixTemplateRepo")
+        return self.resolve_by_module_name("domain.nix_template_repo", "NixTemplateRepo")
 
     def resolveNixPythonPackageRepo(self):
-        return self.resolveByModuleName("domain.nix_python_package_repo", "NixPythonPackageRepo")
+        return self.resolve_by_module_name("domain.nix_python_package_repo", "NixPythonPackageRepo")
 
     def resolveGitRepoRepo(self):
-        return self.resolveByModuleName("domain.git_repo_repo", "GitRepoRepo")
+        return self.resolve_by_module_name("domain.git_repo_repo", "GitRepoRepo")

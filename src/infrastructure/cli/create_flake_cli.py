@@ -1,12 +1,5 @@
-import sys
-from pathlib import Path
-
-base_folder = str(Path(__file__).resolve().parent.parent)
-if base_folder not in sys.path:
-    sys.path.append(base_folder)
-
-from domain.primary_port import PrimaryPort
 from domain.create_flake_command import CreateFlake
+from domain.primary_port import PrimaryPort
 
 import argparse
 import logging

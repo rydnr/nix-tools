@@ -1,13 +1,3 @@
-import os
-import inspect
-from pathlib import Path
-import sys
-import toml
-
-base_folder = str(Path(__file__).resolve().parent.parent)
-if base_folder not in sys.path:
-    sys.path.append(base_folder)
-
 from domain.entity import Entity, primary_key_attribute
 from domain.flake import Flake
 from domain.recipe.empty_flake_section_in_recipe_toml import EmptyFlakeSectionInRecipeToml
@@ -15,6 +5,11 @@ from domain.recipe.missing_flake_section_in_recipe_toml import MissingFlakeSecti
 from domain.recipe.missing_flake_version_spec_in_recipe_toml import MissingFlakeVersionSpecInRecipeToml
 from domain.recipe.missing_recipe_toml import MissingRecipeToml
 from domain.recipe.more_than_one_flake_in_recipe_toml import MoreThanOneFlakeInRecipeToml
+
+import os
+import inspect
+from pathlib import Path
+import toml
 
 class FlakeRecipe(Entity):
 

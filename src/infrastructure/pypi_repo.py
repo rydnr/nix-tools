@@ -1,19 +1,11 @@
-import sys
-from pathlib import Path
-
-base_folder = str(Path(__file__).resolve().parent.parent)
-if base_folder not in sys.path:
-    sys.path.append(base_folder)
-
-import domain
-from domain.python_package_repo import PythonPackageRepo
 from domain.python_package import PythonPackage
+from domain.python_package_repo import PythonPackageRepo
 
-from typing import Dict
-import re
-from packaging.specifiers import SpecifierSet
 import logging
+from packaging.specifiers import SpecifierSet
+import re
 import requests
+from typing import Dict
 
 class PypiRepo(PythonPackageRepo):
     """
@@ -28,14 +20,15 @@ class PypiRepo(PythonPackageRepo):
         """
         Retrieves the PythonPackage matching given name and version.
         """
-        logging.getLogger(__name__).debug(f"looking for {package_name} {package_version} in pypi.org")
+        logger = logging.getLogger(__name__)
+        logger.debug(f"looking for {package_name} {package_version} in pypi.org")
         # If the package_version is an exact version, add '==' before it
         if re.match(r"^\d+(\.\d+)*(-?(rc|b)\d+)?$", package_version):
             package_version = f"=={package_version}"
 
         specifier_set = SpecifierSet(package_version)
 
-        logging.getLogger(__name__).debug(f"Retrieving {package_name}{package_version} info from https://pypi.org/pypi/{package_name}/json")
+        logger.debug(f"Retrieving {package_name}{package_version} info from https://pypi.org/pypi/{package_name}/json")
         package_data = requests.get(f"https://pypi.org/pypi/{package_name}/json").json()
         package_info = package_data.get("info", {})
         versions = package_data["releases"].keys()

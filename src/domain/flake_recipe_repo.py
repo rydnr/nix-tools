@@ -1,13 +1,8 @@
-from pathlib import Path
-import sys
-
-base_folder = str(Path(__file__).resolve().parent.parent)
-if base_folder not in sys.path:
-    sys.path.append(base_folder)
-
 from domain.flake import Flake
 from domain.flake_recipe import FlakeRecipe
 from domain.repo import Repo
+
+from typing import List
 
 class FlakeRecipeRepo(Repo):
     """
@@ -20,8 +15,10 @@ class FlakeRecipeRepo(Repo):
         """
         super().__init__(FlakeRecipe)
 
-    def find_by_flake(self, flake: Flake) -> FlakeRecipe:
-        """Retrieves a recipe matching given flake"""
+    def find_recipe_classes_by_flake(self, flake: Flake) -> List[FlakeRecipe]:
+        """
+        Retrieves the recipe classes matching given flake, if any.
+        """
         raise NotImplementedError(
             "find_by_flake() must be implemented by subclasses"
         )
