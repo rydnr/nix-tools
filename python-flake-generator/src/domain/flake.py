@@ -110,7 +110,6 @@ class Flake(Entity):
             # 3. create flake
             flake = Flake(command.packageName, command.packageVersion, pythonPackage, nativeBuildInputs, propagatedBuildInputs, optionalBuildInputs, dependenciesInNixpkgs)
             flakeRecipe = Ports.instance().resolveFlakeRecipeRepo().find_by_flake(flake)
-            logger.info(f'flakeRecipe -> {flakeRecipe}')
             if flakeRecipe:
                 result = flakeRecipe.process()
             else:

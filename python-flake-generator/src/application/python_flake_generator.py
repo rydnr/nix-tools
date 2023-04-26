@@ -151,7 +151,6 @@ class PythonFlakeGenerator():
         FolderFlakeRepo.repo_folder(folder)
 
     def accept_recipes_folder(self, folder: str):
-        print(f'Setting recipes_folder to {folder}')
         FileNixTemplateRepo.recipes_folder(folder)
         DynamicallyDiscoverableFlakeRecipeRepo.recipes_folder(folder)
         DynamicallyDiscoverableFlakeRecipeRepo.initialize()

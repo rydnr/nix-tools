@@ -46,6 +46,7 @@ class FolderFlakeRepo(FlakeRepo):
 #    def create(self, flake: Flake, flake_nix: str, flake_nix_path: str, package_nix: str, package_nix_path: str) -> FlakeCreated:
         """Creates the flake"""
         if self.find_by_name_and_version(flake.name, flake.version):
+            logging.getLogger(__name__).warning(f'Not creating flake {flake.name}-{flake.version} since it already exists')
             return None
 
         for item in content:
@@ -63,9 +64,3 @@ class FolderFlakeRepo(FlakeRepo):
     def url_for_flake(self, name: str, version: str) -> str:
         """Retrieves the url of given flake"""
         return f'{self.__class__._flakes_url}{name}-{version}'
-
-import traceback
-
-def print_stack_trace():
-    stack_trace = traceback.format_stack()
-    print("".join(stack_trace))

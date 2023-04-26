@@ -1,13 +1,13 @@
-import sys
 from pathlib import Path
+import sys
 
 base_folder = str(Path(__file__).resolve().parent.parent)
 if base_folder not in sys.path:
     sys.path.append(base_folder)
 
-from domain.repo import Repo
-from domain.flake_recipe import FlakeRecipe
 from domain.flake import Flake
+from domain.flake_recipe import FlakeRecipe
+from domain.repo import Repo
 
 class FlakeRecipeRepo(Repo):
     """

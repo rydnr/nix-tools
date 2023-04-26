@@ -1,15 +1,14 @@
-import sys
 from pathlib import Path
+import sys
+from typing import Dict, List
 
 base_folder = str(Path(__file__).resolve().parent.parent)
 if base_folder not in sys.path:
     sys.path.append(base_folder)
 
-from domain.repo import Repo
 from domain.flake import Flake
 from domain.flake_created_event import FlakeCreated
-
-from typing import Dict, List
+from domain.repo import Repo
 
 class FlakeRepo(Repo):
     """

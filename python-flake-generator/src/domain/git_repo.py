@@ -1,15 +1,14 @@
-import sys
 from pathlib import Path
+import re
+import subprocess
+import sys
+from typing import Dict
 
 base_folder = str(Path(__file__).resolve().parent.parent)
 if base_folder not in sys.path:
     sys.path.append(base_folder)
 
 from domain.entity import Entity, attribute
-
-from typing import Dict
-import subprocess
-import re
 
 class GitRepo(Entity):
     """
