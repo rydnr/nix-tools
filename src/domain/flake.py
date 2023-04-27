@@ -17,7 +17,7 @@ class Flake(Entity):
     """
     Represents a nix flake.
     """
-    def __init__(self, name: str, version: str, pythonPackage: PythonPackage, nativeBuildInputs: List, propagatedBuildInputs: List, optionalBuildInputs: List, dependenciesInNixpkgs: List):
+    def __init__(self, name: str, version: str, pythonPackage: PythonPackage, nativeBuildInputs: List, propagatedBuildInputs: List, checkInputs: List, optionalBuildInputs: List, dependenciesInNixpkgs: List):
         """Creates a new flake instance"""
         super().__init__(id)
         self._name = name
@@ -25,6 +25,7 @@ class Flake(Entity):
         self._python_package = pythonPackage
         self._native_build_inputs = nativeBuildInputs
         self._propagated_build_inputs = propagatedBuildInputs
+        self._check_inputs = checkInputs
         self._optional_build_inputs = optionalBuildInputs
         self._dependencies_in_nixpkgs = dependenciesInNixpkgs
 
@@ -55,6 +56,11 @@ class Flake(Entity):
 
     @property
     @attribute
+    def check_inputs(self) -> List:
+        return self._check_inputs
+
+    @property
+    @attribute
     def optional_build_inputs(self) -> List:
         return self._optional_build_inputs
 
@@ -80,9 +86,10 @@ class Flake(Entity):
             nixPythonPackageRepo = Ports.instance().resolve(NixPythonPackageRepo)
             nativeBuildInputs = pythonPackage.get_native_build_inputs()
             propagatedBuildInputs = pythonPackage.get_propagated_build_inputs()
+            checkInputs = pythonPackage.get_check_inputs()
             optionalBuildInputs = pythonPackage.get_optional_build_inputs()
             dependenciesInNixpkgs = []
-            for dep in list(set(nativeBuildInputs) | set(propagatedBuildInputs) | set(optionalBuildInputs)):
+            for dep in list(set(nativeBuildInputs) | set(propagatedBuildInputs) | set(checkInputs) | set(optionalBuildInputs)):
                 depName = dep.name
                 depVersion = dep.version
                 nixPythonPackages = nixPythonPackageRepo.find_by_name(dep.name)
@@ -101,12 +108,12 @@ class Flake(Entity):
                     logger.info(f'Flake {dep.name}-{dep.version} created (triggered by "create flake {command.packageName}-{command.packageVersion}")')
 
             # 3. create flake
-            flake = Flake(command.packageName, command.packageVersion, pythonPackage, nativeBuildInputs, propagatedBuildInputs, optionalBuildInputs, dependenciesInNixpkgs)
+            flake = Flake(command.packageName, command.packageVersion, pythonPackage, nativeBuildInputs, propagatedBuildInputs, checkInputs, optionalBuildInputs, dependenciesInNixpkgs)
             flakeRecipe = cls.find_recipe_by_flake(flake)
             if flakeRecipe:
                 result = flakeRecipe.process()
             else:
-                logger.warn(f'No recipe available for {command.packageName}-{command.packageVersion}')
+                logger.critical(f'No recipe available for {command.packageName}-{command.packageVersion}')
 
             if result:
                 logger.info(f'Flake {command.packageName}-{command.packageVersion} created')
@@ -123,7 +130,7 @@ class Flake(Entity):
         result = None
         flakeRecipeClasses = Ports.instance().resolveFlakeRecipeRepo().find_recipe_classes_by_flake(flake)
         similarities = {}
-        for recipeClass in [ recipeClass for recipeClass in flakeRecipeClasses if recipeClass.supports(flake) ]:
+        for recipeClass in flakeRecipeClasses:
             similarities[recipeClass] = recipeClass.similarity(flake)
         matches = sorted([aux for aux in similarities.keys() if similarities[aux] != 0.0], key=lambda recipeClass: similarities[recipeClass], reverse=True)
         if matches and len(matches) > 0:

@@ -4,6 +4,9 @@ from domain.flake_recipe import FlakeRecipe
 from domain.nix_template import NixTemplate
 from domain.ports import Ports
 
+import inspect
+import logging
+from pathlib import Path
 class BaseFlakeRecipe(FlakeRecipe):
 
     """
@@ -22,7 +25,7 @@ class BaseFlakeRecipe(FlakeRecipe):
     @classmethod
     def supports(cls, flake: Flake) -> bool:
         "Checks if the recipe class supports given flake"
-        return True
+        return False
 
     def process(self) -> FlakeCreated:
         result = None
@@ -32,4 +35,6 @@ class BaseFlakeRecipe(FlakeRecipe):
             for template in [ NixTemplate(t["folder"], t["path"], t["contents"]) for t in templates ]:
                 renderedTemplates.append({ "folder": template.folder, "path": template.path, "contents": template.render(self.flake) })
             result = Ports.instance().resolveFlakeRepo().create(self.flake, renderedTemplates)
+        else:
+            logging.getLogger(__name__).critical(f'No templates provided by recipe {Path(inspect.getsourcefile(self.__class__)).parent}')
         return result

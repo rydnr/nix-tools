@@ -24,16 +24,6 @@ class DynamicallyDiscoverableFlakeRecipeRepo(FlakeRecipeRepo):
         cls._recipes_folder = folder
 
     @classmethod
-    def discover_modules(cls, package):
-        """Discover and import modules under the 'recipes' package and its subpackages."""
-        for module_info in pkgutil.walk_packages(package.__path__, prefix=package.__name__ + "."):
-            if module_info.name in sys.path:
-                module = sys.modules[module_info.name]
-            else:
-                module = importlib.import_module(module_info.name)
-
-
-    @classmethod
     def discover_recipes(cls, package):
         recipe_classes = []
         for module_info in pkgutil.walk_packages(package.__path__, prefix=package.__name__ + "."):
@@ -57,7 +47,6 @@ class DynamicallyDiscoverableFlakeRecipeRepo(FlakeRecipeRepo):
             module = sys.modules[moduleName]
         else:
             module = importlib.import_module(moduleName)
-        cls.discover_modules(module)
         cls._recipe_classes = cls.discover_recipes(module)
 
     def find_recipe_classes_by_flake(self, flake: Flake) -> List[FlakeRecipe]:
@@ -68,5 +57,8 @@ class DynamicallyDiscoverableFlakeRecipeRepo(FlakeRecipeRepo):
         for recipeClass in self.__class__._recipe_classes:
             similarities[recipeClass] = recipeClass.similarity(flake)
         result = sorted([aux for aux in similarities.keys() if similarities[aux] != 0.0], key=lambda recipeClass: similarities[recipeClass], reverse=True)
+
+        if len(result) > 0:
+            logging.getLogger(__name__).debug(f'Recipes for {flake.name}-{flake.version}: {result}')
 
         return result

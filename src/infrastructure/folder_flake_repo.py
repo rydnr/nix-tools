@@ -30,9 +30,9 @@ class FolderFlakeRepo(FlakeRepo):
         """
         result = None
 
-        if os.path.exists(os.path.join(self.__class__._repo_folder, os.path.join(package_name, f'{package_name}-{package_version}.nix'))):
+        if os.path.exists(os.path.join(self.__class__._repo_folder, os.path.join(f'{package_name}-{package_version}.nix', f'{package_name}-{package_version}.nix'))):
             # TODO: parse the flake and retrieve the dependencies
-            result = Flake(package_name, package_version, None, [], [], [], [])
+            result = Flake(package_name, package_version, None, [], [], [], [], [])
 
         return result
 
@@ -45,13 +45,14 @@ class FolderFlakeRepo(FlakeRepo):
 
         for item in content:
             if os.path.exists(os.path.join(self.__class__._repo_folder, item["path"])):
-                return None
+                logging.getLogger(__name__).debug(f'Not overwriting {item["path"]} in {self.__class__._repo_folder}')
+            else:
+                if not os.path.exists(os.path.join(self.__class__._repo_folder, os.path.dirname(item["path"]))):
+                    os.makedirs(os.path.join(self.__class__._repo_folder, os.path.dirname(item["path"])))
 
-            if not os.path.exists(os.path.join(self.__class__._repo_folder, os.path.dirname(item["path"]))):
-                os.makedirs(os.path.join(self.__class__._repo_folder, os.path.dirname(item["path"])))
-
-            with open(os.path.join(self.__class__._repo_folder, item["path"]), "w") as file:
-                file.write(item["contents"])
+                with open(os.path.join(self.__class__._repo_folder, item["path"]), "w") as file:
+                    logging.getLogger(__name__).debug(f'Writing {item["path"]}')
+                    file.write(item["contents"])
 
         return FlakeCreated(flake.name, flake.version)
 

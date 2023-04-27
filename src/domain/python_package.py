@@ -2,9 +2,16 @@ from domain.entity import Entity, attribute, primary_key_attribute
 from domain.ports import Ports
 from domain.git_repo import GitRepo
 from domain.git_repo_repo import GitRepoRepo
+from domain.nix_hash_sha256_failed import NixHashSha256Failed
+from domain.nix_python_package import NixPythonPackage
+from domain.pip_download_failed import PipDownloadFailed
 
+import logging
+import os
 import re
+import subprocess
 import toml
+import tempfile
 from typing import Dict, List
 
 class PythonPackage(Entity):
@@ -45,11 +52,30 @@ class PythonPackage(Entity):
     def git_repo(self) -> Dict:
         return self._git_repo
 
+    def fix_url(self, url: str) -> str:
+        result = url
+        if result.endswith("/issues"):
+            result = result.removesuffix("/issues")
+        return result
+
+    def extract_urls(self) -> List[str]:
+        result = []
+        project_urls = self._info.get("project_urls", {})
+        for url in [ entry["collection"].get(entry["key"], None) for entry in [ { "collection": self._info, "key": "package_url" },{ "collection": self._info, "key": "home_page" },{ "collection": self._info, "key": "project_url" },{ "collection": self._info, "key": "release_url" },{ "collection": project_urls, "key": "Changelog" },{ "collection": project_urls, "key": "Documentation" },{ "collection": project_urls, "key": "Issue Tracker" } ] ]:
+            if url:
+                result.append(self.fix_url(url))
+        return result
+
     def analyze_repo(self) -> GitRepo:
         result = None
-        repo_url = self._info.get("home_page", None)
-        if repo_url and GitRepo.url_is_a_git_repo(repo_url):
-            result = Ports.instance().resolve(GitRepoRepo).find_by_url_and_rev(repo_url, self.version)
+        for url in self.extract_urls():
+            if GitRepo.url_is_a_git_repo(url):
+                result = Ports.instance().resolve(GitRepoRepo).find_by_url_and_rev(url, self.version)
+                break
+
+        if not result:
+            logging.getLogger(__name__).warn(f'No repo_url found for {self.name}-{self.version}')
+
         return result
 
     def _parse_toml(self, contents: str) -> Dict:
@@ -166,12 +192,28 @@ class PythonPackage(Entity):
     def get_optional_build_inputs_poetry(self) -> List:
         return self.get_poetry_deps("extras")
 
-    def satisfies_spec(self, version: str):
-        # TODO: check if nixpkgs packages satisfies the version spec
+    def get_check_inputs(self) -> List:
+        result = []
+        type = self.get_package_type()
+        if (type == "poetry"):
+            result = self.get_check_inputs_poetry()
+        #TODO: Support the other build types
+        return result
+
+    def get_check_inputs_poetry(self) -> List:
+        return self.get_poetry_deps("test")
+
+    def satisfies_spec(self, nixPythonPackage: NixPythonPackage) -> bool:
+        # TODO: check if the nixpkgs package satisfies the version spec
         return True
 
     def in_nixpkgs(self):
-        return Ports.instance().resolveNixPythonPackageRepo().find_by_name_and_version(self.name, self.version) != None
+        result = False
+        for match in Ports.instance().resolveNixPythonPackageRepo().find_by_name(self.name):
+            if self.satisfies_spec(match):
+                result = True
+                break
+        return result
 
     def nixpkgs_package_name(self):
         nixPythonPackage = Ports.instance().resolveNixPythonPackageRepo().find_by_name_and_version(self.name, self.version)
@@ -182,3 +224,24 @@ class PythonPackage(Entity):
 
     def flake_url(self):
         return Ports.instance().resolveFlakeRepo().url_for_flake(self.name, self.version)
+
+    def pip_sha256(self) -> str:
+        result = None
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Use pip to download the package
+            try:
+                subprocess.check_output(['pip', 'download', '--no-deps', '--no-binary', ':all:', f'{self.name}=={self.version}'], stderr=subprocess.STDOUT, cwd=temp_dir)
+            except subprocess.CalledProcessError:
+                raise PipDownloadFailed(self)
+            # Use nix-hash to calculate the sha256
+            try:
+                output = subprocess.run(['nix-hash', '--type', 'sha256', '--base32', f'{self.name}-{self.version}.tar.gz'], check=True, capture_output=True, text=True, cwd=temp_dir)
+                result = output.stdout.splitlines()[-1]
+            except subprocess.CalledProcessError:
+                raise NixHashSha256Failed(self)
+
+            os.remove(os.path.join(temp_dir, f'{self.name}-{self.version}.tar.gz'))
+
+        logging.getLogger(__name__).debug(f'pypi sha256: {result}')
+
+        return result

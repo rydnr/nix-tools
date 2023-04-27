@@ -1,5 +1,6 @@
 from domain.entity import Entity, attribute
 
+import logging
 import re
 import subprocess
 from typing import Dict
@@ -66,3 +67,11 @@ class GitRepo(Entity):
 
         except:
             logging.getLogger(cls.__name__).error(f"Invalid repo: {url}")
+
+    def sha256(self):
+        # Use nix-prefetch-git to compute the hash
+        result = subprocess.run(['nix-prefetch-git', '--deepClone', f'{self.url}/tree/{self.rev}'], check=True, capture_output=True, text=True)
+        output = result.stdout
+        logging.getLogger(__name__).debug(f'nix-prefetch-git --deepClone {self.url}/tree/{self.rev} -> {output}')
+
+        return output.splitlines()[-1]

@@ -1,7 +1,6 @@
 from domain.entity import Entity, primary_key_attribute, attribute
 from domain.python_package import PythonPackage
 from domain.license import License
-from domain.ports import Ports
 
 import logging
 import re
@@ -78,14 +77,17 @@ class NixTemplate(Entity):
             repo_owner, repo_name = flake.python_package.git_repo.repo_owner_and_repo_name()
             repo_url=flake.python_package.git_repo.url
             repo_rev=flake.python_package.git_repo.rev
-            repo_sha256=Ports.instance().resolveGitRepoRepo().repo_sha256(flake.python_package.git_repo)
+            repo_sha256=flake.python_package.git_repo.sha256()
+        pypi_sha256 = flake.python_package.pip_sha256()
         native_build_inputs = flake.native_build_inputs
         propagated_build_inputs = flake.propagated_build_inputs
         build_inputs = flake.propagated_build_inputs # TODO: find out whether build inputs can be inferred from the Python package
+        check_inputs = flake.check_inputs
 
         native_build_inputs_subtemplates = self.extract_dep_templates(flake, native_build_inputs)
         propagated_build_inputs_subtemplates = self.extract_dep_templates(flake, propagated_build_inputs)
         build_inputs_subtemplates = self.extract_dep_templates(flake, build_inputs)
+        check_inputs_subtemplates = self.extract_dep_templates(flake, check_inputs)
 
         native_build_inputs_flakes_declaration = native_build_inputs_subtemplates.get("flakes_declaration", "")
         native_build_inputs_with_blanks = native_build_inputs_subtemplates.get("with_blanks", "")
@@ -108,7 +110,15 @@ class NixTemplate(Entity):
         build_inputs_not_flakes_with_newlines = build_inputs_subtemplates.get("not_flakes_with_newlines", "")
         build_inputs_declaration = build_inputs_subtemplates.get("declaration", "")
         build_inputs_overrides = build_inputs_subtemplates.get("overrides", "")
+        check_inputs_flakes_declaration = check_inputs_subtemplates.get("flakes_declaration", "")
+        check_inputs_with_blanks = check_inputs_subtemplates.get("with_blanks", "")
+        check_inputs_with_newlines = check_inputs_subtemplates.get("with_newlines", "")
+        check_inputs_flakes_with_newlines = check_inputs_subtemplates.get("flakes_with_newlines", "")
+        check_inputs_not_flakes_with_newlines = check_inputs_subtemplates.get("not_flakes_with_newlines", "")
+        check_inputs_declaration = check_inputs_subtemplates.get("declaration", "")
+        check_inputs_overrides = check_inputs_subtemplates.get("overrides", "")
 
+        logging.getLogger(__name__).debug(f'Generating the content of {self.path}')
         return self._contents.format(
             package_name=flake.name,
             package_version=flake.version,
@@ -121,6 +131,7 @@ class NixTemplate(Entity):
             repo_owner=repo_owner,
             repo_name=repo_name,
             repo_sha256=repo_sha256,
+            pypi_sha256=pypi_sha256,
             native_build_inputs_declaration=native_build_inputs_declaration,
             native_build_inputs_flakes_declaration=native_build_inputs_flakes_declaration,
             native_build_inputs_with_blanks=native_build_inputs_with_blanks,
@@ -139,8 +150,16 @@ class NixTemplate(Entity):
             build_inputs_with_newlines=build_inputs_with_newlines,
             build_inputs_flakes_with_newlines = build_inputs_flakes_with_newlines,
             build_inputs_not_flakes_with_newlines = build_inputs_not_flakes_with_newlines,
+            check_inputs_declaration=check_inputs_declaration,
+            check_inputs_flakes_declaration=check_inputs_flakes_declaration,
+            check_inputs_with_blanks=check_inputs_with_blanks,
+            check_inputs_with_newlines=check_inputs_with_newlines,
+            check_inputs_flakes_with_newlines = check_inputs_flakes_with_newlines,
+            check_inputs_not_flakes_with_newlines = check_inputs_not_flakes_with_newlines,
             not_flake_dependencies_with_newlines=f'{native_build_inputs_not_flakes_with_newlines}{propagated_build_inputs_not_flakes_with_newlines}{build_inputs_not_flakes_with_newlines}',
             flake_dependencies_with_newlines=f'{native_build_inputs_flakes_with_newlines}{propagated_build_inputs_flakes_with_newlines}{build_inputs_flakes_with_newlines}',
             flake_dependencies_declaration=f'{native_build_inputs_flakes_declaration}{propagated_build_inputs_flakes_declaration}{build_inputs_flakes_declaration}',
             dependencies_declaration=f'{native_build_inputs_declaration}{propagated_build_inputs_declaration}{build_inputs_declaration}',
-            dependencies_overrides=f'{native_build_inputs_overrides}{propagated_build_inputs_overrides}{build_inputs_overrides}')
+            dependencies_overrides=f'{native_build_inputs_overrides}{propagated_build_inputs_overrides}{build_inputs_overrides}',
+            dependencies_with_newlines=f'{native_build_inputs_with_newlines}{propagated_build_inputs_with_newlines}{build_inputs_with_newlines}',
+          )
