@@ -18,19 +18,20 @@
         pythonPackages = python.pkgs;
       in rec {
         packages = {
-          python_flake_generator-0_0_1 =
-            (import ./python_flake_generator-0.0.1.nix) {
+          python_nix_flake_generator-0_0_1 =
+            (import ./python_nix_flake_generator-0.0.1.nix) {
               inherit (pythonPackages) buildPythonApplication;
               inherit (pkgs) lib;
               mkPoetryApplication = pkgs.poetry2nix.mkPoetryApplication;
             };
-          python_flake_generator = packages.python_flake_generator-0_0_1;
-          default = packages.python_flake_generator;
+          python_nix_flake_generator =
+            packages.python_nix_flake_generator-0_0_1;
+          default = packages.python_nix_flake_generator;
           meta = with lib; {
             description =
-              "A Python CLI application to generate flakes for Python packages";
+              "A Python CLI application to generate Nix flakes for Python packages";
             license = licenses.gpl3;
-            homepage = "https://github.com/rydnr/nix-tools";
+            homepage = "https://github.com/rydnr/python-nix-flake-generator";
             maintainers = with maintainers; [ ];
           };
         };

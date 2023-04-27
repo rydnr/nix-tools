@@ -1,10 +1,10 @@
 [tool.poetry]
-name = "python-flake-generator"
+name = "python-nix-flake-generator"
 version = "0.1.0"
 description = ""
 authors = ["rydnr <github@acm-sl.org>"]
 readme = "README.md"
-packages = [{include = "python_flake_generator"}]
+packages = [{include = "src/domain"}, {include = "src/infrastructure"}, {include = "src/application"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
