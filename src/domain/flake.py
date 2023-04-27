@@ -123,12 +123,20 @@ class Flake(Entity):
         result = None
         flakeRecipeClasses = Ports.instance().resolveFlakeRecipeRepo().find_recipe_classes_by_flake(flake)
         similarities = {}
-        for recipeClass in flakeRecipeClasses:
-            similarities[recipeClass] = self.__class__.delegate_similarity(recipeClass, flake)
+        for recipeClass in [ recipeClass for recipeClass in flakeRecipeClasses if recipeClass.supports(flake) ]:
+            similarities[recipeClass] = recipeClass.similarity(flake)
         matches = sorted([aux for aux in similarities.keys() if similarities[aux] != 0.0], key=lambda recipeClass: similarities[recipeClass], reverse=True)
         if matches and len(matches) > 0:
             result = matches[0](flake)
         return result
 
     def dependency_in_nixpkgs(self, dep: PythonPackage) -> bool:
-        return Ports.instance().resolveNixPythonPackageRepo().find_by_name_and_version(dep.name, dep.version) == None
+        """
+        Checks if given dependency is already in nixpkgs.
+        """
+        nixPythonPackageRepo = Ports.instance().resolveNixPythonPackageRepo()
+        result = nixPythonPackageRepo.find_by_name_and_version(dep.name, dep.version) == None
+        if not result:
+            existing = nixPythonPackageRepo.find_by_name(dep.name)
+            result = existing and len(existing) > 0 and any(pkg.is_compatible_with(self.version) for pkg in existing)
+        return result

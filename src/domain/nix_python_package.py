@@ -23,8 +23,18 @@ class NixPythonPackage(Entity):
         return self._version
 
     def nixpkgs_package_name(self) -> str:
+        """
+        Retrieves the package name in nixpkgs
+        """
         result = self.name
         match = re.search(r'[^.]+$|$', self.name)
         if match:
             result = match.group()
         return result
+
+    def is_compatible_with(self, versionSpec: str) -> bool:
+        """
+        Checks if this package is compatible with given version spec.
+        """
+        # TODO: implement pyproject.toml version rules
+        return versionSpec == self.version

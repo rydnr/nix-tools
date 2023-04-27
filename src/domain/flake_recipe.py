@@ -8,6 +8,7 @@ from domain.recipe.more_than_one_flake_in_recipe_toml import MoreThanOneFlakeInR
 
 import os
 import inspect
+import logging
 from pathlib import Path
 import toml
 
@@ -89,4 +90,5 @@ class FlakeRecipe(Entity):
                 result = 0.7
         elif cls.supports(flake):
             result = 0.6
+        logging.getLogger(cls.__name__).debug(f'Similarity between {cls.__name__} and flake {flake.name}-{flake.version}: {result}')
         return result

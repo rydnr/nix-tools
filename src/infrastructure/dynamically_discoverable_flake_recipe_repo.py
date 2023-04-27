@@ -60,19 +60,13 @@ class DynamicallyDiscoverableFlakeRecipeRepo(FlakeRecipeRepo):
         cls.discover_modules(module)
         cls._recipe_classes = cls.discover_recipes(module)
 
-    @classmethod
-    def delegate_similarity(cls, recipeClass, flake: Flake) -> float:
-        result = recipeClass.similarity(flake)
-        logging.getLogger(cls.__name__).debug(f'Similarity between {recipeClass} and flake {flake.name}-{flake.version}: {result}')
-        return result
-
     def find_recipe_classes_by_flake(self, flake: Flake) -> List[FlakeRecipe]:
         """
         Retrieves the recipe classes matching given flake, if any.
         """
         similarities = {}
         for recipeClass in self.__class__._recipe_classes:
-            similarities[recipeClass] = self.__class__.delegate_similarity(recipeClass, flake)
+            similarities[recipeClass] = recipeClass.similarity(flake)
         result = sorted([aux for aux in similarities.keys() if similarities[aux] != 0.0], key=lambda recipeClass: similarities[recipeClass], reverse=True)
 
         return result

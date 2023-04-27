@@ -1,10 +1,3 @@
-from pathlib import Path
-import sys
-
-base_folder = str(Path(__file__).resolve().parent.parent)
-if base_folder not in sys.path:
-    sys.path.append(base_folder)
-
 from domain.flake import Flake
 from domain.flake_created_event import FlakeCreated
 from domain.flake_recipe import FlakeRecipe
@@ -29,7 +22,7 @@ class BaseFlakeRecipe(FlakeRecipe):
     @classmethod
     def supports(cls, flake: Flake) -> bool:
         "Checks if the recipe class supports given flake"
-        return False
+        return True
 
     def process(self) -> FlakeCreated:
         result = None
