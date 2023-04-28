@@ -15,9 +15,11 @@ if base_folder not in sys.path:
     sys.path.append(base_folder)
 
 import domain
-from domain.create_flake_command import CreateFlake
+from domain.build_flake import BuildFlake
+from domain.create_flake import CreateFlake
 from domain.flake import Flake
-from domain.flake_created_event import FlakeCreated
+from domain.flake_builder import FlakeBuilder
+from domain.flake_created import FlakeCreated
 from domain.port import Port
 from domain.ports import Ports
 from domain.primary_port import PrimaryPort
@@ -129,6 +131,9 @@ class PythonNixFlakeGenerator():
     def accept_configure_logging(self, logConfig: Dict[str, bool]):
         for module_functions in self.get_log_configs():
             module_functions(logConfig["verbose"], logConfig["trace"], logConfig["quiet"])
+
+    def accept_build_flake(self, command: BuildFlake) -> FlakeBuilt:
+        return FlakeBuilder.build(command)
 
     def get_log_configs(self) -> List[Dict]:
         result = []

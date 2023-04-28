@@ -1,5 +1,5 @@
 from domain.flake import Flake
-from domain.flake_created_event import FlakeCreated
+from domain.flake_created import FlakeCreated
 from domain.flake_recipe import FlakeRecipe
 from domain.nix_template import NixTemplate
 from domain.ports import Ports

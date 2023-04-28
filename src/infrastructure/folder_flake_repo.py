@@ -1,7 +1,7 @@
 
 from domain.flake_repo import FlakeRepo
 from domain.flake import Flake
-from domain.flake_created_event import FlakeCreated
+from domain.flake_created import FlakeCreated
 
 import logging
 import os
@@ -24,13 +24,19 @@ class FolderFlakeRepo(FlakeRepo):
     def flakes_url(cls, url: str):
         cls._flakes_url = url
 
+    def flake_folder(self, package_name: str, package_version: str) -> str:
+        return os.path.join(self.__class__._repo_folder, f'{package_name}-{package_version}')
+
+    def flake_nix_path(self, package_name: str, package_version: str) -> str:
+        return os.path.join(self.flake_folder(package_name, package_version), 'flake.nix')
+
     def find_by_name_and_version(self, package_name: str, package_version: str) -> Flake:
         """
         Retrieves the Flake matching given name and version, if any.
         """
         result = None
 
-        if os.path.exists(os.path.join(self.__class__._repo_folder, os.path.join(f'{package_name}-{package_version}.nix', f'{package_name}-{package_version}.nix'))):
+        if os.path.exists(self.flake_nix_path(package_name, package_version)):
             # TODO: parse the flake and retrieve the dependencies
             result = Flake(package_name, package_version, None, [], [], [], [], [])
 
@@ -54,7 +60,7 @@ class FolderFlakeRepo(FlakeRepo):
                     logging.getLogger(__name__).debug(f'Writing {item["path"]}')
                     file.write(item["contents"])
 
-        return FlakeCreated(flake.name, flake.version)
+        return FlakeCreated(flake.name, flake.version, self.flake_folder(package_name, package_version))
 
     def url_for_flake(self, name: str, version: str) -> str:
         """Retrieves the url of given flake"""

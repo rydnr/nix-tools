@@ -1,6 +1,6 @@
 from domain.entity import Entity, primary_key_attribute, attribute
-from domain.create_flake_command import CreateFlake
-from domain.flake_created_event import FlakeCreated
+from domain.create_flake import CreateFlake
+from domain.flake_created import FlakeCreated
 from domain.python_package import PythonPackage
 from domain.python_package_repo import PythonPackageRepo
 from domain.git_repo import GitRepo
@@ -112,6 +112,7 @@ class Flake(Entity):
             flakeRecipe = cls.find_recipe_by_flake(flake)
             if flakeRecipe:
                 result = flakeRecipe.process()
+
             else:
                 logger.critical(f'No recipe available for {command.packageName}-{command.packageVersion}')
 
