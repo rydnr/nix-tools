@@ -7,5 +7,5 @@ class NixBuildFailed(Exception):
         super().__init__(f'"nix build ." failed (in {folder})')
         self._output = output
 
-        def output(self) -> str:
-            return self._output
+    def output(self) -> str:
+        return self._output

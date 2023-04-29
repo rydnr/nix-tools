@@ -1,4 +1,4 @@
-from domain.create_flake import CreateFlake
+from domain.flake_requested import FlakeRequested
 from domain.primary_port import PrimaryPort
 
 import argparse
@@ -7,7 +7,7 @@ import logging
 class CreateFlakeCli(PrimaryPort):
 
     """
-    A PrimaryPort that sends CreateFlake commands specified from the command line.
+    A PrimaryPort that emits FlakeRequested events specified from the command line.
     """
     def __init__(self):
         super().__init__()
@@ -26,7 +26,7 @@ class CreateFlakeCli(PrimaryPort):
         parser.add_argument("-u", "--flakes_url", required=False, help="The flakes url")
         args, unknown_args = parser.parse_known_args()
 
-        command = CreateFlake(args.packageName, args.packageVersion)
+        event = FlakeRequested(args.packageName, args.packageVersion)
 
-        logging.getLogger(__name__).debug(f'Sending command {command} to {app}')
-        app.accept_create_flake(command)
+        logging.getLogger(__name__).debug(f'Emitting {event}')
+        app.accept_event(event)

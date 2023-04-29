@@ -1,6 +1,5 @@
 from domain.entity import Entity, primary_key_attribute
 from domain.flake import Flake
-from domain.flake_created import FlakeCreated
 from domain.recipe.empty_flake_metadata_section_in_recipe_toml import EmptyFlakeMetadataSectionInRecipeToml
 from domain.recipe.empty_flake_section_in_recipe_toml import EmptyFlakeSectionInRecipeToml
 from domain.recipe.missing_flake_section_in_recipe_toml import MissingFlakeSectionInRecipeToml
@@ -91,7 +90,7 @@ class FlakeRecipe(Entity):
                 raise MissingTypeInFlakeMetadataSectionInRecipeToml(cls.recipe_toml_file())
         return result
 
-    def process(self) -> FlakeCreated:
+    def process(self): # -> FlakeCreated:
         "Performs the recipe tasks"
         raise NotImplementedError()
 

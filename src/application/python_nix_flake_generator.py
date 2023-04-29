@@ -1,93 +1,11 @@
 #!/usr/bin/env python3
+
+from application.bootstrap import get_interfaces, get_implementations
+
 import importlib
 import importlib.util
-import inspect
-import logging
 import os
-from pathlib import Path
-import pkgutil
-import sys
 from typing import Dict, List
-import warnings
-
-base_folder = str(Path(__file__).resolve().parent.parent)
-if base_folder not in sys.path:
-    sys.path.append(base_folder)
-
-import domain
-from domain.build_flake import BuildFlake
-from domain.create_flake import CreateFlake
-from domain.flake import Flake
-from domain.flake_builder import FlakeBuilder
-from domain.flake_created import FlakeCreated
-from domain.port import Port
-from domain.ports import Ports
-from domain.primary_port import PrimaryPort
-
-import infrastructure
-from infrastructure.dynamically_discoverable_flake_recipe_repo import DynamicallyDiscoverableFlakeRecipeRepo
-from infrastructure.file_nix_template_repo import FileNixTemplateRepo
-from infrastructure.folder_flake_repo import FolderFlakeRepo
-from infrastructure.github_git_repo import GithubGitRepo
-
-for folder in os.scandir(os.path.join("src", "infrastructure")):
-    if folder.is_dir():
-        sys.path.insert(0, folder.path)
-
-def get_port_interfaces():
-    return get_domain_interfaces(Port)
-
-def iter_submodules(package):
-    result = []
-    package_path = Path(package.__path__[0])
-    for py_file in package_path.glob('**/*.py'):
-        if py_file.is_file():
-            relative_path = py_file.relative_to(package_path).with_suffix('')
-            module_name = f"{package.__name__}.{relative_path.as_posix().replace('/', '.')}"
-            if not module_name in (list(sys.modules.keys())):
-                spec = importlib.util.spec_from_file_location(module_name, py_file)
-                module = importlib.util.module_from_spec(spec)
-                importlib.import_module(module.__name__)
-            result.append(sys.modules[module_name])
-    return result
-
-def get_domain_interfaces(iface):
-    matches = []
-    for module in iter_submodules(domain):
-        try:
-            with warnings.catch_warnings():
-                warnings.simplefilter('ignore', category=DeprecationWarning)
-                for class_name, cls in inspect.getmembers(module, inspect.isclass):
-                    if (issubclass(cls, iface) and
-                        cls != iface):
-                        matches.append(cls)
-        except ImportError:
-            pass
-    return matches
-
-def get_implementations(interface):
-    implementations = []
-    for module in iter_submodules(infrastructure):
-        try:
-            with warnings.catch_warnings():
-                warnings.simplefilter('ignore', category=DeprecationWarning)
-                for class_name, cls in inspect.getmembers(module, inspect.isclass):
-                    if (issubclass(cls, interface) and
-                        cls != interface):
-                        implementations.append(cls)
-        except ImportError:
-            pass
-    return implementations
-
-def resolve_port_implementations():
-    mappings = {}
-    for port in get_port_interfaces():
-        implementations = get_implementations(port)
-        if len(implementations) == 0:
-            logging.getLogger(__name__).critical(f'No implementations found for {port}')
-        else:
-            mappings.update({ port: implementations[0]() })
-    return mappings
 
 class PythonNixFlakeGenerator():
 
@@ -97,7 +15,6 @@ class PythonNixFlakeGenerator():
         super().__init__()
         self._primaryPorts = []
 
-
     def get_primary_ports(self):
         return self._primaryPorts
 
@@ -105,35 +22,48 @@ class PythonNixFlakeGenerator():
     def initialize(cls):
         cls._singleton = PythonNixFlakeGenerator()
         mappings = {}
-        for port in get_port_interfaces():
-            implementations = get_implementations(port)
+        for port in cls.get_port_interfaces():
+            # this is to pass the infrastructure module, so I can get rid of the `import infrastructure`
+            infrastructureModule = importlib.import_module('.'.join(FileNixTemplateRepo.__module__.split('.')[:-1]))
+            implementations = get_implementations(port, infrastructureModule)
             if len(implementations) == 0:
                 logging.getLogger(__name__).critical(f'No implementations found for {port}')
             else:
                 mappings.update({ port: implementations[0]() })
         Ports.initialize(mappings)
-        cls._singleton._primaryPorts = get_implementations(PrimaryPort)
+        cls._singleton._primaryPorts = get_implementations(PrimaryPort, infrastructureModule)
+        for listenerClass in EventListener.__subclasses__():
+            for supportedEvent in listenerClass.supported_events():
+                EventListener.listen(listenerClass, supportedEvent)
+
+    @classmethod
+    def get_port_interfaces(cls):
+        # this is to pass the domain module, so I can get rid of the `import domain`
+        return get_interfaces(Port, importlib.import_module('.'.join(Event.__module__.split('.')[:-1])))
 
     @classmethod
     def instance(cls):
         return cls._singleton
 
-    def delegate_priority(primaryPort: PrimaryPort) -> int:
+    @classmethod
+    def delegate_priority(cls, primaryPort) -> int:
         return primaryPort().priority()
 
     def accept_commands(self):
         for primaryPort in sorted(self.get_primary_ports(), key=PythonNixFlakeGenerator.delegate_priority):
             primaryPort().accept(self)
 
-    def accept_create_flake(self, command: CreateFlake) -> FlakeCreated:
-        return Flake.create_flake(command)
+    def accept_event(self, event): # : Event) -> Event:
+        result = []
+        for listenerClass in EventListener.listeners_for(event.__class__):
+            resulting_events = listenerClass().accept(event)
+            if resulting_events and len(resulting_events) > 0:
+                result.extend(resulting_events)
+        return result
 
     def accept_configure_logging(self, logConfig: Dict[str, bool]):
         for module_functions in self.get_log_configs():
             module_functions(logConfig["verbose"], logConfig["trace"], logConfig["quiet"])
-
-    def accept_build_flake(self, command: BuildFlake) -> FlakeBuilt:
-        return FlakeBuilder.build(command)
 
     def get_log_configs(self) -> List[Dict]:
         result = []
@@ -164,5 +94,23 @@ class PythonNixFlakeGenerator():
         FolderFlakeRepo.flakes_url(url)
 
 if __name__ == "__main__":
+
+    from domain.build_flake import BuildFlake
+    from domain.create_flake import CreateFlake
+    from domain.event import Event
+    from domain.event_listener import EventListener
+    from domain.flake import Flake
+    from domain.flake_builder import FlakeBuilder
+    from domain.flake_built import FlakeBuilt
+    from domain.flake_created import FlakeCreated
+    from domain.port import Port
+    from domain.ports import Ports
+    from domain.primary_port import PrimaryPort
+
+    from infrastructure.dynamically_discoverable_flake_recipe_repo import DynamicallyDiscoverableFlakeRecipeRepo
+    from infrastructure.file_nix_template_repo import FileNixTemplateRepo
+    from infrastructure.folder_flake_repo import FolderFlakeRepo
+    from infrastructure.github_git_repo import GithubGitRepo
+
     PythonNixFlakeGenerator.initialize()
     PythonNixFlakeGenerator.instance().accept_commands()

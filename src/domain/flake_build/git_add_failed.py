@@ -7,5 +7,5 @@ class GitAddFailed(Exception):
         super().__init__(f'"git add {file}" failed')
         self._output = output
 
-        def output(self) -> str:
-            return self._output
+    def output(self) -> str:
+        return self._output

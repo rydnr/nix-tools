@@ -1,6 +1,8 @@
 from domain.entity import Entity, primary_key_attribute, attribute
+from domain.event import Event
+from domain.event_listener import EventListener
 from domain.create_flake import CreateFlake
-from domain.flake_created import FlakeCreated
+from domain.flake_requested import FlakeRequested
 from domain.python_package import PythonPackage
 from domain.python_package_repo import PythonPackageRepo
 from domain.git_repo import GitRepo
@@ -9,10 +11,10 @@ from domain.nix_python_package_repo import NixPythonPackageRepo
 from domain.nix_template import NixTemplate
 from domain.ports import Ports
 
-from typing import Dict, List
+from typing import Dict, List, Type
 import logging
 
-class Flake(Entity):
+class Flake(Entity, EventListener):
 
     """
     Represents a nix flake.
@@ -70,18 +72,24 @@ class Flake(Entity):
         return self._dependencies_in_nixpkgs
 
     @classmethod
-    def create_flake(cls, command: CreateFlake) -> FlakeCreated:
+    def supported_events(cls) -> List[Type[Event]]:
+        """
+        Retrieves the list of supported event classes.
+        """
+        return [ FlakeRequested ]
+
+    def listenFlakeRequested(self, event: FlakeRequested): # -> FlakeCreated:
         result = None
         logger = logging.getLogger(__name__)
-        logger.info(f'Received "create flake {command.packageName}-{command.packageVersion}"')
+        logger.info(f'Received "flake requested {event.packageName}-{event.packageVersion}"')
         flakeRepo = Ports.instance().resolveFlakeRepo()
         # 1. check if flake exists already
-        existingFlake = flakeRepo.find_by_name_and_version(command.packageName, command.packageVersion)
+        existingFlake = flakeRepo.find_by_name_and_version(event.packageName, event.packageVersion)
         if existingFlake:
-            logger.info(f'flake ({command.packageName}, {command.packageVersion}) already exists')
+            logger.info(f'flake ({event.packageName}, {event.packageVersion}) already exists')
         else:
             # 2. obtain pypi info
-            pythonPackage = Ports.instance().resolve(PythonPackageRepo).find_by_name_and_version(command.packageName, command.packageVersion)
+            pythonPackage = Ports.instance().resolve(PythonPackageRepo).find_by_name_and_version(event.packageName, event.packageVersion)
 
             nixPythonPackageRepo = Ports.instance().resolve(NixPythonPackageRepo)
             nativeBuildInputs = pythonPackage.get_native_build_inputs()
@@ -105,26 +113,25 @@ class Flake(Entity):
                     logger.debug(f'Flake found for {depName}-{depVersion}')
                 else:
                     flakeCreated = cls.create_flake(CreateFlake(depName, depVersion))
-                    logger.info(f'Flake {dep.name}-{dep.version} created (triggered by "create flake {command.packageName}-{command.packageVersion}")')
+                    logger.info(f'Flake {dep.name}-{dep.version} created (triggered by "create flake {event.packageName}-{event.packageVersion}")')
 
             # 3. create flake
-            flake = Flake(command.packageName, command.packageVersion, pythonPackage, nativeBuildInputs, propagatedBuildInputs, checkInputs, optionalBuildInputs, dependenciesInNixpkgs)
+            flake = Flake(event.packageName, event.packageVersion, pythonPackage, nativeBuildInputs, propagatedBuildInputs, checkInputs, optionalBuildInputs, dependenciesInNixpkgs)
             flakeRecipe = cls.find_recipe_by_flake(flake)
             if flakeRecipe:
                 result = flakeRecipe.process()
 
             else:
-                logger.critical(f'No recipe available for {command.packageName}-{command.packageVersion}')
+                logger.critical(f'No recipe available for {event.packageName}-{event.packageVersion}')
 
             if result:
-                logger.info(f'Flake {command.packageName}-{command.packageVersion} created')
+                logger.info(f'Flake {event.packageName}-{event.packageVersion} created')
             else:
-                logger.info(f'Flake {command.packageName}-{command.packageVersion} could not be created')
+                logger.info(f'Flake {event.packageName}-{event.packageVersion} could not be created')
 
         return result
 
-    @classmethod
-    def find_recipe_by_flake(cls, flake):
+    def find_recipe_by_flake(self, flake):
         """
         Retrieves the best recipe for given Flake
         """

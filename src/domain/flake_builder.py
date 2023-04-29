@@ -1,26 +1,27 @@
-from domain.flake_recipe import FlakeRecipe
-from domain.flake_built import FlakeBuilt
+from domain.event import Event
+from domain.event_listener import EventListener
 from domain.flake_build.git_add_failed import GitAddFailed
 from domain.flake_build.git_init_failed import GitInitFailed
 from domain.flake_build.nix_build_failed import NixBuildFailed
+from domain.flake_built import FlakeBuilt
+from domain.flake_created import FlakeCreated
+from domain.flake_recipe import FlakeRecipe
 
 import os
 import shutil
+from typing import List, Type
 
-class FlakeBuilder():
-
-    def __init__(self, flakeRecipe: FlakeRecipe):
-        """Creates a new flake recipe instance"""
-        super().__init__(id)
-        self._flake_recipe = flakeRecipe
-
-    @property
-    @primary_key_attribute
-    def flake_recipe(self) -> str:
-        return self._flake_recipe
+class FlakeBuilder(EventListener):
 
     @classmethod
-    def build_flake(cls, command: BuildFlake) -> FlakeBuilt:
+    def supported_events(cls) -> List[Type[Event]]:
+        """
+        Retrieves the list of supported event classes.
+        """
+        return [ FlakeCreated ]
+
+
+    def listenFlakeCreated(self, event: FlakeCreated) -> FlakeBuilt:
         result = None
 
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -30,7 +31,7 @@ class FlakeBuilder():
                 self.git_add(temp_dir, file)
             self.nix_build(temp_dir)
 
-        return FlakeBuilt(command.package_name, command.package_version, command.flake_folder)
+        return FlakeBuilt(event.package_name, event.package_version, event.flake_folder)
 
     def copy_folder_contents(self, source: str, destination: str):
         logging.getLogger(__name__).debug(f'Copying {folder} contents to a temporary folder')
