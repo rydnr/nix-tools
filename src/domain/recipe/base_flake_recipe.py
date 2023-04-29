@@ -34,7 +34,7 @@ class BaseFlakeRecipe(FlakeRecipe):
         if templates:
             for template in [ NixTemplate(t["folder"], t["path"], t["contents"]) for t in templates ]:
                 renderedTemplates.append({ "folder": template.folder, "path": template.path, "contents": template.render(self.flake) })
-            result = Ports.instance().resolveFlakeRepo().create(self.flake, renderedTemplates)
+            result = Ports.instance().resolveFlakeRepo().create(self.flake, renderedTemplates, self)
         else:
             logging.getLogger(__name__).critical(f'No templates provided by recipe {Path(inspect.getsourcefile(self.__class__)).parent}')
         return result

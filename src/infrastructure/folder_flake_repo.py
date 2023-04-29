@@ -1,7 +1,8 @@
 
-from domain.flake_repo import FlakeRepo
 from domain.flake import Flake
 from domain.flake_created import FlakeCreated
+from domain.flake_recipe import FlakeRecipe
+from domain.flake_repo import FlakeRepo
 
 import logging
 import os
@@ -42,7 +43,7 @@ class FolderFlakeRepo(FlakeRepo):
 
         return result
 
-    def create(self, flake: Flake, content: List[Dict[str, str]]) -> FlakeCreated:
+    def create(self, flake: Flake, content: List[Dict[str, str]], recipe: FlakeRecipe) -> FlakeCreated:
 #    def create(self, flake: Flake, flake_nix: str, flake_nix_path: str, package_nix: str, package_nix_path: str) -> FlakeCreated:
         """Creates the flake"""
         if self.find_by_name_and_version(flake.name, flake.version):
@@ -60,7 +61,7 @@ class FolderFlakeRepo(FlakeRepo):
                     logging.getLogger(__name__).debug(f'Writing {item["path"]}')
                     file.write(item["contents"])
 
-        return FlakeCreated(flake.name, flake.version, self.flake_folder(package_name, package_version))
+        return FlakeCreated(flake.name, flake.version, self.flake_folder(flake.name, flake.version), recipe)
 
     def url_for_flake(self, name: str, version: str) -> str:
         """Retrieves the url of given flake"""

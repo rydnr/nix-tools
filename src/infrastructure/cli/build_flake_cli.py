@@ -22,6 +22,7 @@ class BuildFlakeCli(PrimaryPort):
         parser = argparse.ArgumentParser(
             description="Builds a given flake"
         )
+        parser.add_argument("command", choices=['create', 'build'], nargs='?', default=None, help="Whether to generate a nix flake")
         parser.add_argument("packageName", help="The name of the Python package")
         parser.add_argument("packageVersion", help="The version of the Python package")
         parser.add_argument(
@@ -34,7 +35,7 @@ class BuildFlakeCli(PrimaryPort):
         parser.add_argument("-u", "--flakes_url", required=False, help="The flakes url")
         args, unknown_args = parser.parse_known_args()
 
-        event = BuildFlakeRequested(args.packageName, args.packageVersion, args.flakes_folder)
-
-        logging.getLogger(__name__).debug(f"Requesting the building of flake {event.package_name}-{event.package_version} to {app}")
-        app.accept_event(event)
+        if args.command == "build":
+            event = BuildFlakeRequested(args.packageName, args.packageVersion, args.flakes_folder)
+            logging.getLogger(__name__).debug(f"Requesting the building of flake {event.package_name}-{event.package_version} to {app}")
+            app.accept_event(event)

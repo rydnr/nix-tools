@@ -32,9 +32,7 @@ class PythonNixFlakeGenerator():
                 mappings.update({ port: implementations[0]() })
         Ports.initialize(mappings)
         cls._singleton._primaryPorts = get_implementations(PrimaryPort, infrastructureModule)
-        for listenerClass in EventListener.__subclasses__():
-            for supportedEvent in listenerClass.supported_events():
-                EventListener.listen(listenerClass, supportedEvent)
+        EventListener.find_listeners()
 
     @classmethod
     def get_port_interfaces(cls):
@@ -49,16 +47,21 @@ class PythonNixFlakeGenerator():
     def delegate_priority(cls, primaryPort) -> int:
         return primaryPort().priority()
 
-    def accept_commands(self):
+    def accept_input(self):
         for primaryPort in sorted(self.get_primary_ports(), key=PythonNixFlakeGenerator.delegate_priority):
             primaryPort().accept(self)
 
     def accept_event(self, event): # : Event) -> Event:
         result = []
+        firstEvents = []
         for listenerClass in EventListener.listeners_for(event.__class__):
-            resulting_events = listenerClass().accept(event)
-            if resulting_events and len(resulting_events) > 0:
-                result.extend(resulting_events)
+            resultingEvents = listenerClass.accept(listenerClass, event)
+            if resultingEvents and len(resultingEvents) > 0:
+                firstEvents.extend(resultingEvents)
+        if len(firstEvents) > 0:
+            result.extend(firstEvents)
+            for event in firstEvents:
+                result.extend(self.accept_event(event))
         return result
 
     def accept_configure_logging(self, logConfig: Dict[str, bool]):
@@ -113,4 +116,4 @@ if __name__ == "__main__":
     from infrastructure.github_git_repo import GithubGitRepo
 
     PythonNixFlakeGenerator.initialize()
-    PythonNixFlakeGenerator.instance().accept_commands()
+    PythonNixFlakeGenerator.instance().accept_input()

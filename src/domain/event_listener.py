@@ -9,7 +9,7 @@ class EventListener:
     @classmethod
     def supported_events(cls) -> List[Type[Event]]:
         """
-        Retrieves the list of supported event classes
+        Retrieves the list of supported event classes.
         """
         raise NotImplementedError(
             "supported_events() must be implemented by subclasses"
@@ -21,7 +21,15 @@ class EventListener:
 
     @classmethod
     def listeners_for(cls, eventClass: Type[Event]) -> List[Type]:
-        return EventListener._listeners.get(eventClass, [])
+        result = EventListener._listeners.get(eventClass, [])
+        EventListener._listeners[eventClass] = result
+        return result
+
+    @classmethod
+    def find_listeners(cls):
+        for subclass in EventListener.__subclasses__():
+            for eventClass in subclass.supported_events():
+                EventListener.listen(subclass, eventClass)
 
     @classmethod
     def listen(cls, listener: Type, eventClass: Type[Event]):
@@ -29,10 +37,12 @@ class EventListener:
         eventListeners.append(listener)
 
     def accept(self, event: Event):
-        EventListener.listeners_for(event.__class__)
-        if len(_listeners) == 0:
+        result = []
+        listeners = EventListener.listeners_for(event.__class__)
+        if len(listeners) == 0:
             raise UnsupportedEvent(event)
-        for listener in _listeners:
-            methodName = f'listen{event.__class__}'
-            method = getattr(self, methodName)
-            method(event)
+        for listener in listeners:
+            methodName = f'listen{event.__class__.__name__}'
+            method = getattr(listener, methodName)
+            result.append(method(event))
+        return result

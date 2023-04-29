@@ -1,5 +1,6 @@
 from domain.flake import Flake
 from domain.flake_created import FlakeCreated
+from domain.flake_recipe import FlakeRecipe
 from domain.repo import Repo
 
 from typing import Dict, List
@@ -19,7 +20,7 @@ class FlakeRepo(Repo):
         """Retrieves a flake matching given name and version"""
         raise NotImplementedError("find_by_name_and_version() must be implemented by subclasses")
 
-    def create(self, flake: Flake, content: List[Dict[str, str]]) -> FlakeCreated:
+    def create(self, flake: Flake, content: List[Dict[str, str]], recipe: FlakeRecipe) -> FlakeCreated:
         """Creates the flake"""
         raise NotImplementedError("create() must be implemented by subclasses")
 

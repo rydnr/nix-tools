@@ -18,6 +18,7 @@ class CreateFlakeCli(PrimaryPort):
     def accept(self, app):
 
         parser = argparse.ArgumentParser(description="Generates a flake for a given Python package")
+        parser.add_argument("command", choices=['create', 'build'], nargs='?', default=None, help="Whether to generate a nix flake")
         parser.add_argument("packageName", help="The name of the Python package")
         parser.add_argument("packageVersion", help="The version of the Python package")
         # TODO: Check how to avoid including flags from other cli handlers such as the following
@@ -26,7 +27,7 @@ class CreateFlakeCli(PrimaryPort):
         parser.add_argument("-u", "--flakes_url", required=False, help="The flakes url")
         args, unknown_args = parser.parse_known_args()
 
-        event = FlakeRequested(args.packageName, args.packageVersion)
-
-        logging.getLogger(__name__).debug(f'Emitting {event}')
-        app.accept_event(event)
+        if args.command == 'create':
+            event = FlakeRequested(args.packageName, args.packageVersion)
+            logging.getLogger(__name__).debug(f'Emitting {event}')
+            app.accept_event(event)
