@@ -10,6 +10,7 @@ from domain.flake_recipe import FlakeRecipe
 import logging
 import os
 import shutil
+import subprocess
 import tempfile
 from typing import List, Type
 
@@ -26,7 +27,6 @@ class FlakeBuilder(EventListener):
     def listenFlakeCreated(cls, event: FlakeCreated) -> FlakeBuilt:
         result = None
 
-        print(f'Received flake created {event}')
         with tempfile.TemporaryDirectory() as temp_dir:
             cls.copy_folder_contents(event.flake_folder, temp_dir)
             cls.git_init(temp_dir)
@@ -39,6 +39,7 @@ class FlakeBuilder(EventListener):
     @classmethod
     def copy_folder_contents(cls, source: str, destination: str):
         logging.getLogger(__name__).debug(f'Copying {source} contents to {destination}')
+        shutil.rmtree(destination)
         shutil.copytree(source, destination)
 
     @classmethod
@@ -61,9 +62,10 @@ class FlakeBuilder(EventListener):
 
     @classmethod
     def nix_build(cls, folder: str):
-        output = None
         try:
             logging.getLogger(__name__).debug(f'Building the flake in {folder}')
-            output = subprocess.check_output(['nix', 'build', '.'], stderr=subprocess.STDOUT, cwd=folder)
-        except subprocess.CalledProcessError:
-            raise NixBuildFailed(folder, output.stdout)
+            subprocess.run(['nix', 'build', '.'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=folder)
+        except subprocess.CalledProcessError as err:
+            logging.getLogger(__name__).error(err.stdout)
+            logging.getLogger(__name__).error(err.stderr)
+            raise NixBuildFailed(folder, err.stdout)
