@@ -54,7 +54,9 @@ class PythonNixFlakeGenerator():
     def accept_event(self, event): # : Event) -> Event:
         result = []
         firstEvents = []
+        print(f'Accepting event {event}')
         for listenerClass in EventListener.listeners_for(event.__class__):
+            print(f'listener found for {event.__class__}: {listenerClass}')
             resultingEvents = listenerClass.accept(listenerClass, event)
             if resultingEvents and len(resultingEvents) > 0:
                 firstEvents.extend(resultingEvents)

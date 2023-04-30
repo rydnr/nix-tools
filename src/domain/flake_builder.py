@@ -1,3 +1,4 @@
+from domain.build_flake_requested import BuildFlakeRequested
 from domain.event import Event
 from domain.event_listener import EventListener
 from domain.flake_build.git_add_failed import GitAddFailed
@@ -21,20 +22,28 @@ class FlakeBuilder(EventListener):
         """
         Retrieves the list of supported event classes.
         """
-        return [ FlakeCreated ]
+        return [ FlakeCreated, BuildFlakeRequested ]
 
     @classmethod
     def listenFlakeCreated(cls, event: FlakeCreated) -> FlakeBuilt:
+        return cls.build_flake(event, event.flake_folder)
+
+    @classmethod
+    def listenBuildFlakeRequested(cls, event: BuildFlakeRequested) -> FlakeBuilt:
+        return cls.build_flake(event, os.path.join(event.flakes_folder, f'{event.package_name}-{event.package_version}'))
+
+    @classmethod
+    def build_flake(cls, event, flake_folder: str) -> FlakeBuilt:
         result = None
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            cls.copy_folder_contents(event.flake_folder, temp_dir)
+            cls.copy_folder_contents(flake_folder, temp_dir)
             cls.git_init(temp_dir)
             for file in os.listdir(temp_dir):
                 cls.git_add(temp_dir, file)
             cls.nix_build(temp_dir)
 
-        return FlakeBuilt(event.package_name, event.package_version, event.flake_folder)
+        return FlakeBuilt(event.package_name, event.package_version, flake_folder)
 
     @classmethod
     def copy_folder_contents(cls, source: str, destination: str):
