@@ -2,9 +2,8 @@ from domain.entity import Entity, attribute, primary_key_attribute
 from domain.ports import Ports
 from domain.git_repo import GitRepo
 from domain.git_repo_repo import GitRepoRepo
-from domain.nix_hash_sha256_failed import NixHashSha256Failed
+from domain.nix_prefetch_url_failed import NixPrefetchUrlFailed
 from domain.nix_python_package import NixPythonPackage
-from domain.pip_download_failed import PipDownloadFailed
 
 import logging
 import os
@@ -228,19 +227,11 @@ class PythonPackage(Entity):
     def pip_sha256(self) -> str:
         result = None
         with tempfile.TemporaryDirectory() as temp_dir:
-            # Use pip to download the package
             try:
-                subprocess.check_output(['pip', 'download', '--no-deps', '--no-binary', ':all:', f'{self.name}=={self.version}'], stderr=subprocess.STDOUT, cwd=temp_dir)
-            except subprocess.CalledProcessError:
-                raise PipDownloadFailed(self)
-            # Use nix-hash to calculate the sha256
-            try:
-                output = subprocess.run(['nix-hash', '--type', 'sha256', '--base32', f'{self.name}-{self.version}.tar.gz'], check=True, capture_output=True, text=True, cwd=temp_dir)
+                output = subprocess.run(['nix-prefetch-url', f'https://files.pythonhosted.org/packages/source/{self.name[0]}/{self.name}/{self.name}-{self.version}.tar.gz'], check=True, capture_output=True, text=True, cwd=temp_dir)
                 result = output.stdout.splitlines()[-1]
             except subprocess.CalledProcessError:
-                raise NixHashSha256Failed(self)
-
-            os.remove(os.path.join(temp_dir, f'{self.name}-{self.version}.tar.gz'))
+                raise NixPrefetchUrlFailed(self)
 
         logging.getLogger(__name__).debug(f'pypi sha256: {result}')
 
