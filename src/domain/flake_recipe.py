@@ -105,12 +105,16 @@ class FlakeRecipe(Entity):
         raise NotImplementedError()
 
     @classmethod
+    def type_matches(cls, flake) -> bool:
+        return cls._type == flake.python_package.get_type()
+
+    @classmethod
     def similarity(cls, flake: Flake) -> float:
         result = 0.0
         partialResults = []
         if cls.supports(flake):
             return 1.0
-        if cls._type == flake.python_package.get_package_type():
+        if cls.type_matches(flake):
             partialResults.append(0.5)
         for entry in cls._flakes:
             partialResult = 0.0

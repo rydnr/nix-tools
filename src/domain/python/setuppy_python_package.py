@@ -36,13 +36,19 @@ class SetuppyPythonPackage(PythonPackage, SetupcfgUtils):
     def git_repo_matches(cls, gitRepo: GitRepo) -> bool:
         return gitRepo.get_file("setup.py") is not None
 
+    def get_type(self) -> str:
+        """
+        Retrieves the type.
+        """
+        return "setup.py"
+
     def get_native_build_inputs(self) -> List:
         result = []
         setuptools_included = False
         install_requires = self.requires_txt.get("install_requires")
         if install_requires:
             for dep in install_requires:
-                pythonPackage = self.__class__.find_dep(dep)
+                pythonPackage = self.find_dep(dep)
                 if pythonPackage:
                     result.append(pythonPackage)
                     if pythonPackage.name == 'setuptools':
@@ -50,7 +56,7 @@ class SetuppyPythonPackage(PythonPackage, SetupcfgUtils):
         setup_requires = self.requires_txt.get("setup_requires")
         if setup_requires:
             for dep in setup_requires:
-                pythonPackage = self.__class__.find_dep(dep)
+                pythonPackage = self.find_dep(dep)
                 if pythonPackage:
                     if pythonPackage.name == 'setuptools':
                         if not setuptools_included and self.name != "setuptools":
@@ -58,7 +64,7 @@ class SetuppyPythonPackage(PythonPackage, SetupcfgUtils):
                             result.append(pythonPackage)
                     else:
                         result.append(pythonPackage)
-        if not setuptools_included:
+        if not setuptools_included and self.name != "setuptools":
             result.append(Ports.instance().resolvePythonPackageRepo().find_by_name("setuptools"))
         return result
 
@@ -73,13 +79,13 @@ class SetuppyPythonPackage(PythonPackage, SetupcfgUtils):
         extras_require = self.requires_txt.get("extras_require")
         if extras_require:
             for dep in extras_require:
-                pythonPackage = self.__class__.find_dep(dep)
+                pythonPackage = self.find_dep(dep)
                 if pythonPackage:
                     result.append(pythonPackage)
         dev = self.requires_txt.get("dev")
         if dev:
             for dep in dev:
-                pythonPackage = self.__class__.find_dep(dep)
+                pythonPackage = self.find_dep(dep)
                 if pythonPackage:
                     result.append(pythonPackage)
 
@@ -90,13 +96,13 @@ class SetuppyPythonPackage(PythonPackage, SetupcfgUtils):
         test_require = self.requires_txt.get("test_require")
         if test_require:
             for dep in test_require:
-                pythonPackage = self.__class__.find_dep(dep)
+                pythonPackage = self.find_dep(dep)
                 if pythonPackage:
                     result.append(pythonPackage)
         test = self.requires_txt.get("test")
         if test:
             for dep in test:
-                pythonPackage = self.__class__.find_dep(dep)
+                pythonPackage = self.find_dep(dep)
                 if pythonPackage:
                     result.append(pythonPackage)
 
@@ -200,3 +206,15 @@ class SetuppyPythonPackage(PythonPackage, SetupcfgUtils):
             raise UnexpectedNumberOfEggInfoFolders()
 
         return result
+
+    def __str__(self):
+        return self._python_package_str()
+
+    def __setattr__(self, varName, varValue):
+        return self._python_package_setattr(varName, varValue)
+
+    def __eq__(self, other):
+        return self._python_package_eq(other)
+
+    def __hash__(self):
+        return self._python_package_hash()

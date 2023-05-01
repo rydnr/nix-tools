@@ -101,8 +101,6 @@ class PythonNixFlakeGenerator():
 
 if __name__ == "__main__":
 
-    from domain.build_flake import BuildFlake
-    from domain.create_flake import CreateFlake
     from domain.event import Event
     from domain.event_emitter import EventEmitter
     from domain.event_listener import EventListener

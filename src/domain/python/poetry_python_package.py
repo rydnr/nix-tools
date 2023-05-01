@@ -48,6 +48,12 @@ class PoetryPythonPackage(PythonPackage):
                 result = True
         return result
 
+    def get_type(self) -> str:
+        """
+        Retrieves the type.
+        """
+        return "poetry"
+
     def get_poetry_deps(self, section: str) -> List:
         result = []
         pyproject_toml = self.__class__.read_pyproject_toml()

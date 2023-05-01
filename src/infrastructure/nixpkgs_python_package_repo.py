@@ -43,7 +43,6 @@ class NixpkgsPythonPackageRepo(NixPythonPackageRepo):
         Retrieves the NixPythonPackages matching given name.
         """
         result = []
-        logging.getLogger(__name__).debug(f"looking for {package_name} in nixpkgs")
 
         try:
             lower_package = package_name.lower()

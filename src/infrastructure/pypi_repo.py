@@ -16,7 +16,6 @@ class PypiRepo(PythonPackageRepo):
     def __init__(self):
         super().__init__()
 
-
     def find_by_name_and_version(self, package_name: str, package_version: str) -> Dict[str, str]:
         """
         Retrieves the PythonPackage matching given name and version.

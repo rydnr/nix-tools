@@ -30,12 +30,18 @@ class SetuptoolsPythonPackage(PythonPackage, SetupcfgUtils):
 
         return result
 
+    def get_type(self) -> str:
+        """
+        Retrieves the type.
+        """
+        return "setuptools"
+
     def get_native_build_inputs(self) -> List:
         result = []
         setup_cfg = self.read_setup_cfg()
         if setup_cfg:
             for dev_dependency in setup_cfg.get("options", {}).get("setup_requires", "").split('\n'):
-                pythonPackage = self.__class__.find_dep(dev_dependency)
+                pythonPackage = self.find_dep(dev_dependency)
                 if pythonPackage:
                     result.append(pythonPackage)
 
@@ -55,7 +61,7 @@ class SetuptoolsPythonPackage(PythonPackage, SetupcfgUtils):
         result = []
         setup_cfg = self.read_setup_cfg()
         for dep in setup_cfg.get("options.extras_require", {}).get("test", "").split('\n'):
-            pythonPackage = self.__class__.find_dep(dep)
+            pythonPackage = self.find_dep(dep)
             if pythonPackage:
                 result.append(pythonPackage)
         return result

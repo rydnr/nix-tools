@@ -92,43 +92,46 @@ class Flake(Entity, EventListener, EventEmitter):
             # 2. obtain pypi info
             pythonPackage = Ports.instance().resolve(PythonPackageRepo).find_by_name_and_version(event.package_name, event.package_version)
 
-            nixPythonPackageRepo = Ports.instance().resolve(NixPythonPackageRepo)
-            nativeBuildInputs = pythonPackage.get_native_build_inputs()
-            propagatedBuildInputs = pythonPackage.get_propagated_build_inputs()
-            checkInputs = pythonPackage.get_check_inputs()
-            optionalBuildInputs = pythonPackage.get_optional_build_inputs()
-            dependenciesInNixpkgs = []
-            for dep in list(set(nativeBuildInputs) | set(propagatedBuildInputs) | set(checkInputs) | set(optionalBuildInputs)):
-                depName = dep.name
-                depVersion = dep.version
-                nixPythonPackages = nixPythonPackageRepo.find_by_name(dep.name)
-                if len(nixPythonPackages) > 0:
-                    nixPythonPackage = nixPythonPackages[len(nixPythonPackages) - 1]
-                    if pythonPackage.satisfies_spec(nixPythonPackage.version):
-                        dependenciesInNixpkgs.append(pythonPackage)
-                        depName = nixPythonPackage.name
-                        depVersion = nixPythonPackage.version
-                # check if there's a flake for the dependency
-                depFlake = flakeRepo.find_by_name_and_version(depName, depVersion)
-                if depFlake:
-                    logger.debug(f'Flake found for {depName}-{depVersion}')
+            if pythonPackage.in_nixpkgs():
+                logger.info(f'Python package {pythonPackage.nixpkgs_package_name()} compatible with version {event.package_version} already exists in nixpkgs.')
+            else:
+                nixPythonPackageRepo = Ports.instance().resolve(NixPythonPackageRepo)
+                nativeBuildInputs = pythonPackage.get_native_build_inputs()
+                propagatedBuildInputs = pythonPackage.get_propagated_build_inputs()
+                checkInputs = pythonPackage.get_check_inputs()
+                optionalBuildInputs = pythonPackage.get_optional_build_inputs()
+                dependenciesInNixpkgs = []
+                for dep in list(set(nativeBuildInputs) | set(propagatedBuildInputs) | set(checkInputs) | set(optionalBuildInputs)):
+                    depName = dep.name
+                    depVersion = dep.version
+                    nixPythonPackages = nixPythonPackageRepo.find_by_name(dep.name)
+                    if len(nixPythonPackages) > 0:
+                        nixPythonPackage = nixPythonPackages[len(nixPythonPackages) - 1]
+                        if pythonPackage.satisfies_spec(nixPythonPackage.version):
+                            dependenciesInNixpkgs.append(pythonPackage)
+                            depName = nixPythonPackage.name
+                            depVersion = nixPythonPackage.version
+                            # check if there's a flake for the dependency
+                            depFlake = flakeRepo.find_by_name_and_version(depName, depVersion)
+                            if depFlake:
+                                logger.debug(f'Flake found for {depName}-{depVersion}')
+                            else:
+                                flakeCreated = cls.emit(FlakeRequested(depName, depVersion))
+                                logger.info(f'Flake {dep.name}-{dep.version} created (triggered by "flake {event.package_name}-{event.package_version} requested")')
+
+                # 3. create flake
+                flake = Flake(event.package_name, event.package_version, pythonPackage, nativeBuildInputs, propagatedBuildInputs, checkInputs, optionalBuildInputs, dependenciesInNixpkgs)
+                flakeRecipe = cls.find_recipe_by_flake(flake)
+                if flakeRecipe:
+                    result = flakeRecipe.process()
+
                 else:
-                    flakeCreated = cls.emit(FlakeRequested(depName, depVersion))
-                    logger.info(f'Flake {dep.name}-{dep.version} created (triggered by "flake {event.package_name}-{event.package_version} requested")')
+                    logger.critical(f'No recipe available for {event.package_name}-{event.package_version}')
 
-            # 3. create flake
-            flake = Flake(event.package_name, event.package_version, pythonPackage, nativeBuildInputs, propagatedBuildInputs, checkInputs, optionalBuildInputs, dependenciesInNixpkgs)
-            flakeRecipe = cls.find_recipe_by_flake(flake)
-            if flakeRecipe:
-                result = flakeRecipe.process()
-
-            else:
-                logger.critical(f'No recipe available for {event.package_name}-{event.package_version}')
-
-            if result:
-                logger.info(f'Flake {event.package_name}-{event.package_version} created')
-            else:
-                logger.info(f'Flake {event.package_name}-{event.package_version} could not be created')
+                if result:
+                    logger.info(f'Flake {event.package_name}-{event.package_version} created')
+                else:
+                    logger.info(f'Flake {event.package_name}-{event.package_version} could not be created')
 
         return result
 
@@ -145,15 +148,4 @@ class Flake(Entity, EventListener, EventEmitter):
         matches = sorted([aux for aux in similarities.keys() if similarities[aux] != 0.0], key=lambda recipeClass: similarities[recipeClass], reverse=True)
         if matches and len(matches) > 0:
             result = matches[0](flake)
-        return result
-
-    def dependency_in_nixpkgs(self, dep: PythonPackage) -> bool:
-        """
-        Checks if given dependency is already in nixpkgs.
-        """
-        nixPythonPackageRepo = Ports.instance().resolveNixPythonPackageRepo()
-        result = nixPythonPackageRepo.find_by_name_and_version(dep.name, dep.version) == None
-        if not result:
-            existing = nixPythonPackageRepo.find_by_name(dep.name)
-            result = existing and len(existing) > 0 and any(pkg.is_compatible_with(self.version) for pkg in existing)
         return result

@@ -26,6 +26,8 @@ class PythonPackage(Entity):
         self._info = info
         self._release = release
         self._git_repo = gitRepo
+        self._nixpkgs_package = None
+        self._nixpkgs_found = None
 
     @property
     @primary_key_attribute
@@ -105,33 +107,52 @@ class PythonPackage(Entity):
 
         return name, extras, version, full_constraint
 
-    @classmethod
-    def find_dep(cls, depInfo: str): # -> PythonPackage:
-        dep_name, _, dep_version, _ = cls.extract_dep(depInfo)
-        if dep_version:
-            result = Ports.instance().resolvePythonPackageRepo().find_by_name_and_version(dep_name, dep_version)
-        else:
-            result = Ports.instance().resolvePythonPackageRepo().find_by_name(dep_name)
+    def find_dep(self, depInfo: str): # -> PythonPackage:
+        result = None
+        dep_name, _, dep_version, _ = self.__class__.extract_dep(depInfo)
+        if dep_name != self.name:
+            if dep_version:
+                result = Ports.instance().resolvePythonPackageRepo().find_by_name_and_version(dep_name, dep_version)
+            else:
+                result = Ports.instance().resolvePythonPackageRepo().find_by_name(dep_name)
+
         return result
 
     def satisfies_spec(self, nixPythonPackage: NixPythonPackage) -> bool:
         # TODO: check if the nixpkgs package satisfies the version spec
         return True
 
-    def in_nixpkgs(self):
-        result = False
-        for match in Ports.instance().resolveNixPythonPackageRepo().find_by_name(self.name):
-            if self.satisfies_spec(match):
-                result = True
-                break
+    def in_nixpkgs(self) -> bool:
+        """
+        Checks if this package is already in nixpkgs.
+        """
+        if self._nixpkgs_found is None:
+            nixPythonPackageRepo = Ports.instance().resolveNixPythonPackageRepo()
+            result = nixPythonPackageRepo.find_by_name_and_version(self.name, self.version) == None
+            if not result:
+                self._nixpkgs_found = False
+                existing = nixPythonPackageRepo.find_by_name(self.name)
+                if existing and len(existing) > 0:
+                    matches = [pkg for pkg in existing if pkg.is_compatible_with(self.version)]
+                    if len(matches) > 0:
+                        self._nixpkgs_package = matches[0]
+                        self._nixpkgs_found = True
+                        result = True
+        else:
+            result = self._nixpkgs_found
+
         return result
 
     def nixpkgs_package_name(self):
-        nixPythonPackage = Ports.instance().resolveNixPythonPackageRepo().find_by_name_and_version(self.name, self.version)
-        if nixPythonPackage:
-            return nixPythonPackage.nixpkgs_package_name()
-        else:
-            return None
+        result = None
+        if self._nixpkgs_found is None:
+            self.in_nixpkgs()
+            if self._nixpkgs_found:
+                result = self._nixpkgs_package.nixpkgs_package_name()
+        elif self._nixpkgs_found:
+            result = self._nixpkgs_package.nixpkgs_package_name()
+
+        return result
 
     def flake_url(self):
         return Ports.instance().resolveFlakeRepo().url_for_flake(self.name, self.version)
@@ -178,3 +199,21 @@ class PythonPackage(Entity):
         Retrieves the check inputs.
         """
         raise NotImplementedError('get_check_inputs() must be implemented by subclasses')
+
+    def get_type(self) -> str:
+        """
+        Retrieves the type.
+        """
+        raise NotImplementedError('get_type() must be implemented by subclasses')
+
+    def _python_package_str(self):
+        return super().__str__()
+
+    def _python_package_setattr(self, varName, varValue):
+        return super().__setattr__(varName, varValue)
+
+    def _python_package_eq(self, other):
+        return super().__eq__(other)
+
+    def _python_package_hash(self):
+        return super().__hash__()

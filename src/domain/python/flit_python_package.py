@@ -44,6 +44,12 @@ class FlitPythonPackage(PythonPackage):
                 result = True
         return result
 
+    def get_type(self) -> str:
+        """
+        Retrieves the type.
+        """
+        return "flit"
+
     def get_native_build_inputs(self) -> List:
         raise NotImplementedError("flit is currently not supported")
 

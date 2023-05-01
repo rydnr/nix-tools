@@ -19,6 +19,12 @@ class PipenvPythonPackage(PythonPackage):
     def git_repo_matches(cls, gitRepo: GitRepo) -> bool:
         return gitRepo.get_file("Pipfile") is not None
 
+    def get_type(self) -> str:
+        """
+        Retrieves the type.
+        """
+        return "pipenv"
+
     def get_native_build_inputs(self) -> List:
         raise NotImplementedError("pipenv is currently not supported")
 
