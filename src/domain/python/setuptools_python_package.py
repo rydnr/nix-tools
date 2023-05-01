@@ -1,34 +1,18 @@
 from domain.ports import Ports
 from domain.git_repo import GitRepo
+from domain.python.setupcfg_utils import SetupcfgUtils
 from domain.python_package import PythonPackage
 
-import configparser
 import logging
 from typing import Dict, List
 
-class SetuptoolsPythonPackage(PythonPackage):
+class SetuptoolsPythonPackage(PythonPackage, SetupcfgUtils):
     """
     Represents a setuptools-based Python package.
     """
     def __init__(self, name: str, version: str, info: Dict, release: Dict, gitRepo: GitRepo):
         """Creates a new SetuptoolsPythonPackage instance"""
         super().__init__(name, version, info, release, gitRepo)
-
-    @classmethod
-    def parse_config(cls, contents: str) -> Dict:
-        config = configparser.ConfigParser()
-        config.read_string(contents)
-        # Convert to a dictionary
-        return {section: dict(config[section]) for section in config.sections()}
-
-    @classmethod
-    def read_setup_cfg(cls, gitRepo) -> Dict:
-        result = {}
-        if gitRepo:
-            setupcfg_contents = gitRepo.get_file("setup.cfg")
-            if setupcfg_contents:
-                result = cls.parse_config(setupcfg_contents)
-        return result
 
     @classmethod
     def git_repo_matches(cls, gitRepo: GitRepo) -> bool:
@@ -48,7 +32,7 @@ class SetuptoolsPythonPackage(PythonPackage):
 
     def get_native_build_inputs(self) -> List:
         result = []
-        setup_cfg = self._read_setup_cfg()
+        setup_cfg = self.read_setup_cfg()
         if setup_cfg:
             for dev_dependency in setup_cfg.get("options", {}).get("setup_requires", "").split('\n'):
                 pythonPackage = self.__class__.find_dep(dev_dependency)
@@ -69,7 +53,7 @@ class SetuptoolsPythonPackage(PythonPackage):
 
     def get_check_inputs(self) -> List:
         result = []
-        setup_cfg = self._read_setup_cfg()
+        setup_cfg = self.read_setup_cfg()
         for dep in setup_cfg.get("options.extras_require", {}).get("test", "").split('\n'):
             pythonPackage = self.__class__.find_dep(dep)
             if pythonPackage:

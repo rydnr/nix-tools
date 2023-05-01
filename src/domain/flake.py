@@ -82,12 +82,12 @@ class Flake(Entity, EventListener, EventEmitter):
     def listenFlakeRequested(cls, event: FlakeRequested): # -> FlakeCreated:
         result = None
         logger = logging.getLogger(__name__)
-        logger.info(f'Received "flake requested {event.package_name}-{event.package_version}"')
+        logger.info(f'Received "flake requested for {event.package_name}-{event.package_version}"')
         flakeRepo = Ports.instance().resolveFlakeRepo()
         # 1. check if flake exists already
         existingFlake = flakeRepo.find_by_name_and_version(event.package_name, event.package_version)
         if existingFlake:
-            logger.info(f'flake ({event.package_name}, {event.package_version}) already exists')
+            logger.info(f'Flake for {event.package_name}-{event.package_version} already exists')
         else:
             # 2. obtain pypi info
             pythonPackage = Ports.instance().resolve(PythonPackageRepo).find_by_name_and_version(event.package_name, event.package_version)

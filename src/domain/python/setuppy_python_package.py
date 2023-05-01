@@ -3,6 +3,7 @@ from domain.ports import Ports
 from domain.python.error_creating_a_virtual_environment import ErrorCreatingAVirtualEnvironment
 from domain.python.error_installing_setuptools import ErrorInstallingSetuptools
 from domain.python.python_setuppy_egg_info_failed import PythonSetuppyEggInfoFailed
+from domain.python.setupcfg_utils import SetupcfgUtils
 from domain.python.unexpected_number_of_egg_info_folders import UnexpectedNumberOfEggInfoFolders
 from domain.python_package import PythonPackage
 
@@ -13,7 +14,7 @@ import sys
 import tempfile
 from typing import Dict, List
 
-class SetuppyPythonPackage(PythonPackage):
+class SetuppyPythonPackage(PythonPackage, SetupcfgUtils):
     """
     Represents a setup.py-based Python package.
     """
@@ -52,7 +53,7 @@ class SetuppyPythonPackage(PythonPackage):
                 pythonPackage = self.__class__.find_dep(dep)
                 if pythonPackage:
                     if pythonPackage.name == 'setuptools':
-                        if not setuptools_included:
+                        if not setuptools_included and self.name != "setuptools":
                             setuptools_included = True
                             result.append(pythonPackage)
                     else:
@@ -105,8 +106,9 @@ class SetuppyPythonPackage(PythonPackage):
     def parse_requires_txt(cls, contents: str):
         lines = contents.split('\n')
 
-        sections = {}
         current_section = 'default'
+        sections = {}
+        sections[current_section] = []
 
         for line in lines:
             line = line.strip()
@@ -129,7 +131,7 @@ class SetuppyPythonPackage(PythonPackage):
             cls.install_setuptools(venv_dir)
             repo_folder = gitRepo.clone(venv_dir, "upstream")
             cls.run_egg_info(venv_dir, repo_folder)
-            result = cls.cat_requires_txt(repo_folder)
+            result = cls.cat_requires_txt(gitRepo, repo_folder)
 
         return result
 
@@ -155,27 +157,43 @@ class SetuppyPythonPackage(PythonPackage):
     def run_egg_info(cls, venv_folder: str, repo_folder: str):
         try:
             output = subprocess.run([os.path.join(venv_folder, 'bin', 'python'), 'setup.py', 'egg_info'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=repo_folder)
-            print(output.stdout)
         except subprocess.CalledProcessError as err:
             logging.getLogger(__name__).error(err.stdout)
             logging.getLogger(__name__).error(err.stderr)
             raise PythonSetuppyEggInfoFailed()
 
     @classmethod
-    def cat_requires_txt(cls, folder: str) -> str:
+    def retrieve_package_dir(cls, gitRepo: GitRepo, folder: str) -> str:
+        setup_cfg = cls.read_setup_cfg(gitRepo)
+        if setup_cfg:
+            result = setup_cfg.get("options", {}).get("package_dir", None)
+        return result
+
+    @classmethod
+    def cat_requires_txt(cls, gitRepo: GitRepo, folder: str) -> str:
         result = None
 
+        # Retrieve the package dir
+        package_dir = cls.retrieve_package_dir(gitRepo, folder)
+
+        if package_dir:
+            subfolder = os.path.join(folder, package_dir)
+        else:
+            subfolder = folder
+
         # Get the list of all directories in the current directory.
-        dirs = os.listdir(os.path.join(folder, 'src'))
+        dirs = os.listdir(subfolder)
+
+        _, name = gitRepo.repo_owner_and_repo_name()
 
         # Filter the list to only include .egg-info directories.
-        egg_info_dirs = [d for d in dirs if d.endswith('.egg-info')]
+        egg_info_dirs = [d for d in dirs if d.endswith('.egg-info') and name in d]
 
         # There should be only one .egg-info directory.
         # If not, you might need to handle this situation.
         if len(egg_info_dirs) == 1:
             egg_info_dir = egg_info_dirs[0]
-            with open(os.path.join(folder, 'src', egg_info_dir, "requires.txt"), "r") as file:
+            with open(os.path.join(subfolder, egg_info_dir, "requires.txt"), "r") as file:
                 result = file.read()
 
         else:
