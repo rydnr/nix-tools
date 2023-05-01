@@ -15,7 +15,13 @@ class PythonPackageRepo(Repo):
     def find_by_name_and_version(
         self, package_name: str, version_spec: str
     ) -> PythonPackage:
-        """Must be implemented by subclasses"""
+        """Retrieves the PythonPackage matching given name and version."""
         raise NotImplementedError(
             "find_by_name_and_version() must be implemented by subclasses"
+        )
+
+    def find_by_name(self, package_name: str) -> PythonPackage:
+        """Retrieves latest version of the PythonPackage matching given name."""
+        raise NotImplementedError(
+            "find_by_name() must be implemented by subclasses"
         )

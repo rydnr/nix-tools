@@ -33,6 +33,7 @@ class PythonNixFlakeGenerator():
         Ports.initialize(mappings)
         cls._singleton._primaryPorts = get_implementations(PrimaryPort, infrastructureModule)
         EventListener.find_listeners()
+        EventEmitter.register_receiver(cls._singleton)
 
     @classmethod
     def get_port_interfaces(cls):
@@ -103,6 +104,7 @@ if __name__ == "__main__":
     from domain.build_flake import BuildFlake
     from domain.create_flake import CreateFlake
     from domain.event import Event
+    from domain.event_emitter import EventEmitter
     from domain.event_listener import EventListener
     from domain.flake import Flake
     from domain.flake_builder import FlakeBuilder

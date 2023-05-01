@@ -1,10 +1,8 @@
 from domain.git_repo_repo import GitRepoRepo
 from domain.git_repo import GitRepo
+from infrastructure.github_repo import GithubRepo
 
-import base64
-import re
 import requests
-from typing import Dict
 
 class GithubGitRepo(GitRepoRepo):
 
@@ -32,11 +30,8 @@ class GithubGitRepo(GitRepoRepo):
         owner, repo_name = GitRepo.extract_repo_owner_and_repo_name(url)
         headers = {"Authorization": f"token {self.__class__._github_token}"}
         repo_info = requests.get(f"https://api.github.com/repos/{owner}/{repo_name}", headers=headers).json()
-        pyproject_toml = self.get_file_contents_in_github_repo(url, rev, "pyproject.toml")
-        pipfile = self.get_file_contents_in_github_repo(url, rev, "Pipfile")
-        poetry_lock = self.get_file_contents_in_github_repo(url, rev, "poetry.lock")
 
-        return GitRepo(url, rev, repo_info, { "pyproject.toml": pyproject_toml, "Pipfile": pipfile, "poetry.lock": poetry_lock })
+        return GithubRepo(url, rev, repo_info, self.__class__._github_token)
 
     def revision_exists(self, url: str, rev: str) -> bool:
         headers = {"Authorization": f"token {self.__class__._github_token}", "Accept": "application/vnd.github+json"}
@@ -45,23 +40,3 @@ class GithubGitRepo(GitRepoRepo):
         response = requests.get(f"https://api.github.com/repos/{owner}/{repo_name}/git/refs/tags/{rev}", headers=headers)
 
         return response.status_code == 200
-
-    def request_file_in_github_repo(self, url: str, rev: str, file: str) -> bool:
-        headers = {"Authorization": f"token {self.__class__._github_token}", "Accept": "application/vnd.github+json"}
-
-        owner, repo_name = GitRepo.extract_repo_owner_and_repo_name(url)
-        return requests.get(f"https://api.github.com/repos/{owner}/{repo_name}/contents/{file}?ref={rev}", headers=headers)
-
-    def file_exists_in_github_repo(self, url: str, rev: str, file: str) -> bool:
-        file_info = self.request_file_in_github_repo(url, rev, file)
-
-        return file_info.status_code == 200
-
-    def get_file_contents_in_github_repo(self, url: str, rev: str, file: str) -> str:
-        file_info = self.request_file_in_github_repo(url, rev, file)
-
-        if (file_info.status_code == 200):
-            decoded_bytes = base64.b64decode(file_info.json().get("content", ""))
-            return decoded_bytes.decode('utf-8')
-        else:
-            return ""

@@ -9,13 +9,13 @@ class GitRepo(Entity):
     """
     Represents a Git repository.
     """
-    def __init__(self, url: str, rev: str, repo_info: Dict, files: Dict[str, str]):
+    def __init__(self, url: str, rev: str, repo_info: Dict):
         """Creates a new Git repository instance"""
         super().__init__(id)
         self._url = url
         self._rev = rev
         self._repo_info = repo_info
-        self._files = files
+        self._files = {}
 
     @property
     @attribute
@@ -32,19 +32,22 @@ class GitRepo(Entity):
     def repo_info(self):
         return self._repo_info
 
-    @property
-    @attribute
-    def files(self):
-        return self._files
+    def get_file(self, fileName: str) -> str:
+        """
+        Retrieves the contents of given file in the repo.
+        """
+        result = self._files.get(fileName, None)
+        if not result:
+            result = self.access_file(fileName)
+            self._files[fileName] = result
 
-    def pyproject_toml(self):
-        return self._files.get("pyproject.toml", None)
+        return result
 
-    def pipfile(self):
-        return self._files.get("Pipfile", None)
-
-    def poetry_lock(self):
-        return self._files.get("poetry.lock", None)
+    def access_file(self, fileName: str) -> str:
+        """
+        Retrieves the contents of given file in the repo
+        """
+        raise NotImplementedError("access_file() must be implemented by subclasses")
 
     def repo_owner_and_repo_name(self) -> tuple:
         return self.__class__.extract_repo_owner_and_repo_name(self.url)

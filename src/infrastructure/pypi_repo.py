@@ -1,4 +1,5 @@
 from domain.python_package import PythonPackage
+from domain.python_package_factory import PythonPackageFactory
 from domain.python_package_repo import PythonPackageRepo
 
 import logging
@@ -42,4 +43,18 @@ class PypiRepo(PythonPackageRepo):
         latest_release = len(package_data.get("releases", [])[latest_version]) - 1
         release_info = package_data.get("releases", [[]])[latest_version][latest_release]
 
-        return PythonPackage(package_name, latest_version, package_info, release_info)
+        return PythonPackageFactory.create(package_name, latest_version, package_info, release_info)
+
+    def find_by_name(self, package_name: str) -> PythonPackage:
+        """Retrieves latest version of the PythonPackage matching given name."""
+        logger = logging.getLogger(__name__)
+        logger.debug(f"looking for latest version of {package_name} in pypi.org")
+        package_data = requests.get(f"https://pypi.org/pypi/{package_name}/json").json()
+        package_info = package_data.get("info", {})
+        versions = package_data["releases"].keys()
+
+        latest_version = max(versions)
+        latest_release = len(package_data.get("releases", [])[latest_version]) - 1
+        release_info = package_data.get("releases", [[]])[latest_version][latest_release]
+
+        return PythonPackageFactory.create(package_name, latest_version, package_info, release_info)

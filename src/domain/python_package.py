@@ -5,6 +5,7 @@ from domain.git_repo_repo import GitRepoRepo
 from domain.nix_prefetch_url_failed import NixPrefetchUrlFailed
 from domain.nix_python_package import NixPythonPackage
 
+import configparser
 import logging
 import os
 import re
@@ -17,14 +18,14 @@ class PythonPackage(Entity):
     """
     Represents a Python package.
     """
-    def __init__(self, name: str, version: str, info: Dict, release: Dict):
+    def __init__(self, name: str, version: str, info: Dict, release: Dict, gitRepo: GitRepo):
         """Creates a new PythonPackage instance"""
         super().__init__(id)
         self._name = name
         self._version = version
         self._info = info
         self._release = release
-        self._git_repo = self.analyze_repo()
+        self._git_repo = gitRepo
 
     @property
     @primary_key_attribute
@@ -51,99 +52,48 @@ class PythonPackage(Entity):
     def git_repo(self) -> Dict:
         return self._git_repo
 
-    def fix_url(self, url: str) -> str:
+    @classmethod
+    def git_repo_matches(cls, gitRepo: GitRepo) -> bool:
+        """
+        Analyzes given git repository and checks if the subclass is compatible
+        """
+        raise NotImplementedError("git_repo_matches() must be implemented by subclasses")
+
+    @classmethod
+    def fix_url(cls, url: str) -> str:
         result = url
         if result.endswith("/issues"):
             result = result.removesuffix("/issues")
         return result
 
-    def extract_urls(self) -> List[str]:
+    @classmethod
+    def extract_urls(cls, info: Dict) -> List[str]:
         result = []
-        project_urls = self._info.get("project_urls", {})
-        for url in [ entry["collection"].get(entry["key"], None) for entry in [ { "collection": self._info, "key": "package_url" },{ "collection": self._info, "key": "home_page" },{ "collection": self._info, "key": "project_url" },{ "collection": self._info, "key": "release_url" },{ "collection": project_urls, "key": "Changelog" },{ "collection": project_urls, "key": "Documentation" },{ "collection": project_urls, "key": "Issue Tracker" } ] ]:
+        project_urls = info.get("project_urls", {})
+        for url in [ entry["collection"].get(entry["key"], None) for entry in [ { "collection": info, "key": "package_url" },{ "collection": info, "key": "home_page" },{ "collection": info, "key": "project_url" },{ "collection": info, "key": "release_url" },{ "collection": project_urls, "key": "Changelog" },{ "collection": project_urls, "key": "Documentation" },{ "collection": project_urls, "key": "Issue Tracker" } ] ]:
             if url:
-                result.append(self.fix_url(url))
+                result.append(cls.fix_url(url))
         return result
 
-    def analyze_repo(self) -> GitRepo:
+    @classmethod
+    def extract_repo(cls, version: str, info: Dict) -> GitRepo:
         result = None
-        for url in self.extract_urls():
+        for url in cls.extract_urls(info):
             if GitRepo.url_is_a_git_repo(url):
-                result = Ports.instance().resolve(GitRepoRepo).find_by_url_and_rev(url, self.version)
+                result = Ports.instance().resolve(GitRepoRepo).find_by_url_and_rev(url, version)
                 break
-
-        if not result:
-            logging.getLogger(__name__).warn(f'No repo_url found for {self.name}-{self.version}')
-
         return result
 
-    def _parse_toml(self, contents: str) -> Dict:
-        return toml.loads(contents)
-
-    def _read_pyproject_toml(self) -> Dict:
-        result = {}
-        if self._git_repo:
-            pyprojecttoml_contents = self._git_repo.pyproject_toml()
-
-            if pyprojecttoml_contents:
-                result = self._parse_toml(pyprojecttoml_contents)
-        return result
-
-    def _read_poetry_lock(self) -> Dict:
-        result = {}
-        if self._git_repo:
-            poetrylock_contents = self._git_repo.poetry_lock()
-
-            if poetrylock_contents:
-                result = self._parse_toml(poetrylock_contents)
-        return result
-
-    def get_package_type(self) -> str:
-        result = "setuptools"
-        pyproject_toml = self._read_pyproject_toml()
-
-        if pyproject_toml:
-            build_system_requires = pyproject_toml.get("build-system", {}).get("requires", [])
-            if any(item.startswith("poetry") for item in build_system_requires):
-                result = "poetry"
-            elif any(item.startswith("flit") for item in build_system_requires):
-                result = "flit"
-            elif self._git_repo.pipfile():
-                result = "pipenv"
-
-        return result
-
-    def get_poetry_deps(self, section: str) -> List:
-        result = []
-        pyproject_toml = self._read_pyproject_toml()
-        if pyproject_toml:
-            poetry_lock = self._read_poetry_lock()
-            if poetry_lock:
-                for dev_dependency in list(pyproject_toml.get("tool", {}).get("poetry", {}).get(section, {}).keys()):
-                    for package in poetry_lock["package"]:
-                        if package.get("name", "") == dev_dependency:
-                            pythonPackage = Ports.instance().resolvePythonPackageRepo().find_by_name_and_version(dev_dependency, package.get("version", ""))
-                            if pythonPackage:
-                                result.append(pythonPackage)
-
-        return result
-
-    def get_native_build_inputs(self) -> List:
-        result = []
-        type = self.get_package_type()
-        pyproject_toml = self._read_pyproject_toml()
-        if (type == "poetry"):
-            result = self.get_native_build_inputs_poetry()
-        elif pyproject_toml:
-            result = self.get_native_build_inputs_pyproject_toml()
-        return result
-
-    def get_native_build_inputs_poetry(self) -> List:
-        return self.get_poetry_deps("dev-dependencies")
-
-    def extract_requires(self, required_dep) -> tuple:
+    @classmethod
+    def extract_requires(cls, dep) -> tuple:
         pattern = r"([a-zA-Z0-9-_]+)\[?([a-zA-Z0-9-_]+)?\]?([<>=!~]+)?([0-9.]+)?"
-        match = re.match(pattern, required_dep)
+        match = re.match(pattern, dep)
+
+        name = None
+        extras = None
+        constraint = None
+        version = None
+        full_constraint = None
 
         if match:
             name = match.group(1)
@@ -153,54 +103,7 @@ class PythonPackage(Entity):
 
             full_constraint = constraint + version if version else ""
 
-            return name, extras, version, full_constraint
-
-        return None
-
-    def get_native_build_inputs_pyproject_toml(self) -> List:
-        result = []
-        pyproject_toml = self._read_pyproject_toml()
-        if pyproject_toml:
-            for dev_dependency in list(pyproject_toml.get("build-system", {}).get("requires", [])):
-                dep_name, _, dep_version, _ = self.extract_requires(dev_dependency)
-                pythonPackage = Ports.instance().resolvePythonPackageRepo().find_by_name_and_version(dep_name, dep_version)
-                if pythonPackage:
-                    result.append(pythonPackage)
-
-        return result
-
-    def get_propagated_build_inputs(self) -> List:
-        result = []
-        type = self.get_package_type()
-        if (type == "poetry"):
-            result = self.get_propagated_build_inputs_poetry()
-        #TODO: Support the other build types
-        return result
-
-    def get_propagated_build_inputs_poetry(self) -> List:
-        return self.get_poetry_deps("dependencies")
-
-    def get_optional_build_inputs(self) -> List:
-        result = []
-        type = self.get_package_type()
-        if (type == "poetry"):
-            result = self.get_optional_build_inputs_poetry()
-        #TODO: Support the other build types
-        return result
-
-    def get_optional_build_inputs_poetry(self) -> List:
-        return self.get_poetry_deps("extras")
-
-    def get_check_inputs(self) -> List:
-        result = []
-        type = self.get_package_type()
-        if (type == "poetry"):
-            result = self.get_check_inputs_poetry()
-        #TODO: Support the other build types
-        return result
-
-    def get_check_inputs_poetry(self) -> List:
-        return self.get_poetry_deps("test")
+        return name, extras, version, full_constraint
 
     def satisfies_spec(self, nixPythonPackage: NixPythonPackage) -> bool:
         # TODO: check if the nixpkgs package satisfies the version spec
@@ -236,3 +139,33 @@ class PythonPackage(Entity):
         logging.getLogger(__name__).debug(f'pypi sha256: {result}')
 
         return result
+
+    def get_native_build_inputs(self) -> List:
+        """
+        Retrieves the native build inputs.
+        """
+        raise NotImplementedError('get_native_build_inputs() must be implemented by subclasses')
+
+    def get_propagated_build_inputs(self) -> List:
+        """
+        Retrieves the propagated build inputs.
+        """
+        raise NotImplementedError('get_propagated_build_inputs() must be implemented by subclasses')
+
+    def get_build_inputs(self) -> List:
+        """
+        Retrieves the build inputs.
+        """
+        raise NotImplementedError('get_build_inputs() must be implemented by subclasses')
+
+    def get_optional_build_inputs(self) -> List:
+        """
+        Retrieves the optional build inputs.
+        """
+        raise NotImplementedError('get_optional_build_inputs() must be implemented by subclasses')
+
+    def get_check_inputs(self) -> List:
+        """
+        Retrieves the check inputs.
+        """
+        raise NotImplementedError('get_check_inputs() must be implemented by subclasses')

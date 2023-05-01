@@ -1,7 +1,7 @@
 from domain.entity import Entity, primary_key_attribute, attribute
 from domain.event import Event
+from domain.event_emitter import EventEmitter
 from domain.event_listener import EventListener
-from domain.create_flake import CreateFlake
 from domain.flake_requested import FlakeRequested
 from domain.python_package import PythonPackage
 from domain.python_package_repo import PythonPackageRepo
@@ -14,7 +14,7 @@ from domain.ports import Ports
 from typing import Dict, List, Type
 import logging
 
-class Flake(Entity, EventListener):
+class Flake(Entity, EventListener, EventEmitter):
 
     """
     Represents a nix flake.
@@ -113,8 +113,8 @@ class Flake(Entity, EventListener):
                 if depFlake:
                     logger.debug(f'Flake found for {depName}-{depVersion}')
                 else:
-                    flakeCreated = cls.create_flake(CreateFlake(depName, depVersion))
-                    logger.info(f'Flake {dep.name}-{dep.version} created (triggered by "create flake {event.package_name}-{event.package_version}")')
+                    flakeCreated = cls.emit(FlakeRequested(depName, depVersion))
+                    logger.info(f'Flake {dep.name}-{dep.version} created (triggered by "flake {event.package_name}-{event.package_version} requested")')
 
             # 3. create flake
             flake = Flake(event.package_name, event.package_version, pythonPackage, nativeBuildInputs, propagatedBuildInputs, checkInputs, optionalBuildInputs, dependenciesInNixpkgs)
