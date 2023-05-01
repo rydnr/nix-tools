@@ -39,7 +39,7 @@ class SetuptoolsPythonPackage(PythonPackage):
         setup_cfg = cls.read_setup_cfg(gitRepo)
         if setup_cfg:
             for dep in setup_cfg.get("options", {}).get("setup_requires", "").split('\n'):
-                dep_name, _, _, _ = cls.extract_requires(dep)
+                dep_name, _, _, _ = cls.extract_dep(dep)
                 if dep_name == 'setuptools':
                     result = True
                     break
@@ -51,8 +51,7 @@ class SetuptoolsPythonPackage(PythonPackage):
         setup_cfg = self._read_setup_cfg()
         if setup_cfg:
             for dev_dependency in setup_cfg.get("options", {}).get("setup_requires", "").split('\n'):
-                dep_name, _, dep_version, _ = self.__class__.extract_requires(dev_dependency)
-                pythonPackage = Ports.instance().resolvePythonPackageRepo().find_by_name_and_version(dep_name, dep_version)
+                pythonPackage = self.__class__.find_dep(dev_dependency)
                 if pythonPackage:
                     result.append(pythonPackage)
 
@@ -72,11 +71,7 @@ class SetuptoolsPythonPackage(PythonPackage):
         result = []
         setup_cfg = self._read_setup_cfg()
         for dep in setup_cfg.get("options.extras_require", {}).get("test", "").split('\n'):
-            dep_name, _, dep_version, _ = self.__class__.extract_requires(dep)
-            if dep_version:
-                pythonPackage = Ports.instance().resolvePythonPackageRepo().find_by_name_and_version(dep_name, dep_version)
-            else:
-                pythonPackage = Ports.instance().resolvePythonPackageRepo().find_by_name(dep_name)
+            pythonPackage = self.__class__.find_dep(dep)
             if pythonPackage:
                 result.append(pythonPackage)
         return result

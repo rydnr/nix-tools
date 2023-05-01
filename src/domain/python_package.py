@@ -85,9 +85,9 @@ class PythonPackage(Entity):
         return result
 
     @classmethod
-    def extract_requires(cls, dep) -> tuple:
+    def extract_dep(cls, depInfo: str) -> tuple:
         pattern = r"([a-zA-Z0-9-_]+)\[?([a-zA-Z0-9-_]+)?\]?([<>=!~]+)?([0-9.]+)?"
-        match = re.match(pattern, dep)
+        match = re.match(pattern, depInfo)
 
         name = None
         extras = None
@@ -104,6 +104,15 @@ class PythonPackage(Entity):
             full_constraint = constraint + version if version else ""
 
         return name, extras, version, full_constraint
+
+    @classmethod
+    def find_dep(cls, depInfo: str): # -> PythonPackage:
+        dep_name, _, dep_version, _ = cls.extract_dep(depInfo)
+        if dep_version:
+            result = Ports.instance().resolvePythonPackageRepo().find_by_name_and_version(dep_name, dep_version)
+        else:
+            result = Ports.instance().resolvePythonPackageRepo().find_by_name(dep_name)
+        return result
 
     def satisfies_spec(self, nixPythonPackage: NixPythonPackage) -> bool:
         # TODO: check if the nixpkgs package satisfies the version spec

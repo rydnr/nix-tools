@@ -1,6 +1,7 @@
 from domain.python_package import PythonPackage
 from domain.unsupported_python_package import UnsupportedPythonPackage
 
+import logging
 from typing import Dict
 
 class PythonPackageFactory():

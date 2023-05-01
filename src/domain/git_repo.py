@@ -1,6 +1,9 @@
 from domain.entity import Entity, attribute
+from domain.error_cloning_git_repository import ErrorCloningGitRepository
+from domain.git_checkout_failed import GitCheckoutFailed
 
 import logging
+import os
 import re
 import subprocess
 from typing import Dict
@@ -78,3 +81,21 @@ class GitRepo(Entity):
         logging.getLogger(__name__).debug(f'nix-prefetch-git --deepClone {self.url}/tree/{self.rev} -> {output}')
 
         return output.splitlines()[-1]
+
+    def clone(self, folder: str, subfolder: str):
+        result = os.path.join(folder, subfolder)
+
+        try:
+            subprocess.run(['git', 'clone', self.url, subfolder], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=folder)
+        except subprocess.CalledProcessError as err:
+            logging.getLogger(__name__).error(err.stdout)
+            logging.getLogger(__name__).error(err.stderr)
+            raise ErrorCloningGitRepository(self.url, folder)
+        try:
+            subprocess.run(['git', 'checkout', self.rev], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=result)
+        except subprocess.CalledProcessError as err:
+            logging.getLogger(__name__).error(err.stdout)
+            logging.getLogger(__name__).error(err.stderr)
+            raise GitCheckoutFailed(self.url, self.rev, folder)
+
+        return result
