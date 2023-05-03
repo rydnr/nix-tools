@@ -43,6 +43,19 @@ class SetuppyPythonPackage(PythonPackage, SetupcfgUtils):
         """
         return "setup.py"
 
+    def append_package(self, packages: List, package: PythonPackage, setuptoolsIncluded: bool) -> bool:
+        result = False
+        print(f'Found {pythonPackage.name}-{pythonPackage.version} ({len(packages)})')
+        if pythonPackage.name != 'setuptools':
+            packages.append(pythonPackage)
+            result = setuptoolsIncluded
+        elif pythonPackage.name == 'setuptools' and not setuptoolsIncluded and self.name != "setuptools":
+            packages.append(pythonPackage)
+            result = True
+        else:
+            result = True
+        return result
+
     def get_native_build_inputs(self) -> List:
         result = []
         setuptools_included = False
@@ -51,61 +64,59 @@ class SetuppyPythonPackage(PythonPackage, SetupcfgUtils):
             for dep in install_requires:
                 pythonPackage = self.find_dep(dep)
                 if pythonPackage:
-                    result.append(pythonPackage)
-                    if pythonPackage.name == 'setuptools':
-                        setuptools_included = True
+                    print(f'found {pythonPackage.name}-{pythonPackage.version}')
+                    setuptools_included = self.append_package(result, pythonPackage, setuptools_included)
         setup_requires = self.requires_txt.get("setup_requires")
         if setup_requires:
             for dep in setup_requires:
                 pythonPackage = self.find_dep(dep)
                 if pythonPackage:
-                    if pythonPackage.name == 'setuptools':
-                        if not setuptools_included and self.name != "setuptools":
-                            setuptools_included = True
-                            result.append(pythonPackage)
-                    else:
-                        result.append(pythonPackage)
+                    setuptools_included = self.append_package(result, pythonPackage, setuptools_included)
         if not setuptools_included and self.name != "setuptools":
             result.append(Ports.instance().resolvePythonPackageRepo().find_by_name("setuptools"))
         return result
 
     def get_propagated_build_inputs(self) -> List:
+        # TODO
         return self.get_native_build_inputs()
 
     def get_build_inputs(self) -> List:
+        # TODO
         return self.get_propagated_build_inputs()
 
     def get_optional_build_inputs(self) -> List:
         result = []
+        setuptools_included = False
         extras_require = self.requires_txt.get("extras_require")
         if extras_require:
             for dep in extras_require:
                 pythonPackage = self.find_dep(dep)
                 if pythonPackage:
-                    result.append(pythonPackage)
+                    setuptools_included = self.append_package(result, pythonPackage, setuptools_included)
         dev = self.requires_txt.get("dev")
         if dev:
             for dep in dev:
                 pythonPackage = self.find_dep(dep)
                 if pythonPackage:
-                    result.append(pythonPackage)
+                    setuptools_included = self.append_package(result, pythonPackage, setuptools_included)
 
         return result
 
     def get_check_inputs(self) -> List:
         result = []
+        setuptools_included = False
         test_require = self.requires_txt.get("test_require")
         if test_require:
             for dep in test_require:
                 pythonPackage = self.find_dep(dep)
                 if pythonPackage:
-                    result.append(pythonPackage)
+                    setuptools_included = self.append_package(result, pythonPackage, setuptoolsIncluded)
         test = self.requires_txt.get("test")
         if test:
             for dep in test:
                 pythonPackage = self.find_dep(dep)
                 if pythonPackage:
-                    result.append(pythonPackage)
+                    setuptools_included = self.append_package(result, pythonPackage, setuptoolsIncluded)
 
         return result
 

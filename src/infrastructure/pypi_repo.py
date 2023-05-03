@@ -6,49 +6,86 @@ import logging
 from packaging.specifiers import SpecifierSet
 import re
 import requests
-from typing import Dict
+from typing import Dict, List
 
 class PypiRepo(PythonPackageRepo):
     """
     A PythonPackageRepo that uses Pypi as store
     """
 
+    _cached_packages = {}
+    _cached_package_data = {}
+
     def __init__(self):
         super().__init__()
 
-    def find_by_name_and_version(self, package_name: str, package_version: str) -> Dict[str, str]:
+    def retrieve_package_data(self, package_name: str) -> Dict:
+        result = self.__class__._cached_package_data.get(package_name, None)
+        if result is None:
+            logging.getLogger(__name__).debug(f"Retrieving {package_name} info from https://pypi.org/pypi/{package_name}/json")
+            result = requests.get(f"https://pypi.org/pypi/{package_name}/json").json()
+            self.__class__._cached_package_data[package_name] = result
+        return result
+
+    def find_by_name_and_version(self, package_name: str, package_version: str) -> PythonPackage:
         """
         Retrieves the PythonPackage matching given name and version.
         """
+        result = self.__class__._cached_packages.get(f'{package_name}-{package_version}', None)
+        if result is None:
+            logger = logging.getLogger(__name__)
+            package_data = self.retrieve_package_data(package_name)
+
+            # If the package_version is an exact version, add '==' before it
+            if re.match(r"^\d+(\.\d+)*(-?(rc|b)\d+)?$", package_version):
+                package_version = f"=={package_version}"
+
+            specifier_set = SpecifierSet(package_version)
+
+            package_info = package_data.get("info", {})
+            versions = package_data["releases"].keys()
+
+            compatible_versions = [v for v in versions if v in specifier_set]
+
+            if compatible_versions:
+                latest_version = max(compatible_versions)
+                latest_release = len(package_data.get("releases", [])[latest_version]) - 1
+                release_info = package_data.get("releases", [[]])[latest_version][latest_release]
+
+                result = PythonPackageFactory.create(package_name, latest_version, package_info, release_info)
+                self.__class__._cached_packages[f'{package_name}-{latest_version}'] = result
+                self.__class__._cached_packages[f'{package_name}-{package_version}'] = result
+
+        return result
+
+    def find_all_by_name(self, package_name: str) -> List[PythonPackage]:
+        """Retrieves all versions of the PythonPackage matching given name."""
+        result = []
         logger = logging.getLogger(__name__)
-        logger.debug(f"looking for {package_name} {package_version} in pypi.org")
-        # If the package_version is an exact version, add '==' before it
-        if re.match(r"^\d+(\.\d+)*(-?(rc|b)\d+)?$", package_version):
-            package_version = f"=={package_version}"
+        logger.debug(f"Looking for all versions of {package_name} in pypi.org")
 
-        specifier_set = SpecifierSet(package_version)
+        package_data = self.retrieve_package_data(package_name)
 
-        logger.debug(f"Retrieving {package_name}{package_version} info from https://pypi.org/pypi/{package_name}/json")
-        package_data = requests.get(f"https://pypi.org/pypi/{package_name}/json").json()
         package_info = package_data.get("info", {})
         versions = package_data["releases"].keys()
 
-        compatible_versions = [v for v in versions if v in specifier_set]
+        for version in versions:
+            latest_release = len(package_data.get("releases", [])[version]) - 1
+            release_info = package_data.get("releases", [[]])[version][latest_release]
+            package = self.__class__._cached_packages.get(f'{package_name}-{latest_version}', None)
+            if package is None:
+                package = PythonPackageFactory.create(package_name, latest_version, package_info, release_info)
+                self.__class__._cached_packages[f'{package_name}-{latest_version}'] = package
 
-        if not compatible_versions:
-            raise Exception(f"No compatible versions found for {package_name} version {package_version}")
+            result.append(package)
 
-        latest_version = max(compatible_versions)
-        latest_release = len(package_data.get("releases", [])[latest_version]) - 1
-        release_info = package_data.get("releases", [[]])[latest_version][latest_release]
-
-        return PythonPackageFactory.create(package_name, latest_version, package_info, release_info)
+        return result
 
     def find_by_name(self, package_name: str) -> PythonPackage:
         """Retrieves latest version of the PythonPackage matching given name."""
         logger = logging.getLogger(__name__)
-        logger.debug(f"looking for latest version of {package_name} in pypi.org")
-        package_data = requests.get(f"https://pypi.org/pypi/{package_name}/json").json()
+        package_data = self.retrieve_package_data(package_name)
+
         package_info = package_data.get("info", {})
         versions = package_data["releases"].keys()
 
@@ -56,4 +93,9 @@ class PypiRepo(PythonPackageRepo):
         latest_release = len(package_data.get("releases", [])[latest_version]) - 1
         release_info = package_data.get("releases", [[]])[latest_version][latest_release]
 
-        return PythonPackageFactory.create(package_name, latest_version, package_info, release_info)
+        result = self.__class__._cached_packages.get(f'{package_name}-{latest_version}', None)
+        if result is None:
+            result = PythonPackageFactory.create(package_name, latest_version, package_info, release_info)
+            self.__class__._cached_packages[f'{package_name}-{latest_version}'] = result
+
+        return result

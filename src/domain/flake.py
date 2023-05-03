@@ -84,45 +84,54 @@ class Flake(Entity, EventListener, EventEmitter):
         logger = logging.getLogger(__name__)
         logger.info(f'Received "flake requested for {event.package_name}-{event.package_version}"')
         flakeRepo = Ports.instance().resolveFlakeRepo()
-        # 1. check if flake exists already
+
+        logging.getLogger('step-by-step').info(f'Checking if there is a flake for {event.package_name}-{event.package_version}')
         existingFlake = flakeRepo.find_by_name_and_version(event.package_name, event.package_version)
         if existingFlake:
             logger.info(f'Flake for {event.package_name}-{event.package_version} already exists')
         else:
-            # 2. obtain pypi info
+            logging.getLogger('step-by-step').info(f'Retrieving the Python package for {event.package_name}-{event.package_version}')
             pythonPackage = Ports.instance().resolve(PythonPackageRepo).find_by_name_and_version(event.package_name, event.package_version)
 
             if pythonPackage.in_nixpkgs():
                 logger.info(f'Python package {pythonPackage.nixpkgs_package_name()} compatible with version {event.package_version} already exists in nixpkgs.')
             else:
                 nixPythonPackageRepo = Ports.instance().resolve(NixPythonPackageRepo)
+                logging.getLogger('step-by-step').info(f'Retrieving the dependencies of {event.package_name}-{event.package_version}')
                 nativeBuildInputs = pythonPackage.get_native_build_inputs()
                 propagatedBuildInputs = pythonPackage.get_propagated_build_inputs()
+                buildInputs = pythonPackage.get_build_inputs()
                 checkInputs = pythonPackage.get_check_inputs()
                 optionalBuildInputs = pythonPackage.get_optional_build_inputs()
                 dependenciesInNixpkgs = []
-                for dep in list(set(nativeBuildInputs) | set(propagatedBuildInputs) | set(checkInputs) | set(optionalBuildInputs)):
-                    depName = dep.name
-                    depVersion = dep.version
-                    nixPythonPackages = nixPythonPackageRepo.find_by_name(dep.name)
-                    if len(nixPythonPackages) > 0:
-                        nixPythonPackage = nixPythonPackages[len(nixPythonPackages) - 1]
-                        if pythonPackage.satisfies_spec(nixPythonPackage.version):
-                            dependenciesInNixpkgs.append(pythonPackage)
-                            depName = nixPythonPackage.name
-                            depVersion = nixPythonPackage.version
-                            # check if there's a flake for the dependency
-                            depFlake = flakeRepo.find_by_name_and_version(depName, depVersion)
-                            if depFlake:
-                                logger.debug(f'Flake found for {depName}-{depVersion}')
-                            else:
-                                flakeCreated = cls.emit(FlakeRequested(depName, depVersion))
-                                logger.info(f'Flake {dep.name}-{dep.version} created (triggered by "flake {event.package_name}-{event.package_version} requested")')
+                for dep in list(set(nativeBuildInputs) | set(propagatedBuildInputs) | set(buildInputs) | set(checkInputs) | set(optionalBuildInputs)):
+                    logging.getLogger('step-by-step').info(f'Processing dependency {dep.name}-{dep.version} of {event.package_name}-{event.package_version}')
+                    # check if it's in nixpkgs already
+                    if dep.in_nixpkgs():
+                        logging.getLogger('step-by-step').info(f'Dependency {dep.name}-{dep.version} of {event.package_name}-{event.package_version} already in nixpkgs')
+                    else:
+                        depName = dep.name
+                        depVersion = dep.version
+                        nixPythonPackages = nixPythonPackageRepo.find_by_name(dep.name)
+                        if len(nixPythonPackages) > 0:
+                            nixPythonPackage = nixPythonPackages[len(nixPythonPackages) - 1]
+                            if dep.satisfies_spec(nixPythonPackage.version):
+                                dependenciesInNixpkgs.append(pythonPackage)
+                                depName = nixPythonPackage.name
+                                depVersion = nixPythonPackage.version
+                                # check if there's a flake for the dependency
+                                depFlake = flakeRepo.find_by_name_and_version(depName, depVersion)
+                                if depFlake:
+                                    logger.debug(f'Flake found for {depName}-{depVersion}')
+                                else:
+                                    flakeCreated = cls.emit(FlakeRequested(depName, depVersion))
+                                    logger.info(f'Flake {dep.name}-{dep.version} created (triggered by "flake {event.package_name}-{event.package_version} requested")')
 
-                # 3. create flake
                 flake = Flake(event.package_name, event.package_version, pythonPackage, nativeBuildInputs, propagatedBuildInputs, checkInputs, optionalBuildInputs, dependenciesInNixpkgs)
+                logging.getLogger('step-by-step').info(f'Retrieving recipe for flake {flake.name}-{flake.version}')
                 flakeRecipe = cls.find_recipe_by_flake(flake)
                 if flakeRecipe:
+                    logging.getLogger('step-by-step').info(f'Recipe processing')
                     result = flakeRecipe.process()
 
                 else:

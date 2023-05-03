@@ -8,12 +8,12 @@ from domain.recipe.missing_recipe_toml import MissingRecipeToml
 from domain.recipe.missing_type_in_flake_metadata_section_in_recipe_toml import MissingTypeInFlakeMetadataSectionInRecipeToml
 from domain.recipe.more_than_one_flake_in_recipe_toml import MoreThanOneFlakeInRecipeToml
 
-import os
 import inspect
 import logging
+import os
 from pathlib import Path
 import toml
-from typing import Dict,List
+from typing import Dict, List
 
 class FlakeRecipe(Entity):
 

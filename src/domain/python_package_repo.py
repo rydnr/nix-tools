@@ -1,6 +1,8 @@
 from domain.repo import Repo
 from domain.python_package import PythonPackage
 
+from typing import List
+
 class PythonPackageRepo(Repo):
     """
     A subclass of Repo that manages Python Packages.
@@ -24,4 +26,10 @@ class PythonPackageRepo(Repo):
         """Retrieves latest version of the PythonPackage matching given name."""
         raise NotImplementedError(
             "find_by_name() must be implemented by subclasses"
+        )
+
+    def find_all_by_name(self, package_name: str) -> List[PythonPackage]:
+        """Retrieves all versions of the PythonPackage matching given name."""
+        raise NotImplementedError(
+            "find_all_by_name() must be implemented by subclasses"
         )

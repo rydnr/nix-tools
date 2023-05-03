@@ -5,12 +5,9 @@ from domain.git_repo_repo import GitRepoRepo
 from domain.nix_prefetch_url_failed import NixPrefetchUrlFailed
 from domain.nix_python_package import NixPythonPackage
 
-import configparser
-import logging
 import os
 import re
 import subprocess
-import toml
 import tempfile
 from typing import Dict, List
 
