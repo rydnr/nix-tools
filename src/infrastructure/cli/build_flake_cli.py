@@ -33,6 +33,9 @@ class BuildFlakeCli(PrimaryPort):
             "-t", "--github_token", required=False, help="The github token"
         )
         parser.add_argument("-u", "--flakes_url", required=False, help="The flakes url")
+        parser.add_argument(
+            "-x", "--forensic_folder", required=False, help="The folder where to copy the contents of flakes whose build failed"
+        )
         args, unknown_args = parser.parse_known_args()
 
         if args.command == "build":

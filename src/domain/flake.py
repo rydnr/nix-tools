@@ -149,3 +149,6 @@ class Flake(Entity, EventListener, EventEmitter):
         if matches and len(matches) > 0:
             result = matches[0](flake)
         return result
+
+    def dependency_in_nixpkgs(self, dep) -> bool:
+        return dep in self.dependencies_in_nixpkgs

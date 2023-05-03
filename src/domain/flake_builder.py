@@ -17,6 +17,12 @@ from typing import List, Type
 
 class FlakeBuilder(EventListener):
 
+    _forensic_folder = None
+
+    @classmethod
+    def forensic_folder(cls, folder: str):
+        cls._forensic_folder = folder
+
     @classmethod
     def supported_events(cls) -> List[Type[Event]]:
         """
@@ -48,7 +54,8 @@ class FlakeBuilder(EventListener):
     @classmethod
     def copy_folder_contents(cls, source: str, destination: str):
         logging.getLogger(__name__).debug(f'Copying {source} contents to {destination}')
-        shutil.rmtree(destination)
+        if os.path.exists(destination):
+            shutil.rmtree(destination)
         shutil.copytree(source, destination)
 
     @classmethod
@@ -77,4 +84,5 @@ class FlakeBuilder(EventListener):
         except subprocess.CalledProcessError as err:
             logging.getLogger(__name__).error(err.stdout)
             logging.getLogger(__name__).error(err.stderr)
-            raise NixBuildFailed(folder, err.stdout)
+            cls.copy_folder_contents(folder, cls._forensic_folder)
+            raise NixBuildFailed(cls._forensic_folder, err.stdout)

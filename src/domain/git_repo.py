@@ -6,18 +6,20 @@ import logging
 import os
 import re
 import subprocess
+from urllib.parse import urlparse
 from typing import Dict
 
 class GitRepo(Entity):
     """
     Represents a Git repository.
     """
-    def __init__(self, url: str, rev: str, repo_info: Dict):
+    def __init__(self, url: str, rev: str, repo_info: Dict, subfolder=None):
         """Creates a new Git repository instance"""
         super().__init__(id)
         self._url = url
         self._rev = rev
         self._repo_info = repo_info
+        self._subfolder = subfolder
         self._files = {}
 
     @property
@@ -45,6 +47,11 @@ class GitRepo(Entity):
             self._files[fileName] = result
 
         return result
+
+    @property
+    @attribute
+    def subfolder(self):
+        return self._subfolder
 
     def access_file(self, fileName: str) -> str:
         """
@@ -99,3 +106,17 @@ class GitRepo(Entity):
             raise GitCheckoutFailed(self.url, self.rev, folder)
 
         return result
+
+    @classmethod
+    def extract_url_and_subfolder(cls, url: str) -> tuple:
+        parsed_url = urlparse(url)
+        path_parts = parsed_url.path.split('/')
+
+        if len(path_parts) > 4 and path_parts[3] == 'tree':
+            repo_url = f"{parsed_url.scheme}://{parsed_url.netloc}/{path_parts[1]}/{path_parts[2]}"
+            subfolder = '/'.join(path_parts[5:])
+        else:
+            repo_url = f"{parsed_url.scheme}://{parsed_url.netloc}/{path_parts[1]}/{path_parts[2]}"
+            subfolder = '/'.join(path_parts[3:])
+
+        return repo_url, subfolder

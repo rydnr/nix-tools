@@ -131,3 +131,9 @@ class FlakeRecipe(Entity):
         result = max(partialResults)
         logging.getLogger(cls.__name__).debug(f'Similarity between recipe {cls.__name__} and flake {flake.name}-{flake.version}: {result}')
         return result
+
+    def usesGitrepoSha256(self):
+        return False
+
+    def usesPipSha256(self):
+        return False

@@ -2,9 +2,10 @@ from domain.git_repo import GitRepo
 from domain.ports import Ports
 from domain.python.error_creating_a_virtual_environment import ErrorCreatingAVirtualEnvironment
 from domain.python.error_installing_setuptools import ErrorInstallingSetuptools
+from domain.python.more_than_one_egg_info_folder import MoreThanOneEggInfoFolder
+from domain.python.no_egg_info_folder_found import NoEggInfoFolderFound
 from domain.python.python_setuppy_egg_info_failed import PythonSetuppyEggInfoFailed
 from domain.python.setupcfg_utils import SetupcfgUtils
-from domain.python.unexpected_number_of_egg_info_folders import UnexpectedNumberOfEggInfoFolders
 from domain.python_package import PythonPackage
 
 import logging
@@ -29,12 +30,12 @@ class SetuppyPythonPackage(PythonPackage, SetupcfgUtils):
     @property
     def requires_txt(self) -> Dict:
         if not self._requires_txt:
-            self._requires_txt = self.__class__.parse_requires_txt(self.__class__.egg_info(self.git_repo))
+            self._requires_txt = self.__class__.parse_requires_txt(self.egg_info(self.git_repo))
         return self._requires_txt
 
     @classmethod
     def git_repo_matches(cls, gitRepo: GitRepo) -> bool:
-        return gitRepo.get_file("setup.py") is not None
+        return gitRepo.get_file("setup.py") is not None or gitRepo.get_file(f'{gitRepo.subfolder}/setup.py') is not None
 
     def get_type(self) -> str:
         """
@@ -129,58 +130,79 @@ class SetuppyPythonPackage(PythonPackage, SetupcfgUtils):
         return sections
 
     @classmethod
-    def egg_info(cls, gitRepo: GitRepo) -> str:
+    def python_path(cls, venvFolder: str) -> str:
+        if sys.platform == 'win32':
+            result = os.path.join(venvFolder, "Scripts", "python.exe")
+        else:
+            result = os.path.join(venvFolder, "bin", "python")
+        return result
+
+    def egg_info(self, gitRepo: GitRepo) -> str:
         result = None
 
         with tempfile.TemporaryDirectory() as venv_dir:
-            cls.create_venv(venv_dir)
-            cls.install_setuptools(venv_dir)
+            self.__class__.create_venv(venv_dir)
+            self.__class__.install_setuptools(venv_dir)
             repo_folder = gitRepo.clone(venv_dir, "upstream")
-            cls.run_egg_info(venv_dir, repo_folder)
-            result = cls.cat_requires_txt(gitRepo, repo_folder)
+            if gitRepo.subfolder:
+                repo_folder = os.path.join(repo_folder, gitRepo.subfolder)
+            egg_info_output = self.__class__.run_egg_info(venv_dir, repo_folder)
+            result = self.cat_requires_txt(gitRepo, repo_folder, egg_info_output)
 
         return result
 
     @classmethod
-    def create_venv(cls, folder: str):
+    def create_venv(cls, folder: str) -> str:
         try:
-            subprocess.run([sys.executable, '-m', 'venv', folder], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=folder)
+            output = subprocess.run([sys.executable, '-m', 'venv', folder], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=folder)
         except subprocess.CalledProcessError as err:
             logging.getLogger(__name__).error(err.stdout)
             logging.getLogger(__name__).error(err.stderr)
             raise ErrorCreatingAVirtualEnvironment()
 
+        return output.stdout
+
     @classmethod
-    def install_setuptools(cls, folder: str):
+    def install_setuptools(cls, folder: str) -> str:
         try:
-            subprocess.run([os.path.join(folder, 'bin', 'python'), '-m', 'pip', 'install', 'setuptools'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=folder)
+            output = subprocess.run([cls.python_path(folder), '-m', 'pip', 'install', 'setuptools'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=folder)
         except subprocess.CalledProcessError as err:
             logging.getLogger(__name__).error(err.stdout)
             logging.getLogger(__name__).error(err.stderr)
             raise ErrorInstallingSetuptools()
 
+        return output.stdout
+
     @classmethod
-    def run_egg_info(cls, venv_folder: str, repo_folder: str):
+    def run_egg_info(cls, venv_folder: str, repo_folder: str) -> str:
+        logging.getLogger(__name__).info(f'Running "python setup.py egg_info" from {repo_folder}')
         try:
-            output = subprocess.run([os.path.join(venv_folder, 'bin', 'python'), 'setup.py', 'egg_info'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=repo_folder)
+            output = subprocess.run([cls.python_path(venv_folder), 'setup.py', 'egg_info'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=repo_folder)
         except subprocess.CalledProcessError as err:
             logging.getLogger(__name__).error(err.stdout)
             logging.getLogger(__name__).error(err.stderr)
             raise PythonSetuppyEggInfoFailed()
 
+        return output.stdout
+
     @classmethod
-    def retrieve_package_dir(cls, gitRepo: GitRepo, folder: str) -> str:
+    def retrieve_package_dir(cls, gitRepo: GitRepo) -> str:
         setup_cfg = cls.read_setup_cfg(gitRepo)
         if setup_cfg:
             result = setup_cfg.get("options", {}).get("package_dir", None)
+        else:
+            result = None
         return result
 
     @classmethod
-    def cat_requires_txt(cls, gitRepo: GitRepo, folder: str) -> str:
+    def normalize(cls, s: str) -> str:
+        return ''.join(c if c.isalnum() else '_' for c in s).lower()
+
+    def cat_requires_txt(self, gitRepo: GitRepo, folder: str, eggInfoOutput: str) -> str:
         result = None
 
         # Retrieve the package dir
-        package_dir = cls.retrieve_package_dir(gitRepo, folder)
+        package_dir = self.__class__.retrieve_package_dir(gitRepo)
 
         if package_dir:
             subfolder = os.path.join(folder, package_dir)
@@ -191,19 +213,27 @@ class SetuppyPythonPackage(PythonPackage, SetupcfgUtils):
         dirs = os.listdir(subfolder)
 
         _, name = gitRepo.repo_owner_and_repo_name()
+        normalized_name = self.__class__.normalize(name)
+        normalized_package_name = self.__class__.normalize(self.name)
+
+        logging.getLogger(__name__).info(f'name: {normalized_name}, package_name: {normalized_package_name}, folder: {folder}, subfolder: {subfolder}, dirs: {dirs}')
+
 
         # Filter the list to only include .egg-info directories.
-        egg_info_dirs = [d for d in dirs if d.endswith('.egg-info') and name in d]
+        egg_info_dirs = [d for d in dirs if d.endswith('.egg-info') and (normalized_name in d or normalized_package_name in d)]
 
         # There should be only one .egg-info directory.
         # If not, you might need to handle this situation.
+        if len(egg_info_dirs) == 0:
+            logging.getLogger(__name__).error(eggInfoOutput)
+            raise NoEggInfoFolderFound()
         if len(egg_info_dirs) == 1:
             egg_info_dir = egg_info_dirs[0]
             with open(os.path.join(subfolder, egg_info_dir, "requires.txt"), "r") as file:
                 result = file.read()
-
         else:
-            raise UnexpectedNumberOfEggInfoFolders()
+            logging.getLogger(__name__).error(eggInfoOutput)
+            raise MoreThanOneEggInfoFolder(egg_info_dirs)
 
         return result
 

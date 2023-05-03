@@ -66,7 +66,7 @@ class NixTemplate(Entity):
             "overrides": overrides
             }
 
-    def render(self, flake) -> str:
+    def render(self, flake, recipe) -> str:
 
         repo_owner = ""
         repo_name = ""
@@ -77,8 +77,15 @@ class NixTemplate(Entity):
             repo_owner, repo_name = flake.python_package.git_repo.repo_owner_and_repo_name()
             repo_url=flake.python_package.git_repo.url
             repo_rev=flake.python_package.git_repo.rev
+        if recipe.usesGitrepoSha256():
             repo_sha256=flake.python_package.git_repo.sha256()
-        pypi_sha256 = flake.python_package.pip_sha256()
+        else:
+            repo_sha256=""
+        if recipe.usesPipSha256():
+            pypi_sha256 = flake.python_package.pip_sha256()
+        else:
+            pypi_sha256=""
+
         native_build_inputs = flake.native_build_inputs
         propagated_build_inputs = flake.propagated_build_inputs
         build_inputs = flake.propagated_build_inputs # TODO: find out whether build inputs can be inferred from the Python package

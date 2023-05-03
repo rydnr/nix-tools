@@ -1,31 +1,17 @@
 from domain.ports import Ports
 from domain.git_repo import GitRepo
+from domain.python.pyprojecttoml_utils import PyprojecttomlUtils
 from domain.python_package import PythonPackage
 
-import toml
 from typing import Dict, List
 
-class PoetryPythonPackage(PythonPackage):
+class PoetryPythonPackage(PythonPackage, PyprojecttomlUtils):
     """
     Represents a Poetry-based Python package.
     """
     def __init__(self, name: str, version: str, info: Dict, release: Dict, gitRepo: GitRepo):
         """Creates a new PoetryPythonPackage instance"""
         super().__init__(name, version, info, release, gitRepo)
-
-    @classmethod
-    def parse_toml(cls, contents: str) -> Dict:
-        return toml.loads(contents)
-
-    @classmethod
-    def read_pyproject_toml(cls, gitRepo: GitRepo) -> Dict:
-        result = {}
-        if gitRepo:
-            pyprojecttoml_contents = gitRepo.get_file("pyproject.toml")
-
-            if pyprojecttoml_contents:
-                result = cls.parse_toml(pyprojecttoml_contents)
-        return result
 
     @classmethod
     def read_poetry_lock(cls, gitRepo) -> Dict:
@@ -56,9 +42,9 @@ class PoetryPythonPackage(PythonPackage):
 
     def get_poetry_deps(self, section: str) -> List:
         result = []
-        pyproject_toml = self.__class__.read_pyproject_toml()
+        pyproject_toml = self.__class__.read_pyproject_toml(self.git_repo)
         if pyproject_toml:
-            poetry_lock = self.__class__.read_poetry_lock()
+            poetry_lock = self.__class__.read_poetry_lock(self.git_repo)
             if poetry_lock:
                 for dev_dependency in list(pyproject_toml.get("tool", {}).get("poetry", {}).get(section, {}).keys()):
                     for package in poetry_lock["package"]:

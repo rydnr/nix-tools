@@ -7,6 +7,7 @@ from domain.ports import Ports
 import inspect
 import logging
 from pathlib import Path
+
 class BaseFlakeRecipe(FlakeRecipe):
 
     """
@@ -33,7 +34,7 @@ class BaseFlakeRecipe(FlakeRecipe):
         templates = Ports.instance().resolveNixTemplateRepo().find_flake_templates_by_recipe(self)
         if templates:
             for template in [ NixTemplate(t["folder"], t["path"], t["contents"]) for t in templates ]:
-                renderedTemplates.append({ "folder": template.folder, "path": template.path, "contents": template.render(self.flake) })
+                renderedTemplates.append({ "folder": template.folder, "path": template.path, "contents": template.render(self.flake, self) })
             result = Ports.instance().resolveFlakeRepo().create(self.flake, renderedTemplates, self)
         else:
             logging.getLogger(__name__).critical(f'No templates provided by recipe {Path(inspect.getsourcefile(self.__class__)).parent}')

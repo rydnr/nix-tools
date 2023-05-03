@@ -28,6 +28,8 @@ class PythonPackage(Entity):
         self._git_repo = gitRepo
         self._nixpkgs_package = None
         self._nixpkgs_found = None
+        self._pip_sha256 = None
+        self._pip_sha256_failed = None
 
     @property
     @primary_key_attribute
@@ -72,7 +74,7 @@ class PythonPackage(Entity):
     def extract_urls(cls, info: Dict) -> List[str]:
         result = []
         project_urls = info.get("project_urls", {})
-        for url in [ entry["collection"].get(entry["key"], None) for entry in [ { "collection": info, "key": "package_url" },{ "collection": info, "key": "home_page" },{ "collection": info, "key": "project_url" },{ "collection": info, "key": "release_url" },{ "collection": project_urls, "key": "Source" },{ "collection": project_urls, "key": "Homepage" },{ "collection": project_urls, "key": "Changelog" },{ "collection": project_urls, "key": "Documentation" },{ "collection": project_urls, "key": "Issue Tracker" },{ "collection": project_urls, "key": "Tracker" } ] ]:
+        for url in [ entry["collection"].get(entry["key"], None) for entry in [ { "collection": info, "key": "package_url" },{ "collection": info, "key": "home_page" },{ "collection": info, "key": "project_url" },{ "collection": info, "key": "release_url" },{ "collection": project_urls, "key": "Source" },{ "collection": project_urls, "key": "Source Code" },{ "collection": project_urls, "key": "Homepage" },{ "collection": project_urls, "key": "Changelog" },{ "collection": project_urls, "key": "Documentation" },{ "collection": project_urls, "key": "Issue Tracker" },{ "collection": project_urls, "key": "Tracker" } ] ]:
             if url:
                 result.append(cls.fix_url(url))
         return result
@@ -81,8 +83,9 @@ class PythonPackage(Entity):
     def extract_repo(cls, version: str, info: Dict) -> GitRepo:
         result = None
         for url in cls.extract_urls(info):
-            if GitRepo.url_is_a_git_repo(url):
-                result = Ports.instance().resolve(GitRepoRepo).find_by_url_and_rev(url, version)
+            repo_url, subfolder = GitRepo.extract_url_and_subfolder(url)
+            if GitRepo.url_is_a_git_repo(repo_url):
+                result = Ports.instance().resolve(GitRepoRepo).find_by_url_and_rev(repo_url, version, subfolder=subfolder)
                 break
         return result
 
@@ -128,8 +131,12 @@ class PythonPackage(Entity):
         """
         if self._nixpkgs_found is None:
             nixPythonPackageRepo = Ports.instance().resolveNixPythonPackageRepo()
-            result = nixPythonPackageRepo.find_by_name_and_version(self.name, self.version) == None
-            if not result:
+            match = nixPythonPackageRepo.find_by_name_and_version(self.name, self.version)
+            result = match != None
+            if result:
+                self._nixpkgs_package = match
+                self._nixpkgs_found = True
+            else:
                 self._nixpkgs_found = False
                 existing = nixPythonPackageRepo.find_by_name(self.name)
                 if existing and len(existing) > 0:
@@ -157,16 +164,33 @@ class PythonPackage(Entity):
     def flake_url(self):
         return Ports.instance().resolveFlakeRepo().url_for_flake(self.name, self.version)
 
+    def package_in_pypi(self):
+        result = False
+
+        try:
+            self.pip_sha256()
+            result = True
+        except NixPrefetchUrlFailed:
+            result = False
+
+        return result
+
     def pip_sha256(self) -> str:
         result = None
-        with tempfile.TemporaryDirectory() as temp_dir:
-            try:
-                output = subprocess.run(['nix-prefetch-url', f'https://files.pythonhosted.org/packages/source/{self.name[0]}/{self.name}/{self.name}-{self.version}.tar.gz'], check=True, capture_output=True, text=True, cwd=temp_dir)
-                result = output.stdout.splitlines()[-1]
-            except subprocess.CalledProcessError:
-                raise NixPrefetchUrlFailed(self)
-
-        logging.getLogger(__name__).debug(f'pypi sha256: {result}')
+        if self._pip_sha256_failed is None:
+            with tempfile.TemporaryDirectory() as temp_dir:
+                try:
+                    output = subprocess.run(['nix-prefetch-url', f'https://files.pythonhosted.org/packages/source/{self.name[0]}/{self.name}/{self.name}-{self.version}.tar.gz'], check=True, capture_output=True, text=True, cwd=temp_dir)
+                    result = output.stdout.splitlines()[-1]
+                    self._pip_sha256 = result
+                    self._pip_sha256_failed = False
+                except subprocess.CalledProcessError:
+                    self._pip_sha256_failed = True
+                    raise NixPrefetchUrlFailed(self)
+        elif self._pip_sha256_failed:
+            raise NixPrefetchUrlFailed(self)
+        else:
+            result = self._pip_sha256
 
         return result
 
