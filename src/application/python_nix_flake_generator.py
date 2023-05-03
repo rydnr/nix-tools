@@ -56,7 +56,6 @@ class PythonNixFlakeGenerator():
     def accept_event(self, event): # : Event) -> Event:
         result = []
         firstEvents = []
-        print(f'accept_event {event}')
         logging.getLogger(__name__).info(f'Accepting event {event}')
         for listenerClass in EventListener.listeners_for(event.__class__):
             resultingEvents = listenerClass.accept(listenerClass, event)

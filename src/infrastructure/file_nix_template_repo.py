@@ -38,7 +38,6 @@ class FileNixTemplateRepo(NixTemplateRepo):
                 template["template"] = str(tmpl_file)
                 template["basename"] = file_base
                 template["path"] = relative_path
-                print(f'path -> {relative_path}, template_name -> {template_name}, tmpl_file -> {tmpl_file}')
                 template["contents"] = self.read_file(tmpl_file)
                 result.append(template)
         return result
