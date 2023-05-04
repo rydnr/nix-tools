@@ -29,13 +29,18 @@ class BaseFlakeRecipe(FlakeRecipe):
 
     class Subtemplates(Enum):
         FLAKES_DECLARATION = "flakes_declaration"
-        WITH_COMMAS = "with_commas"
-        WITH_BLANKS = "with_blanks"
-        WITH_NEWLINES = "with_newlines"
+        NOT_FLAKES_DECLARATION = "not_flakes_declaration"
         FLAKES_WITH_NEWLINES = "flakes_with_newlines"
         NOT_FLAKES_WITH_NEWLINES = "not_flakes_with_newlines"
+        FLAKES_NAMES_WITH_COMMAS = "flakes_names_with_commas"
+        NIXPKGS_NAMES_WITH_COMMAS = "nixpkgs_names_with_commas"
+        FLAKES_NAMES_WITH_BLANKS = "flakes_names_with_blanks"
+        NIXPKGS_NAMES_WITH_BLANKS = "nixpkgs_names_with_blanks"
+        NAMES_WITH_NEWLINES = "names_with_newlines"
+        FLAKES_NAMES_WITH_NEWLINES = "flakes_names_with_newlines"
+        NIXPKGS_NAMES_WITH_NEWLINES = "nixpkgs_names_with_newlines"
         DECLARATION = "declaration"
-        OVERRIDES = "overrides"
+        NOT_FLAKES_OVERRIDES = "not_flakes_overrides"
 
     @classmethod
     def should_initialize(cls) -> bool:
@@ -63,33 +68,48 @@ class BaseFlakeRecipe(FlakeRecipe):
 
     def extract_dep_templates(self, flake, inputs: List[PythonPackage]) -> Dict[str, str]:
         if inputs:
-            flakes_declaration = "\n  ".join(f'{dep.name}-flake.url = "{dep.flake_url()}";' for dep in inputs if not dep.in_nixpkgs())
-            not_flakes_with_newlines = "\n            ".join(f'{dep.nixpkgs_package_name()} = pkgs.python3Packages.{dep.nixpkgs_package_name()};' for dep in inputs if dep.in_nixpkgs())
-            flakes_with_newlines = "\n            ".join(f'{dep.name} = {dep.name}-flake.packages.${{system}}.{dep.name};' for dep in inputs if not flake.dependency_in_nixpkgs(dep))
-            with_commas = ", ".join(dep.nixpkgs_package_name() for dep in inputs if dep.in_nixpkgs())
-            with_blanks = " ".join(dep.nixpkgs_package_name() for dep in inputs if dep.in_nixpkgs())
-            with_newlines = "\n    ".join(dep.nixpkgs_package_name() for dep in inputs if dep.in_nixpkgs())
-            declaration = f", {with_commas}"
-            overrides = "\n    ".join(f'{dep.nixpkgs_package_name()} = pkgs.python3Packages.{dep.nixpkgs_package_name()};' for dep in inputs if dep.in_nixpkgs())
+            flakes_declaration = "\n  ".join(f'    {dep.name}-flake.url = "{dep.flake_url()}";' for dep in inputs if dep.in_nixpkgs())
+            not_flakes_declaration = "\n            ".join(f'{dep.nixpkgs_package_name()} = pkgs.python3Packages.{dep.nixpkgs_package_name()};' for dep in inputs if not dep.in_nixpkgs())
+            flakes_with_newlines = "\n            ".join(f'{dep.name} = {dep.name}-flake.packages.${{system}}.{dep.name};' for dep in inputs if not dep.in_nixpkgs())
+            not_flakes_with_newlines = "\n            ".join(dep.nixpkgs_package_name() for dep in inputs if dep.in_nixpkgs())
+            flakes_names_with_commas = ", ".join(dep.name for dep in inputs if not dep.in_nixpkgs())
+            nixpkgs_names_with_commas = ", ".join(dep.name for dep in inputs if not dep.in_nixpkgs())
+            flakes_names_with_blanks = " ".join(dep.name for dep in inputs if dep.in_nixpkgs())
+            nixpkgs_names_with_blanks = " ".join(dep.nixpkgs_package_name() for dep in inputs if dep.in_nixpkgs())
+            names_with_newlines = "\n    ".join(dep.name for dep in inputs)
+            flakes_names_with_newlines = "\n    ".join(dep.name for dep in inputs if not dep.in_nixpkgs())
+            nixpkgs_names_with_newlines = "\n    ".join(dep.nixpkgs_package_name() for dep in inputs if dep.in_nixpkgs())
+            declaration = ", ".join(dep.name for dep in inputs)
+            if declaration != "":
+                declaration = f', {declaration}'
+            not_flakes_overrides = "\n    ".join(f'{dep.nixpkgs_package_name()} = pkgs.python3Packages.{dep.nixpkgs_package_name()};' for dep in inputs if dep.in_nixpkgs())
         else:
             flakes_declaration = ""
+            not_flakes_declaration = ""
             not_flakes_with_newlines = ""
             flakes_with_newlines = ""
-            with_commas = ""
-            with_blanks = ""
-            with_newlines = ""
+            flakes_names_with_commas = ""
+            nixpkgs_names_with_commas = ""
+            flakes_names_with_blanks = ""
+            nixpkgs_names_with_blanks = ""
+            flakes_names_with_newlines = ""
+            nixpkgs_names_with_newlines = ""
             declaration = ""
-            overrides = ""
+            not_flakes_overrides = ""
 
         return {
             BaseFlakeRecipe.Subtemplates.FLAKES_DECLARATION: flakes_declaration,
-            BaseFlakeRecipe.Subtemplates.NOT_FLAKES_WITH_NEWLINES: not_flakes_with_newlines,
+            BaseFlakeRecipe.Subtemplates.NOT_FLAKES_DECLARATION: not_flakes_declaration,
             BaseFlakeRecipe.Subtemplates.FLAKES_WITH_NEWLINES: flakes_with_newlines,
-            BaseFlakeRecipe.Subtemplates.WITH_COMMAS: with_commas,
-            BaseFlakeRecipe.Subtemplates.WITH_BLANKS: with_blanks,
-            BaseFlakeRecipe.Subtemplates.WITH_NEWLINES: with_newlines,
+            BaseFlakeRecipe.Subtemplates.NOT_FLAKES_WITH_NEWLINES: not_flakes_with_newlines,
+            BaseFlakeRecipe.Subtemplates.FLAKES_NAMES_WITH_COMMAS: flakes_names_with_commas,
+            BaseFlakeRecipe.Subtemplates.NIXPKGS_NAMES_WITH_COMMAS: nixpkgs_names_with_commas,
+            BaseFlakeRecipe.Subtemplates.FLAKES_NAMES_WITH_BLANKS: flakes_names_with_blanks,
+            BaseFlakeRecipe.Subtemplates.NIXPKGS_NAMES_WITH_BLANKS: nixpkgs_names_with_blanks,
+            BaseFlakeRecipe.Subtemplates.FLAKES_NAMES_WITH_NEWLINES: flakes_names_with_newlines,
+            BaseFlakeRecipe.Subtemplates.NIXPKGS_NAMES_WITH_NEWLINES: nixpkgs_names_with_newlines,
             BaseFlakeRecipe.Subtemplates.DECLARATION: declaration,
-            BaseFlakeRecipe.Subtemplates.OVERRIDES: overrides
+            BaseFlakeRecipe.Subtemplates.NOT_FLAKES_OVERRIDES: not_flakes_overrides
             }
 
     def package_version_value(self):
@@ -149,11 +169,29 @@ class BaseFlakeRecipe(FlakeRecipe):
     def native_build_inputs_flakes_declaration_value(self):
         return self._native_build_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.FLAKES_DECLARATION, "")
 
-    def native_build_inputs_with_blanks_value(self):
-        return self._native_build_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.WITH_BLANKS, "")
+    def native_build_inputs_not_flakes_declaration_value(self):
+        return self._native_build_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.NOT_FLAKES_DECLARATION, "")
 
-    def native_build_inputs_with_newlines_value(self):
-        return self._native_build_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.WITH_NEWLINES, "")
+    def native_build_inputs_flakes_names_with_blanks_value(self):
+        return self._native_build_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.FLAKES_NAMES_WITH_BLANKS, "")
+
+    def native_build_inputs_nixpkgs_names_with_blanks_value(self):
+        return self._native_build_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.NIXPKGS_NAMES_WITH_BLANKS, "")
+
+    def native_build_inputs_flakes_names_with_commas_value(self):
+        return self._native_build_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.FLAKES_NAMES_WITH_COMMAS, "")
+
+    def native_build_inputs_nixpkgs_names_with_commas_value(self):
+        return self._native_build_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.NIXPKGS_NAMES_WITH_COMMAS, "")
+
+    def native_build_inputs_names_with_newlines_value(self):
+        return self._native_build_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.NAMES_WITH_NEWLINES, "")
+
+    def native_build_inputs_flakes_names_with_newlines_value(self):
+        return self._native_build_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.FLAKES_NAMES_WITH_NEWLINES, "")
+
+    def native_build_inputs_nixpkgs_names_with_newlines_value(self):
+        return self._native_build_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.NIXPKGS_NAMES_WITH_NEWLINES, "")
 
     def native_build_inputs_flakes_with_newlines_value(self):
         return self._native_build_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.FLAKES_WITH_NEWLINES, "")
@@ -167,11 +205,29 @@ class BaseFlakeRecipe(FlakeRecipe):
     def propagated_build_inputs_flakes_declaration_value(self):
         return self._propagated_build_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.FLAKES_DECLARATION, "")
 
-    def propagated_build_inputs_with_blanks_value(self):
-        return self._propagated_build_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.WITH_BLANKS, "")
+    def propagated_build_inputs_not_flakes_declaration_value(self):
+        return self._propagated_build_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.NOT_FLAKES_DECLARATION, "")
 
-    def propagated_build_inputs_with_newlines_value(self):
-        return self._propagated_build_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.WITH_NEWLINES, "")
+    def propagated_build_inputs_flakes_names_with_blanks_value(self):
+        return self._propagated_build_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.FLAKES_NAMES_WITH_BLANKS, "")
+
+    def propagated_build_inputs_nixpkgs_names_with_blanks_value(self):
+        return self._propagated_build_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.NIXPKGS_NAMES_WITH_BLANKS, "")
+
+    def propagated_build_inputs_flakes_names_with_commas_value(self):
+        return self._propagated_build_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.FLAKES_NAMES_WITH_COMMAS, "")
+
+    def propagated_build_inputs_nixpkgs_names_with_commas_value(self):
+        return self._propagated_build_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.NIXPKGS_NAMES_WITH_COMMAS, "")
+
+    def propagated_build_inputs_names_with_newlines_value(self):
+        return self._propagated_build_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.NAMES_WITH_NEWLINES, "")
+
+    def propagated_build_inputs_nixpkgs_names_with_newlines_value(self):
+        return self._propagated_build_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.NIXPKGS_NAMES_WITH_NEWLINES, "")
+
+    def propagated_build_inputs_flakes_names_with_newlines_value(self):
+        return self._propagated_build_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.FLAKES_NAMES_WITH_NEWLINES, "")
 
     def propagated_build_inputs_flakes_with_newlines_value(self):
         return self._propagated_build_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.FLAKES_WITH_NEWLINES, "")
@@ -185,11 +241,29 @@ class BaseFlakeRecipe(FlakeRecipe):
     def build_inputs_flakes_declaration_value(self):
         return self._build_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.FLAKES_DECLARATION, "")
 
-    def build_inputs_with_blanks_value(self):
-        return self._build_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.WITH_BLANKS, "")
+    def build_inputs_not_flakes_declaration_value(self):
+        return self._build_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.NOT_FLAKES_DECLARATION, "")
 
-    def build_inputs_with_newlines_value(self):
-        return self._build_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.WITH_NEWLINES, "")
+    def build_inputs_flakes_names_with_blanks_value(self):
+        return self._build_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.FLAKES_NAMES_WITH_BLANKS, "")
+
+    def build_inputs_nixpkgs_names_with_blanks_value(self):
+        return self._build_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.NIXPKGS_NAMES_WITH_BLANKS, "")
+
+    def build_inputs_flakes_names_with_commas_value(self):
+        return self._build_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.FLAKES_NAMES_WITH_COMMAS, "")
+
+    def build_inputs_nixpkgs_names_with_commas_value(self):
+        return self._build_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.NIXPKGS_NAMES_WITH_COMMAS, "")
+
+    def build_inputs_flakes_names_with_newlines_value(self):
+        return self._build_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.FLAKES_NAMES_WITH_NEWLINES, "")
+
+    def build_inputs_names_with_newlines_value(self):
+        return self._build_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.NAMES_WITH_NEWLINES, "")
+
+    def build_inputs_nixpkgs_names_with_newlines_value(self):
+        return self._build_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.NIXPKGS_NAMES_WITH_NEWLINES, "")
 
     def build_inputs_flakes_with_newlines_value(self):
         return self._build_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.FLAKES_WITH_NEWLINES, "")
@@ -203,17 +277,77 @@ class BaseFlakeRecipe(FlakeRecipe):
     def check_inputs_flakes_declaration_value(self):
         return self._check_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.FLAKES_DECLARATION, "")
 
-    def check_inputs_with_blanks_value(self):
-        return self._check_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.WITH_BLANKS, "")
+    def check_inputs_not_flakes_declaration_value(self):
+        return self._check_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.NOT_FLAKES_DECLARATION, "")
 
-    def check_inputs_with_newlines_value(self):
-        return self._check_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.WITH_NEWLINES, "")
+    def check_inputs_flakes_names_with_blanks_value(self):
+        return self._check_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.FLAKES_NAMES_WITH_BLANKS, "")
 
-    def check_inputs_flakes_with_newlines_value(self):
-        return self._check_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.FLAKES_WITH_NEWLINES, "")
+    def check_inputs_nixpkgs_names_with_blanks_value(self):
+        return self._check_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.NIXPKGS_NAMES_WITH_BLANKS, "")
+
+    def check_inputs_flakes_names_with_commas_value(self):
+        return self._check_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.FLAKES_NAMES_WITH_COMMAS, "")
+
+    def check_inputs_nixpkgs_names_with_commas_value(self):
+        return self._check_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.NIXPKGS_NAMES_WITH_COMMAS, "")
+
+    def check_inputs_flakes_names_with_blanks_value(self):
+        return self._check_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.FLAKES_NAMES_WITH_BLANKS, "")
+
+    def check_inputs_nixpkgs_names_with_blanks_value(self):
+        return self._check_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.NIXPKGS_NAMES_WITH_BLANKS, "")
+
+    def check_inputs_names_with_newlines_value(self):
+        return self._check_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.NAMES_WITH_NEWLINES, "")
+
+    def check_inputs_flakes_names_with_newlines_value(self):
+        return self._check_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.FLAKES_NAMES_WITH_NEWLINES, "")
+
+    def check_inputs_nixpkgs_names_with_newlines_value(self):
+        return self._check_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.NIXPKGS_NAMES_WITH_NEWLINES, "")
 
     def check_inputs_not_flakes_with_newlines_value(self):
         return self._check_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.NOT_FLAKES_WITH_NEWLINES, "")
+
+    def check_inputs_declaration_value(self):
+        return self._check_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.DECLARATION, "")
+
+    def optional_inputs_flakes_declaration_value(self):
+        return self._optional_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.FLAKES_DECLARATION, "")
+
+    def optional_inputs_not_flakes_declaration_value(self):
+        return self._optional_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.NOT_FLAKES_DECLARATION, "")
+
+    def optional_inputs_flakes_names_with_blanks_value(self):
+        return self._optional_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.FLAKES_NAMES_WITH_BLANKS, "")
+
+    def optional_inputs_nixpkgs_names_with_blanks_value(self):
+        return self._optional_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.NIXPKGS_NAMES_WITH_BLANKS, "")
+
+    def optional_inputs_flakes_names_with_commas_value(self):
+        return self._optional_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.FLAKES_NAMES_WITH_COMMAS, "")
+
+    def optional_inputs_nixpkgs_names_with_commas_value(self):
+        return self._optional_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.NIXPKGS_NAMES_WITH_COMMAS, "")
+
+    def optional_inputs_flakes_names_with_blanks_value(self):
+        return self._optional_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.FLAKES_NAMES_WITH_BLANKS, "")
+
+    def optional_inputs_nixpkgs_names_with_blanks_value(self):
+        return self._optional_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.NIXPKGS_NAMES_WITH_BLANKS, "")
+
+    def optional_inputs_names_with_newlines_value(self):
+        return self._optional_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.NAMES_WITH_NEWLINES, "")
+
+    def optional_inputs_flakes_names_with_newlines_value(self):
+        return self._optional_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.FLAKES_NAMES_WITH_NEWLINES, "")
+
+    def optional_inputs_nixpkgs_names_with_newlines_value(self):
+        return self._optional_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.NIXPKGS_NAMES_WITH_NEWLINES, "")
+
+    def optional_inputs_not_flakes_with_newlines_value(self):
+        return self._optional_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.NOT_FLAKES_WITH_NEWLINES, "")
 
     def not_flake_dependencies_with_newlines_value(self):
         return self._subtemplates.get(BaseFlakeRecipe.Subtemplates.NOT_FLAKES_WITH_NEWLINES, "")
@@ -227,8 +361,11 @@ class BaseFlakeRecipe(FlakeRecipe):
     def dependencies_declaration_value(self):
         return self._subtemplates.get(BaseFlakeRecipe.Subtemplates.DECLARATION, "")
 
-    def dependencies_overrides_value(self):
-        return self._subtemplates.get(BaseFlakeRecipe.Subtemplates.OVERRIDES, "")
+    def dependencies_not_flakes_overrides_value(self):
+        return self._subtemplates.get(BaseFlakeRecipe.Subtemplates.NOT_FLAKES_OVERRIDES, "")
 
     def dependencies_with_newlines_value(self):
-        return self._subtemplates.get(BaseFlakeRecipe.Subtemplates.WITH_NEWLINES, "")
+        return f'{self._subtemplates.get(BaseFlakeRecipe.Subtemplates.FLAKES_NAMES_WITH_NEWLINES, "")}{self._subtemplates.get(BaseFlakeRecipe.Subtemplates.NIXPKGS_NAMES_WITH_NEWLINES, "")}'
+
+    def dependencies_with_blanks_value(self):
+        return f'{self._subtemplates.get(BaseFlakeRecipe.Subtemplates.FLAKES_NAMES_WITH_BLANKS, "")}{self._subtemplates.get(BaseFlakeRecipe.Subtemplates.NIXPKGS_NAMES_WITH_BLANKS, "")}'

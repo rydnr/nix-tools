@@ -4,4 +4,4 @@ class RecipeDoesNotSupportPlaceholder(Exception):
     """
 
     def __init__(self, placeholder: str, functionName: str, recipeClass: str):
-        super().__init__(f'Function {function_name} not implemented for placeholder {placeholder} in recipe class {recipeClass}')
+        super().__init__(f'Function {functionName} not implemented for placeholder {placeholder} in recipe class {recipeClass}')
