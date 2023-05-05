@@ -71,7 +71,7 @@ class PythonPackage(Entity):
     def extract_urls(cls, info: Dict) -> List[str]:
         result = []
         project_urls = info.get("project_urls", {})
-        for url in [ entry["collection"].get(entry["key"], None) for entry in [ { "collection": info, "key": "package_url" },{ "collection": info, "key": "home_page" },{ "collection": info, "key": "project_url" },{ "collection": info, "key": "release_url" },{ "collection": project_urls, "key": "Source" },{ "collection": project_urls, "key": "Source Code" },{ "collection": project_urls, "key": "Homepage" },{ "collection": project_urls, "key": "Changelog" },{ "collection": project_urls, "key": "Documentation" },{ "collection": project_urls, "key": "Issue Tracker" },{ "collection": project_urls, "key": "Tracker" } ] ]:
+        for url in [ entry["collection"].get(entry["key"], None) for entry in [ { "collection": info, "key": "package_url" },{ "collection": info, "key": "home_page" },{ "collection": info, "key": "project_url" },{ "collection": info, "key": "release_url" },{ "collection": project_urls, "key": "Source" },{ "collection": project_urls, "key": "Source Code" },{ "collection": project_urls, "key": "Home" },{ "collection": project_urls, "key": "Homepage" },{ "collection": project_urls, "key": "Changelog" },{ "collection": project_urls, "key": "Documentation" },{ "collection": project_urls, "key": "Issue Tracker" },{ "collection": project_urls, "key": "Tracker" } ] ]:
             if url:
                 result.append(cls.fix_url(url))
         return result

@@ -43,9 +43,8 @@ class SetuppyPythonPackage(PythonPackage, SetupcfgUtils):
         """
         return "setup.py"
 
-    def append_package(self, packages: List, package: PythonPackage, setuptoolsIncluded: bool) -> bool:
+    def append_package(self, packages: List, pythonPackage: PythonPackage, setuptoolsIncluded: bool) -> bool:
         result = False
-        print(f'Found {pythonPackage.name}-{pythonPackage.version} ({len(packages)})')
         if pythonPackage.name != 'setuptools':
             packages.append(pythonPackage)
             result = setuptoolsIncluded
@@ -59,29 +58,21 @@ class SetuppyPythonPackage(PythonPackage, SetupcfgUtils):
     def get_native_build_inputs(self) -> List:
         result = []
         setuptools_included = False
-        install_requires = self.requires_txt.get("install_requires")
-        if install_requires:
-            for dep in install_requires:
-                pythonPackage = self.find_dep(dep)
-                if pythonPackage:
-                    print(f'found {pythonPackage.name}-{pythonPackage.version}')
-                    setuptools_included = self.append_package(result, pythonPackage, setuptools_included)
-        setup_requires = self.requires_txt.get("setup_requires")
-        if setup_requires:
-            for dep in setup_requires:
-                pythonPackage = self.find_dep(dep)
-                if pythonPackage:
-                    setuptools_included = self.append_package(result, pythonPackage, setuptools_included)
-        if not setuptools_included and self.name != "setuptools":
-            result.append(Ports.instance().resolvePythonPackageRepo().find_by_name("setuptools"))
+        sections = self.requires_txt.keys()
+        deps = []
+        for section in sections:
+            if section not in [ "extras_require", "test_require", "test", "dev" ]:
+                deps.extend(self.requires_txt[section])
+        for dep in deps:
+            pythonPackage = self.find_dep(dep)
+            if pythonPackage:
+                setuptools_included = self.append_package(result, pythonPackage, setuptools_included)
         return result
 
     def get_propagated_build_inputs(self) -> List:
-        # TODO
         return self.get_native_build_inputs()
 
     def get_build_inputs(self) -> List:
-        # TODO
         return self.get_propagated_build_inputs()
 
     def get_optional_build_inputs(self) -> List:

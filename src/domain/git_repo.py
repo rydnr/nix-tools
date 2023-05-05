@@ -37,6 +37,9 @@ class GitRepo(Entity):
     def repo_info(self):
         return self._repo_info
 
+    def is_monorepo(self):
+        return self._subfolder is not None
+
     def get_file(self, fileName: str) -> str:
         """
         Retrieves the contents of given file in the repo.
@@ -115,8 +118,11 @@ class GitRepo(Entity):
         if len(path_parts) > 4 and path_parts[3] == 'tree':
             repo_url = f"{parsed_url.scheme}://{parsed_url.netloc}/{path_parts[1]}/{path_parts[2]}"
             subfolder = '/'.join(path_parts[5:])
-        else:
+        elif len(path_parts) > 3:
             repo_url = f"{parsed_url.scheme}://{parsed_url.netloc}/{path_parts[1]}/{path_parts[2]}"
             subfolder = '/'.join(path_parts[3:])
+        else:
+            repo_url = url
+            subfolder = None
 
         return repo_url, subfolder
