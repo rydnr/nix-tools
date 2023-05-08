@@ -21,7 +21,7 @@ class Flake(Entity, EventListener, EventEmitter):
     """
     def __init__(self, name: str, version: str, pythonPackage: PythonPackage, nativeBuildInputs: List, propagatedBuildInputs: List, checkInputs: List, optionalBuildInputs: List, dependenciesInNixpkgs: List):
         """Creates a new flake instance"""
-        super().__init__(id)
+        super().__init__()
         self._name = name
         self._version = version
         self._python_package = pythonPackage

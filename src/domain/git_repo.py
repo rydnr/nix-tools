@@ -15,7 +15,7 @@ class GitRepo(Entity):
     """
     def __init__(self, url: str, rev: str, repo_info: Dict, subfolder=None):
         """Creates a new Git repository instance"""
-        super().__init__(id)
+        super().__init__()
         self._url = url
         self._rev = rev
         self._repo_info = repo_info

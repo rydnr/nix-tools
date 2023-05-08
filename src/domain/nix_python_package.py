@@ -8,7 +8,7 @@ class NixPythonPackage(Entity):
     """
     def __init__(self, name: str, version: str):
         """Creates a new NixPythonPackage instance"""
-        super().__init__(id)
+        super().__init__()
         self._name = name
         self._version = version
 

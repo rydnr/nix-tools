@@ -17,7 +17,7 @@ class PythonPackage(Entity):
     """
     def __init__(self, name: str, version: str, info: Dict, release: Dict, gitRepo: GitRepo):
         """Creates a new PythonPackage instance"""
-        super().__init__(id)
+        super().__init__()
         self._name = name
         self._version = version
         self._info = info

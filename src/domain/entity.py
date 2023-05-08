@@ -1,5 +1,6 @@
 import functools
 from datetime import datetime
+import importlib
 import inspect
 import re
 
@@ -8,36 +9,39 @@ _filter_attributes = {}
 _attributes = {}
 
 def attribute(func):
-    key = inspect.getmodule(func).__name__
-    if not key in _attributes:
-        _attributes[key] = [ ]
-    _attributes[key].append(func.__name__)
     @functools.wraps(func)
     def wrapper(self, *args, **kwargs):
+        key = self.__class__
+        if not key in _attributes:
+            _attributes[key] = [ ]
+        if not func.__name__ in _attributes[key]:
+            _attributes[key].append(func.__name__)
         return func(self, *args, **kwargs)
     return wrapper
 
 
 def primary_key_attribute(func):
-    key = inspect.getmodule(func).__name__
-    if not key in _primary_key_attributes:
-        _primary_key_attributes[key] = []
-    _primary_key_attributes[key].append(func.__name__)
-    attribute(func)
     @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        return func(*args, **kwargs)
+    def wrapper(self, *args, **kwargs):
+        key = self.__class__
+        if not key in _primary_key_attributes:
+            _primary_key_attributes[key] = []
+        if not func.__name__ in _primary_key_attributes[key]:
+            _primary_key_attributes[key].append(func.__name__)
+            attribute(func)
+        return func(self, *args, **kwargs)
     return wrapper
 
 def filter_attribute(func):
-    key = inspect.getmodule(func).__name__
-    if not key in _filter_attributes:
-        _filter_attributes[key] = []
-    _filter_attributes[key].append(func.__name__)
-    attribute(func)
     @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        return func(*args, **kwargs)
+    def wrapper(self, *args, **kwargs):
+        key = self.__class__
+        if not key in _filter_attributes:
+            _filter_attributes[key] = []
+        if not func.__name__ in _filter_attributes[key]:
+            _filter_attributes[key].append(func.__name__)
+            attribute(func)
+        return func(self, *args, **kwargs)
     return wrapper
 
 class Entity:
@@ -59,7 +63,6 @@ class Entity:
             result = _filter_attributes[key]
         return result
 
-
     @classmethod
     def attributes(cls):
         result = []
@@ -72,7 +75,7 @@ class Entity:
     """
     Represents an entity.
     """
-    def __init__(self, id):
+    def __init__(self):
         """Creates a new Entity instance"""
         self._id = id
         self._created = datetime.now()
@@ -83,24 +86,31 @@ class Entity:
     def id(self):
         return self._id
 
-
     @property
     def created(self):
         return self._created
-
 
     @property
     def updated(self):
         return self._updated
 
+    @classmethod
+    def _propagate_attributes(cls):
+        for cls in _attributes.keys():
+            for subclass in cls.__subclasses__():
+                if subclass not in _attributes:
+                    _attributes[subclass] = _attributes[cls].copy()
+
+    @classmethod
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        cls._propagate_attributes()
 
     def __str__(self):
         result = []
-        print(f'In {self.__class__}.__str__(), defined in Entity')
-        key = inspect.getmodule(self.__class__).__name__
-        if key in _attributes:
+        if self.__class__ in _attributes:
             result.append(f"'id': '{self._id}'")
-            for attr in _attributes[key]:
+            for attr in _attributes[self.__class__]:
                 result.append(f"'{attr}': '" + str(getattr(self, f"_{attr}")) + "'")
             result.append(f"'_created': '{self._created}'")
             if self._updated:
@@ -109,9 +119,8 @@ class Entity:
         return "{ " + ", ".join(result) + " }"
 
     def __setattr__(self, varName, varValue):
-        key = inspect.getmodule(self.__class__).__name__
-        if key in _attributes:
-            if varName in [ x for x in _attributes[key] ]:
+        if self.__class__ in _attributes:
+            if varName in [ x for x in _attributes[self.__class__] ]:
                 self._updated = datetime.now()
         super(Entity, self).__setattr__(varName, varValue)
 
