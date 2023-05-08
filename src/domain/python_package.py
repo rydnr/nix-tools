@@ -227,6 +227,10 @@ class PythonPackage(Entity):
         """
         raise NotImplementedError('get_type() must be implemented by subclasses')
 
+    def __str__(self):
+        print(f'In PythonPackage.__str__()')
+        return super().__str__()
+
     def _python_package_str(self):
         return super().__str__()
 

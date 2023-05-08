@@ -96,6 +96,7 @@ class Entity:
 
     def __str__(self):
         result = []
+        print(f'In {self.__class__}.__str__(), defined in Entity')
         key = inspect.getmodule(self.__class__).__name__
         if key in _attributes:
             result.append(f"'id': '{self._id}'")
@@ -106,7 +107,6 @@ class Entity:
                 result.append(f"'_updated': '{self._updated}'")
 
         return "{ " + ", ".join(result) + " }"
-
 
     def __setattr__(self, varName, varValue):
         key = inspect.getmodule(self.__class__).__name__

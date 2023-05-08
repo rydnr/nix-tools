@@ -59,7 +59,8 @@ class NixpkgsPythonPackageRepo(NixPythonPackageRepo):
         """
         Retrieves the NixPythonPackages matching given name and version.
         """
-        matches = [p for p in self.find_by_name(package_name) if p.version == package_version]
+        matches = [p for p in self.find_by_name(package_name) if p.is_compatible_with(package_version)]
+        print(f'Matches for {package_name}-{package_version}: {matches}')
         if len(matches) > 0:
             return matches[0]
         else:

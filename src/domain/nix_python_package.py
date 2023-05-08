@@ -36,5 +36,16 @@ class NixPythonPackage(Entity):
         """
         Checks if this package is compatible with given version spec.
         """
-        # TODO: implement pyproject.toml version rules
-        return versionSpec == self.version
+        result = True
+        # TODO: support specs, not just values.
+        # Split version strings into lists of integers
+        version1_parts = [int(part) for part in self.version.split('.')]
+        version2_parts = [int(part) for part in versionSpec.split('.')]
+
+        # Compare each part of the versions
+        for v1, v2 in zip(version1_parts, version2_parts):
+            if v1 < v2:
+                result = False
+                break
+
+        return result

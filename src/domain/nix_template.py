@@ -36,15 +36,21 @@ class NixTemplate(Entity):
 
         logging.getLogger(__name__).debug(f'Generating the content of {self.path}')
 
-        parsed_contents = list(string.Formatter().parse(self._contents))
+        backslash = '\n'
+        tab = '\t'
 
-        placeholders = {}
+#        parsed_contents = list(string.Formatter().parse(self._contents))
 
-        for placeholder in [field_name for (_, field_name, _, _) in parsed_contents if field_name is not None]:
-            function_name = f'{placeholder}_value'
-            if hasattr(recipe, function_name):
-                placeholders[placeholder] = getattr(recipe, function_name)()
-            else:
-                raise RecipeDoesNotSupportPlaceholder(placeholder, function_name, recipe.__class__)
+#        placeholders = {}
+#        placeholders["flake"] = flake
+#        placeholders["recipe"] = recipe
 
-        return self._contents.format(**placeholders)
+#        for placeholder in [field_name for (_, field_name, _, _) in parsed_contents if field_name is not None]:
+#            function_name = f'{placeholder}_value'
+#            if hasattr(recipe, function_name):
+#                placeholders[placeholder] = getattr(recipe, function_name)()
+#            else:
+#                raise RecipeDoesNotSupportPlaceholder(placeholder, function_name, recipe.__class__)
+
+#        return self._contents.format(**placeholders)
+        return eval(f"""f'''{self._contents}'''""")
