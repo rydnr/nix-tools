@@ -137,3 +137,11 @@ class FlakeRecipe(Entity):
 
     def usesPipSha256(self):
         return False
+
+    def remove_duplicates(self, *lists) -> List:
+        result = []
+        for lst in lists:
+            for item in lst:
+                if item not in result:
+                    result.append(item)
+        return result

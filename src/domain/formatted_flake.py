@@ -1,17 +1,18 @@
 from domain.flake import Flake
+from domain.formatting import Formatting
 from domain.license import License
 
-class FormattedFlake():
+class FormattedFlake(Formatting):
     """
     Augments Flake class to include formatting logic required by recipe templates.
     """
     def __init__(self, flk: Flake):
         """Creates a new instance"""
-        self._flake = flk
+        super().__init__(flk)
 
     @property
     def flake(self) -> Flake:
-        return self._flake
+        return self._fmt
 
     def version_with_underscores(self):
         return self.flake.version.replace(".", "_")
@@ -48,18 +49,3 @@ class FormattedFlake():
         if self.flake.python_package.git_repo:
             _, result = self.flake.python_package.git_repo.repo_owner_and_repo_name()
         return result
-
-    def __getattr__(self, attr):
-        """
-        Delegate any method call to the wrapped instance.
-        """
-        return getattr(self._flake, attr)
-
-    def __str__(self):
-        return self._flake.__str__()
-
-    def __eq__(self, other):
-        return self._flake.__eq__(other)
-
-    def __hash__(self):
-        return self._flake.__hash__()

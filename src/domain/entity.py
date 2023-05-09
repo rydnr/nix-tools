@@ -1,8 +1,11 @@
+from domain.formatting import Formatting
+
 import functools
 from datetime import datetime
 import importlib
 import inspect
 import re
+from typing import List
 
 _primary_key_attributes = {}
 _filter_attributes = {}
@@ -50,16 +53,15 @@ def filter_attribute(func):
 class Entity:
 
     @classmethod
-    def primary_key(cls):
+    def primary_key(cls) -> List:
         result = []
         key = cls
         if key in _primary_key_attributes:
             result = _primary_key_attributes[key]
         return result
 
-
     @classmethod
-    def filter_attributes(cls):
+    def filter_attributes(cls) -> List:
         result = []
         key = cls
         if key in _filter_attributes:
@@ -67,7 +69,7 @@ class Entity:
         return result
 
     @classmethod
-    def attributes(cls):
+    def attributes(cls) -> List:
         result = []
         key = cls
         if key in _attributes:
@@ -121,10 +123,22 @@ class Entity:
             if self._updated:
                 result.append(f"'_updated': '{self._updated}'")
 
-        return "{ " + ", ".join(result) + " }"
+        if len(result) > 0:
+            return "{ " + ", ".join(result) + " }"
+        else:
+            return super().__str__()
 
     def __repr__(self):
-        return self.__str__()
+        result = []
+        key = self.__class__
+        if key in _primary_key_attributes:
+            for attr in _primary_key_attributes[key]:
+                result.append(f"'{attr}': '" + str(getattr(self, f"_{attr}")) + "'")
+
+        if len(result) > 0:
+            return "{ " + ", ".join(result) + " }"
+        else:
+            return super().__repr__()
 
     def __setattr__(self, varName, varValue):
         key = self.__class__
@@ -135,17 +149,24 @@ class Entity:
 
     def __eq__(self, other):
         result = False
-        if isinstance(other, self.__class__):
-            result = True
-            for key in self.__class__.primary_key():
-                if getattr(self, key, None) != getattr(other, key, None):
-                    result = False
-                    break
+        if other is not None:
+            if isinstance(other, Formatting):
+                result = self.__eq__(other._formatted)
+            elif isinstance(other, self.__class__):
+                result = True
+                for key in self.__class__.primary_key():
+                    if getattr(self, key, None) != getattr(other, key, None):
+                        result = False
+                        break
+
         return result
 
     def __hash__(self):
         attrs = []
         for key in self.__class__.primary_key():
             attrs.append(getattr(self, key, None))
-
-        return hash(tuple(attrs))
+        if len(attrs) == 0:
+            result = hash((self.id, self.__class__))
+        else:
+            result = hash(tuple(attrs))
+        return result

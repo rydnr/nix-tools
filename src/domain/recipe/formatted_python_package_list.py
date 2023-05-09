@@ -1,15 +1,16 @@
+from domain.formatting import Formatting
 from domain.recipe.formatted_python_package import FormattedPythonPackage
 
 from typing import Callable, List
 
-class FormattedPythonPackageList():
+class FormattedPythonPackageList(Formatting):
     """
     Augments a list of PythonPackages to include formatting logic required by recipe templates.
     """
 
     def __init__(self, lst: List[FormattedPythonPackage], f: str = "__str__", indent: str = "", separator: str = "", initialPrefix: str = "", finalSuffix: str = ""):
         """Creates a new instance"""
-        self._list = lst
+        super().__init__(lst)
         self._func_name = f
         self._indent = indent
         self._separator = separator
@@ -18,7 +19,7 @@ class FormattedPythonPackageList():
 
     @property
     def list(self) -> List[FormattedPythonPackage]:
-        return self._list
+        return self._fmt
 
     @property
     def func_name(self) -> str:
@@ -41,19 +42,19 @@ class FormattedPythonPackageList():
         return self._final_suffix
 
     def with_function(self, value: str) :#-> FormattedPythonPackageList:
-        return FormattedPythonPackageList(self._list, value, self._indent, self._separator, self._initial_prefix, self._final_suffix)
+        return FormattedPythonPackageList(self.list, value, self._indent, self._separator, self._initial_prefix, self._final_suffix)
 
     def with_indentation(self, value: str) :#-> FormattedPythonPackageList:
-        return FormattedPythonPackageList(self._list, self._func_name, value, self._separator, self._initial_prefix, self._final_suffix)
+        return FormattedPythonPackageList(self.list, self._func_name, value, self._separator, self._initial_prefix, self._final_suffix)
 
     def with_separator(self, value: str) :#-> FormattedPythonPackageList:
-        return FormattedPythonPackageList(self._list, self._func_name, self._indent, value, self._initial_prefix, self._final_suffix)
+        return FormattedPythonPackageList(self.list, self._func_name, self._indent, value, self._initial_prefix, self._final_suffix)
 
     def with_initial_prefix(self, value: str) :#-> FormattedPythonPackageList:
-        return FormattedPythonPackageList(self._list, self._func_name, self._indent, self._separator, value, self._final_suffix)
+        return FormattedPythonPackageList(self.list, self._func_name, self._indent, self._separator, value, self._final_suffix)
 
     def with_final_suffix(self, value: str) :#-> FormattedPythonPackageList:
-        return FormattedPythonPackageList(self._list, self._func_name, self._indent, self._separator, self._initial_prefix, value)
+        return FormattedPythonPackageList(self.list, self._func_name, self._indent, self._separator, self._initial_prefix, value)
 
     def _invoke_func(self, dep: FormattedPythonPackage): #-> str:
         result = ""
@@ -75,4 +76,4 @@ class FormattedPythonPackageList():
         """
         Delegate any method call to the wrapped instance.
         """
-        return getattr(self._list, attr)
+        return getattr(self.list, attr)

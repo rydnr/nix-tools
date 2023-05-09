@@ -1,6 +1,7 @@
 from domain.entity import Entity, primary_key_attribute, attribute
 from domain.recipe.recipe_does_not_support_placeholder import RecipeDoesNotSupportPlaceholder
 
+from datetime import datetime
 import logging
 import string
 
@@ -38,5 +39,8 @@ class NixTemplate(Entity):
 
         newline = '\n'
         tab = '\t'
+        path = self.path
+        folder = self.folder
+        timestamp = datetime.now()
 
         return eval(f"""f'''{self._contents}'''""")

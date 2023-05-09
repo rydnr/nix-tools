@@ -35,19 +35,12 @@ class BaseFlakeRecipe(FlakeRecipe):
             | set(flake.python_package.get_build_inputs())
             | set(flake.python_package.get_check_inputs())
             | set(flake.python_package.get_optional_build_inputs())))
-        print(f'native_build_inputs -> {flake.python_package.get_native_build_inputs()}')
-        print(f'propagated_build_inputs -> {flake.python_package.get_propagated_build_inputs()}')
-        print(f'build_inputs -> {flake.python_package.get_build_inputs()}')
-        print(f'check_inputs -> {flake.python_package.get_check_inputs()}')
-        print(f'optional_build_inputs -> {flake.python_package.get_optional_build_inputs()}')
         all = list(
                 set(flake.python_package.get_native_build_inputs())
             | set(flake.python_package.get_propagated_build_inputs())
             | set(flake.python_package.get_build_inputs())
             | set(flake.python_package.get_check_inputs())
             | set(flake.python_package.get_optional_build_inputs()))
-
-        print(f'all -> {all}')
 
     class Subtemplates(Enum):
         FLAKE_DEPS = "flake_deps"
@@ -83,9 +76,9 @@ class BaseFlakeRecipe(FlakeRecipe):
 
     def extract_dep_templates(self, flake, inputs: List[PythonPackage]) -> Dict[str, str]:
         if inputs:
-            flake_deps = FormattedPythonPackageList(list([FormattedFlakePythonPackage(dep) for dep in inputs if not dep.in_nixpkgs()]))
-            nixpkgs_deps = FormattedPythonPackageList(list([FormattedNixpkgsPythonPackage(dep) for dep in inputs if not dep.in_nixpkgs()]))
-            all_deps = FormattedPythonPackageList(flake_deps.list + nixpkgs_deps.list)
+            flake_deps = FormattedPythonPackageList(self.remove_duplicates([FormattedFlakePythonPackage(dep) for dep in inputs if not dep.in_nixpkgs()]))
+            nixpkgs_deps = FormattedPythonPackageList(self.remove_duplicates([FormattedNixpkgsPythonPackage(dep) for dep in inputs if dep.in_nixpkgs()]))
+            all_deps = FormattedPythonPackageList(self.remove_duplicates(flake_deps.list, nixpkgs_deps.list))
 
             flakes_declaration = FormattedPythonPackageList(flake_deps.list, "flake_declaration")
             nixpkgs_declaration = FormattedPythonPackageList(nixpkgs_deps.list, "nixpkgs_declaration")
@@ -253,33 +246,33 @@ class BaseFlakeRecipe(FlakeRecipe):
         return self._optional_build_inputs_subtemplates.get(BaseFlakeRecipe.Subtemplates.NIXPKGS_OVERRIDES, [])
 
     def flakes_as_parameter_to_package_nix(self) -> FormattedPythonPackageList:
-        return FormattedPythonPackageList(list(
-            set(self.native_build_inputs_flakes_as_parameter_to_package_nix().list)
-            | set(self.propagated_build_inputs_flakes_as_parameter_to_package_nix().list)
-            | set(self.build_inputs_flakes_as_parameter_to_package_nix().list)
-            | set(self.check_inputs_flakes_as_parameter_to_package_nix().list)
-            | set(self.optional_build_inputs_flakes_as_parameter_to_package_nix().list)), "as_parameter_to_package_nix")
+        return FormattedPythonPackageList(self.remove_duplicates(
+            self.native_build_inputs_flakes_as_parameter_to_package_nix().list,
+                self.propagated_build_inputs_flakes_as_parameter_to_package_nix().list,
+                self.build_inputs_flakes_as_parameter_to_package_nix().list,
+                self.check_inputs_flakes_as_parameter_to_package_nix().list,
+                self.optional_build_inputs_flakes_as_parameter_to_package_nix().list), "as_parameter_to_package_nix")
 
     def nixpkgs_as_parameter_to_package_nix(self) -> FormattedPythonPackageList:
-        return FormattedPythonPackageList(list(
-            set(self.native_build_inputs_nixpkgs_as_parameter_to_package_nix().list)
-            | set(self.propagated_build_inputs_nixpkgs_as_parameter_to_package_nix().list)
-            | set(self.build_inputs_nixpkgs_as_parameter_to_package_nix().list)
-            | set(self.check_inputs_nixpkgs_as_parameter_to_package_nix().list)
-            | set(self.optional_build_inputs_nixpkgs_as_parameter_to_package_nix().list)), "as_parameter_to_package_nix")
+        return FormattedPythonPackageList(self.remove_duplicates(
+            self.native_build_inputs_nixpkgs_as_parameter_to_package_nix().list,
+            self.propagated_build_inputs_nixpkgs_as_parameter_to_package_nix().list,
+            self.build_inputs_nixpkgs_as_parameter_to_package_nix().list,
+            self.check_inputs_nixpkgs_as_parameter_to_package_nix().list,
+            self.optional_build_inputs_nixpkgs_as_parameter_to_package_nix().list), "as_parameter_to_package_nix")
 
     def flakes_declaration(self) -> FormattedPythonPackageList:
-        return FormattedPythonPackageList(list(
-            set(self.native_build_inputs_flakes_declaration().list)
-            | set(self.propagated_build_inputs_flakes_declaration().list)
-            | set(self.build_inputs_flakes_declaration().list)
-            | set(self.check_inputs_flakes_declaration().list)
-            | set(self.optional_build_inputs_flakes_declaration().list)), "flake_declaration")
+        return FormattedPythonPackageList(self.remove_duplicates(
+            self.native_build_inputs_flakes_declaration().list,
+            self.propagated_build_inputs_flakes_declaration().list,
+            self.build_inputs_flakes_declaration().list,
+            self.check_inputs_flakes_declaration().list,
+            self.optional_build_inputs_flakes_declaration().list), "flake_declaration")
 
     def declaration(self) -> FormattedPythonPackageList:
-        return FormattedPythonPackageList(list(
-            set(self.native_build_inputs_declaration().list)
-            | set(self.propagated_build_inputs_declaration().list)
-            | set(self.build_inputs_declaration().list)
-            | set(self.check_inputs_declaration().list)
-            | set(self.optional_build_inputs_declaration().list)), "name")
+        return FormattedPythonPackageList(self.remove_duplicates(
+            self.native_build_inputs_declaration().list,
+            self.propagated_build_inputs_declaration().list,
+            self.build_inputs_declaration().list,
+            self.check_inputs_declaration().list,
+            self.optional_build_inputs_declaration().list), "name")

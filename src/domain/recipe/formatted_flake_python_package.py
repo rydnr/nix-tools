@@ -12,7 +12,7 @@ class FormattedFlakePythonPackage(FormattedPythonPackage):
         super().__init__(pkg)
 
     def flake_declaration(self) -> str:
-        return f'{self._pkg.name}-flake.url = "{self._pkg.flake_url()}";'
+        return f'{self._formatted.name}-flake.url = "{self._formatted.flake_url()}";'
 
     def as_parameter_to_package_nix(self) -> str:
-        return f"{self._pkg.name} = {self._pkg.name}-flake.packages.${{system}}.{self._pkg.name};"
+        return f"{self._formatted.name} = {self._formatted.name}-flake.packages.${{system}}.{self._formatted.name};"

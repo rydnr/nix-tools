@@ -12,7 +12,7 @@ class FormattedNixpkgsPythonPackage(FormattedPythonPackage):
         super().__init__(pkg)
 
     def as_parameter_to_package_nix(self) -> str:
-        return self._pkg.name
+        return self._formatted.name
 
     def overrides(self) -> str:
-        return "TODO: {self._pkg.name}"
+        return "TODO: {self._formatted.name}"
