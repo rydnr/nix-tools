@@ -11,8 +11,8 @@ class FormattedFlakePythonPackage(FormattedPythonPackage):
         """Creates a new instance"""
         super().__init__(pkg)
 
-    def flake_declaration() -> str:
+    def flake_declaration(self) -> str:
         return f'{self._pkg.name}-flake.url = "{self._pkg.flake_url()}";'
 
-    def as_parameter_to_package_nix() -> str:
+    def as_parameter_to_package_nix(self) -> str:
         return f"{self._pkg.name} = {self._pkg.name}-flake.packages.${{system}}.{self._pkg.name};"

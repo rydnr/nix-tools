@@ -11,8 +11,8 @@ class FormattedNixpkgsPythonPackage(FormattedPythonPackage):
         """Creates a new instance"""
         super().__init__(pkg)
 
-    def as_parameter_to_package_nix() -> str:
+    def as_parameter_to_package_nix(self) -> str:
         return self._pkg.name
 
-    def overrides() -> str:
+    def overrides(self) -> str:
         return "TODO: {self._pkg.name}"

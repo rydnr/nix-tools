@@ -41,35 +41,35 @@ class FormattedPythonPackageList():
         return self._final_suffix
 
     def with_function(self, value: str) :#-> FormattedPythonPackageList:
-        return FormattedPythonPackageList(self.list, value, self.indent, self.separator, self.initial_prefix, self.final_suffix)
+        return FormattedPythonPackageList(self._list, value, self._indent, self._separator, self._initial_prefix, self._final_suffix)
 
     def with_indentation(self, value: str) :#-> FormattedPythonPackageList:
-        return FormattedPythonPackageList(self.list, self.func_name, value, self.separator, self.initial_prefix, self.final_suffix)
+        return FormattedPythonPackageList(self._list, self._func_name, value, self._separator, self._initial_prefix, self._final_suffix)
 
     def with_separator(self, value: str) :#-> FormattedPythonPackageList:
-        return FormattedPythonPackageList(self.list, self.func_name, self.indent, value, self.initial_prefix, self.final_suffix)
+        return FormattedPythonPackageList(self._list, self._func_name, self._indent, value, self._initial_prefix, self._final_suffix)
 
     def with_initial_prefix(self, value: str) :#-> FormattedPythonPackageList:
-        return FormattedPythonPackageList(self.list, self.func_name, self.indent, self.separator, value, self.final_suffix)
+        return FormattedPythonPackageList(self._list, self._func_name, self._indent, self._separator, value, self._final_suffix)
 
     def with_final_suffix(self, value: str) :#-> FormattedPythonPackageList:
-        return FormattedPythonPackageList(self.list, self.func_name, self.indent, self.separator, self.initial_prefix, value)
+        return FormattedPythonPackageList(self._list, self._func_name, self._indent, self._separator, self._initial_prefix, value)
 
-    def invoke_func(self, dep: FormattedPythonPackage):#-> str:
+    def _invoke_func(self, dep: FormattedPythonPackage): #-> str:
+        result = ""
+
         func = getattr(dep, self.func_name)
 
         if callable(func):
             result = func()
-            print(f'{dep}.{self.func_name}() -> {result}')
         else:
             result = func
-            print(f'{dep}.{self.func_name} -> {result}')
 
         return result
 
     def __str__(self):
 
-        return f'{self.initial_prefix}{self.separator.join([f"{self.indent}{self.invoke_func(dep)}" for dep in self.list])}{self.final_suffix}'
+        return f'{self.initial_prefix}{self.separator.join([f"{self.indent}{self._invoke_func(dep)}" for dep in self.list])}{self.final_suffix}'
 
     def __getattr__(self, attr):
         """

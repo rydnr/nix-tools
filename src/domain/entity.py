@@ -8,14 +8,17 @@ _primary_key_attributes = {}
 _filter_attributes = {}
 _attributes = {}
 
+def _add_attribute(self, func):
+    key = self.__class__
+    if not key in _attributes:
+        _attributes[key] = [ ]
+    if not func.__name__ in _attributes[key]:
+        _attributes[key].append(func.__name__)
+
 def attribute(func):
     @functools.wraps(func)
     def wrapper(self, *args, **kwargs):
-        key = self.__class__
-        if not key in _attributes:
-            _attributes[key] = [ ]
-        if not func.__name__ in _attributes[key]:
-            _attributes[key].append(func.__name__)
+        _add_attribute(self, func)
         return func(self, *args, **kwargs)
     return wrapper
 
@@ -28,7 +31,7 @@ def primary_key_attribute(func):
             _primary_key_attributes[key] = []
         if not func.__name__ in _primary_key_attributes[key]:
             _primary_key_attributes[key].append(func.__name__)
-            attribute(func)
+        _add_attribute(self, func)
         return func(self, *args, **kwargs)
     return wrapper
 
@@ -40,7 +43,7 @@ def filter_attribute(func):
             _filter_attributes[key] = []
         if not func.__name__ in _filter_attributes[key]:
             _filter_attributes[key].append(func.__name__)
-            attribute(func)
+        _add_attribute(self, func)
         return func(self, *args, **kwargs)
     return wrapper
 
@@ -49,7 +52,7 @@ class Entity:
     @classmethod
     def primary_key(cls):
         result = []
-        key = cls.__module__
+        key = cls
         if key in _primary_key_attributes:
             result = _primary_key_attributes[key]
         return result
@@ -58,7 +61,7 @@ class Entity:
     @classmethod
     def filter_attributes(cls):
         result = []
-        key = cls.__module__
+        key = cls
         if key in _filter_attributes:
             result = _filter_attributes[key]
         return result
@@ -66,7 +69,7 @@ class Entity:
     @classmethod
     def attributes(cls):
         result = []
-        key = cls.__module__
+        key = cls
         if key in _attributes:
             result = _attributes[key]
         return [ "id" ] + result + [ "_created", "_updated" ]
@@ -77,7 +80,7 @@ class Entity:
     """
     def __init__(self):
         """Creates a new Entity instance"""
-        self._id = id
+        self._id = id(self)
         self._created = datetime.now()
         self._updated = None
 
@@ -108,9 +111,11 @@ class Entity:
 
     def __str__(self):
         result = []
-        if self.__class__ in _attributes:
+        key = self.__class__
+        if key in _attributes:
             result.append(f"'id': '{self._id}'")
-            for attr in _attributes[self.__class__]:
+            result.append(f"'class': '{self.__class__.__name__}'")
+            for attr in _attributes[key]:
                 result.append(f"'{attr}': '" + str(getattr(self, f"_{attr}")) + "'")
             result.append(f"'_created': '{self._created}'")
             if self._updated:
@@ -118,9 +123,13 @@ class Entity:
 
         return "{ " + ", ".join(result) + " }"
 
+    def __repr__(self):
+        return self.__str__()
+
     def __setattr__(self, varName, varValue):
-        if self.__class__ in _attributes:
-            if varName in [ x for x in _attributes[self.__class__] ]:
+        key = self.__class__
+        if key in _attributes:
+            if varName in [ x for x in _attributes[key] ]:
                 self._updated = datetime.now()
         super(Entity, self).__setattr__(varName, varValue)
 

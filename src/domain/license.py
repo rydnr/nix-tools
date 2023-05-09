@@ -25,7 +25,7 @@ class License(Entity):
     """
     def __init__(self, pypi: str, nix: str):
         """Creates a new License instance"""
-        super().__init__(id)
+        super().__init__()
         self._pypi = pypi
         self._nix = nix
 

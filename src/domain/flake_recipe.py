@@ -25,7 +25,7 @@ class FlakeRecipe(Entity):
 
     def __init__(self, flake: Flake):
         """Creates a new flake recipe instance"""
-        super().__init__(id)
+        super().__init__()
         self._flake = flake
 
     @property

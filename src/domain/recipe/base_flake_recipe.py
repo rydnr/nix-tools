@@ -35,6 +35,19 @@ class BaseFlakeRecipe(FlakeRecipe):
             | set(flake.python_package.get_build_inputs())
             | set(flake.python_package.get_check_inputs())
             | set(flake.python_package.get_optional_build_inputs())))
+        print(f'native_build_inputs -> {flake.python_package.get_native_build_inputs()}')
+        print(f'propagated_build_inputs -> {flake.python_package.get_propagated_build_inputs()}')
+        print(f'build_inputs -> {flake.python_package.get_build_inputs()}')
+        print(f'check_inputs -> {flake.python_package.get_check_inputs()}')
+        print(f'optional_build_inputs -> {flake.python_package.get_optional_build_inputs()}')
+        all = list(
+                set(flake.python_package.get_native_build_inputs())
+            | set(flake.python_package.get_propagated_build_inputs())
+            | set(flake.python_package.get_build_inputs())
+            | set(flake.python_package.get_check_inputs())
+            | set(flake.python_package.get_optional_build_inputs()))
+
+        print(f'all -> {all}')
 
     class Subtemplates(Enum):
         FLAKE_DEPS = "flake_deps"
@@ -245,7 +258,7 @@ class BaseFlakeRecipe(FlakeRecipe):
             | set(self.propagated_build_inputs_flakes_as_parameter_to_package_nix().list)
             | set(self.build_inputs_flakes_as_parameter_to_package_nix().list)
             | set(self.check_inputs_flakes_as_parameter_to_package_nix().list)
-            | set(self.optional_build_inputs_flakes_as_parameter_to_package_nix().list)))
+            | set(self.optional_build_inputs_flakes_as_parameter_to_package_nix().list)), "as_parameter_to_package_nix")
 
     def nixpkgs_as_parameter_to_package_nix(self) -> FormattedPythonPackageList:
         return FormattedPythonPackageList(list(
@@ -253,7 +266,7 @@ class BaseFlakeRecipe(FlakeRecipe):
             | set(self.propagated_build_inputs_nixpkgs_as_parameter_to_package_nix().list)
             | set(self.build_inputs_nixpkgs_as_parameter_to_package_nix().list)
             | set(self.check_inputs_nixpkgs_as_parameter_to_package_nix().list)
-            | set(self.optional_build_inputs_nixpkgs_as_parameter_to_package_nix().list)))
+            | set(self.optional_build_inputs_nixpkgs_as_parameter_to_package_nix().list)), "as_parameter_to_package_nix")
 
     def flakes_declaration(self) -> FormattedPythonPackageList:
         return FormattedPythonPackageList(list(
@@ -261,7 +274,7 @@ class BaseFlakeRecipe(FlakeRecipe):
             | set(self.propagated_build_inputs_flakes_declaration().list)
             | set(self.build_inputs_flakes_declaration().list)
             | set(self.check_inputs_flakes_declaration().list)
-            | set(self.optional_build_inputs_flakes_declaration().list)))
+            | set(self.optional_build_inputs_flakes_declaration().list)), "flake_declaration")
 
     def declaration(self) -> FormattedPythonPackageList:
         return FormattedPythonPackageList(list(
@@ -269,4 +282,4 @@ class BaseFlakeRecipe(FlakeRecipe):
             | set(self.propagated_build_inputs_declaration().list)
             | set(self.build_inputs_declaration().list)
             | set(self.check_inputs_declaration().list)
-            | set(self.optional_build_inputs_declaration().list)))
+            | set(self.optional_build_inputs_declaration().list)), "name")
