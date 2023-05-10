@@ -19,7 +19,7 @@ class Flake(Entity, EventListener, EventEmitter):
     """
     Represents a nix flake.
     """
-    def __init__(self, name: str, version: str, pythonPackage: PythonPackage, nativeBuildInputs: List, propagatedBuildInputs: List, checkInputs: List, optionalBuildInputs: List, dependenciesInNixpkgs: List):
+    def __init__(self, name: str, version: str, pythonPackage: PythonPackage, nativeBuildInputs: List, propagatedBuildInputs: List, buildInputs: List, checkInputs: List, optionalBuildInputs: List):
         """Creates a new flake instance"""
         super().__init__()
         self._name = name
@@ -27,9 +27,9 @@ class Flake(Entity, EventListener, EventEmitter):
         self._python_package = pythonPackage
         self._native_build_inputs = nativeBuildInputs
         self._propagated_build_inputs = propagatedBuildInputs
+        self._build_inputs = buildInputs
         self._check_inputs = checkInputs
         self._optional_build_inputs = optionalBuildInputs
-        self._dependencies_in_nixpkgs = dependenciesInNixpkgs
 
     @property
     @primary_key_attribute
@@ -58,6 +58,11 @@ class Flake(Entity, EventListener, EventEmitter):
 
     @property
     @attribute
+    def build_inputs(self) -> List:
+        return self._build_inputs
+
+    @property
+    @attribute
     def check_inputs(self) -> List:
         return self._check_inputs
 
@@ -65,11 +70,6 @@ class Flake(Entity, EventListener, EventEmitter):
     @attribute
     def optional_build_inputs(self) -> List:
         return self._optional_build_inputs
-
-    @property
-    @attribute
-    def dependencies_in_nixpkgs(self) -> List:
-        return self._dependencies_in_nixpkgs
 
     @classmethod
     def supported_events(cls) -> List[Type[Event]]:
@@ -110,13 +110,16 @@ class Flake(Entity, EventListener, EventEmitter):
                     # check if it's in nixpkgs already
                     if dep.in_nixpkgs():
                         logging.getLogger('step-by-step').info(f'Dependency {dep.name}-{dep.version} of {event.package_name}-{event.package_version} already in nixpkgs')
+                        dependenciesInNixpkgs.append(dep)
                     else:
                         depName = dep.name
                         depVersion = dep.version
                         nixPythonPackages = nixPythonPackageRepo.find_by_name(dep.name)
                         nixPythonPackage = next((pkg for pkg in nixPythonPackages if dep.satisfies_spec(pkg.version)), None)
                         if nixPythonPackage:
-                            dependenciesInNixpkgs.append(pythonPackageRepo.find_by_name_and_version(nixPythonPackage.name, nixPythonPackage.version))
+                            pkg = pythonPackageRepo.find_by_name_and_version(nixPythonPackage.name, nixPythonPackage.version)
+                            logging.getLogger('step-by-step').info(f'Found a compatible Python package in Nix for {dep.name}-{dep.version}: {pkg.name}-{pkg.version}')
+                            dependenciesInNixpkgs.append(pkg)
                         else:
                             # check if there's a flake for the dependency
                             depFlake = flakeRepo.find_by_name_and_version(depName, depVersion)
@@ -126,7 +129,15 @@ class Flake(Entity, EventListener, EventEmitter):
                                 flakeCreated = cls.emit(FlakeRequested(depName, depVersion))
                                 logger.info(f'Flake {dep.name}-{dep.version} created (triggered by "flake {event.package_name}-{event.package_version} requested")')
 
-                flake = Flake(event.package_name, event.package_version, pythonPackage, nativeBuildInputs, propagatedBuildInputs, checkInputs, optionalBuildInputs, dependenciesInNixpkgs)
+                flake = Flake(
+                    event.package_name,
+                    event.package_version,
+                    pythonPackage,
+                    cls.cleanup_nixpkgs_dependencies(nativeBuildInputs, dependenciesInNixpkgs),
+                    cls.cleanup_nixpkgs_dependencies(propagatedBuildInputs, dependenciesInNixpkgs),
+                    cls.cleanup_nixpkgs_dependencies(buildInputs, dependenciesInNixpkgs),
+                    cls.cleanup_nixpkgs_dependencies(checkInputs, dependenciesInNixpkgs),
+                    cls.cleanup_nixpkgs_dependencies(optionalBuildInputs, dependenciesInNixpkgs))
                 logging.getLogger('step-by-step').info(f'Retrieving recipe for flake {flake.name}-{flake.version}')
                 flakeRecipe = cls.find_recipe_by_flake(flake)
                 if flakeRecipe:
@@ -158,8 +169,12 @@ class Flake(Entity, EventListener, EventEmitter):
             result = matches[0](flake)
         return result
 
+    @classmethod
+    def cleanup_nixpkgs_dependencies(cls, inputs: List[PythonPackage], inNixpkgs: List[PythonPackage]) -> List[PythonPackage]:
+        return list([input for input in inputs if not any((input.name == nixpkg.name) for nixpkg in inNixpkgs)]) + inNixpkgs
+
     def dependency_in_nixpkgs(self, dep) -> bool:
-        return dep in self.dependencies_in_nixpkgs
+        return dep.in_nixpkgs() or dep in self.dependencies_in_nixpkgs
 
     def __str__(self):
         return super(Entity, self).__str__()

@@ -70,7 +70,11 @@ class FormattedPythonPackageList(Formatting):
 
     def __str__(self):
 
-        return f'{self.initial_prefix}{self.separator.join([f"{self.indent}{self._invoke_func(dep)}" for dep in self.list])}{self.final_suffix}'
+        result = ""
+        if len(self.list) > 0:
+            result = f'{self.initial_prefix}{self.separator.join([f"{self.indent}{self._invoke_func(dep)}" for dep in self.list])}{self.final_suffix}'
+
+        return result
 
     def __getattr__(self, attr):
         """

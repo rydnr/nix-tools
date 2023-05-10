@@ -24,32 +24,32 @@ class BaseFlakeRecipe(FlakeRecipe):
     def __init__(self, flake: Flake):
         """Creates a new base nix flake recipe instance"""
         super().__init__(flake)
-        self._native_build_inputs_subtemplates = self.extract_dep_templates(flake, flake.python_package.get_native_build_inputs())
-        self._propagated_build_inputs_subtemplates = self.extract_dep_templates(flake, flake.python_package.get_propagated_build_inputs())
-        self._build_inputs_subtemplates = self.extract_dep_templates(flake, flake.python_package.get_build_inputs())
-        self._check_inputs_subtemplates = self.extract_dep_templates(flake, flake.python_package.get_check_inputs())
-        self._optional_build_inputs_subtemplates = self.extract_dep_templates(flake, flake.python_package.get_optional_build_inputs())
+        self._native_build_inputs_subtemplates = self.extract_dep_templates(flake, flake.native_build_inputs)
+        self._propagated_build_inputs_subtemplates = self.extract_dep_templates(flake, flake.propagated_build_inputs)
+        self._build_inputs_subtemplates = self.extract_dep_templates(flake, flake.build_inputs)
+        self._check_inputs_subtemplates = self.extract_dep_templates(flake, flake.check_inputs)
+        self._optional_build_inputs_subtemplates = self.extract_dep_templates(flake, flake.optional_build_inputs)
         self._subtemplates = self.extract_dep_templates(flake, list(
-                set(flake.python_package.get_native_build_inputs())
-            | set(flake.python_package.get_propagated_build_inputs())
-            | set(flake.python_package.get_build_inputs())
-            | set(flake.python_package.get_check_inputs())
-            | set(flake.python_package.get_optional_build_inputs())))
+                set(flake.native_build_inputs)
+            | set(flake.propagated_build_inputs)
+            | set(flake.build_inputs)
+            | set(flake.check_inputs)
+            | set(flake.optional_build_inputs)))
         all = list(
-                set(flake.python_package.get_native_build_inputs())
-            | set(flake.python_package.get_propagated_build_inputs())
-            | set(flake.python_package.get_build_inputs())
-            | set(flake.python_package.get_check_inputs())
-            | set(flake.python_package.get_optional_build_inputs()))
+                set(flake.native_build_inputs)
+            | set(flake.propagated_build_inputs)
+            | set(flake.build_inputs)
+            | set(flake.check_inputs)
+            | set(flake.optional_build_inputs))
 
     class Subtemplates(Enum):
-        FLAKE_DEPS = "flake_deps"
         NIXPKGS_DEPS = "nixpkgs_deps"
+        FLAKE_DEPS = "flake_deps"
         ALL_DEPS = "all_deps"
-        FLAKES_DECLARATION = "flakes_declaration"
         NIXPKGS_DECLARATION = "nixpkgs_declaration"
-        FLAKES_AS_PARAMETER_TO_PACKAGE_NIX = "flakes_as_parameter_to_package_nix"
+        FLAKES_DECLARATION = "flakes_declaration"
         NIXPKGS_AS_PARAMETER_TO_PACKAGE_NIX = "nixpkgs_as_parameter_to_package_nix"
+        FLAKES_AS_PARAMETER_TO_PACKAGE_NIX = "flakes_as_parameter_to_package_nix"
         DECLARATION = "declaration"
         NIXPKGS_OVERRIDES = "nixpkgs_overrides"
 
@@ -76,35 +76,35 @@ class BaseFlakeRecipe(FlakeRecipe):
 
     def extract_dep_templates(self, flake, inputs: List[PythonPackage]) -> Dict[str, str]:
         if inputs:
-            flake_deps = FormattedPythonPackageList(self.remove_duplicates([FormattedFlakePythonPackage(dep) for dep in inputs if not dep.in_nixpkgs()]))
             nixpkgs_deps = FormattedPythonPackageList(self.remove_duplicates([FormattedNixpkgsPythonPackage(dep) for dep in inputs if dep.in_nixpkgs()]))
-            all_deps = FormattedPythonPackageList(self.remove_duplicates(flake_deps.list, nixpkgs_deps.list))
+            flake_deps = FormattedPythonPackageList(self.remove_duplicates([FormattedFlakePythonPackage(dep) for dep in inputs if not dep.in_nixpkgs()]))
+            all_deps = FormattedPythonPackageList(flake_deps.list + nixpkgs_deps.list)
 
-            flakes_declaration = FormattedPythonPackageList(flake_deps.list, "flake_declaration")
             nixpkgs_declaration = FormattedPythonPackageList(nixpkgs_deps.list, "nixpkgs_declaration")
-            flakes_as_parameter_to_package_nix = FormattedPythonPackageList(flake_deps.list, "as_parameter_to_package_nix")
+            flakes_declaration = FormattedPythonPackageList(flake_deps.list, "flake_declaration")
             nixpkgs_as_parameter_to_package_nix = FormattedPythonPackageList(nixpkgs_deps.list, "as_parameter_to_package_nix")
+            flakes_as_parameter_to_package_nix = FormattedPythonPackageList(flake_deps.list, "as_parameter_to_package_nix")
             declaration = FormattedPythonPackageList(all_deps.list, "name")
             nixpkgs_overrides = FormattedPythonPackageList(nixpkgs_deps.list, "overrides")
         else:
-            flake_deps = FormattedPythonPackageList([])
             nixpkgs_deps = FormattedPythonPackageList([])
+            flake_deps = FormattedPythonPackageList([])
             all_deps = FormattedPythonPackageList([])
-            flakes_declaration = FormattedPythonPackageList([])
             nixpkgs_declaration = FormattedPythonPackageList([])
-            flakes_as_parameter_to_package_nix = FormattedPythonPackageList([])
+            flakes_declaration = FormattedPythonPackageList([])
             nixpkgs_as_parameter_to_package_nix = FormattedPythonPackageList([])
+            flakes_as_parameter_to_package_nix = FormattedPythonPackageList([])
             declaration = FormattedPythonPackageList([])
             nixpkgs_overrides = FormattedPythonPackageList([])
 
         return {
-            BaseFlakeRecipe.Subtemplates.FLAKE_DEPS: flake_deps,
             BaseFlakeRecipe.Subtemplates.NIXPKGS_DEPS: nixpkgs_deps,
+            BaseFlakeRecipe.Subtemplates.FLAKE_DEPS: flake_deps,
             BaseFlakeRecipe.Subtemplates.ALL_DEPS: all_deps,
-            BaseFlakeRecipe.Subtemplates.FLAKES_DECLARATION: flakes_declaration,
             BaseFlakeRecipe.Subtemplates.NIXPKGS_DECLARATION: nixpkgs_declaration,
-            BaseFlakeRecipe.Subtemplates.FLAKES_AS_PARAMETER_TO_PACKAGE_NIX: flakes_as_parameter_to_package_nix,
+            BaseFlakeRecipe.Subtemplates.FLAKES_DECLARATION: flakes_declaration,
             BaseFlakeRecipe.Subtemplates.NIXPKGS_AS_PARAMETER_TO_PACKAGE_NIX: nixpkgs_as_parameter_to_package_nix,
+            BaseFlakeRecipe.Subtemplates.FLAKES_AS_PARAMETER_TO_PACKAGE_NIX: flakes_as_parameter_to_package_nix,
             BaseFlakeRecipe.Subtemplates.DECLARATION: declaration,
             BaseFlakeRecipe.Subtemplates.NIXPKGS_OVERRIDES: nixpkgs_overrides
             }
