@@ -4,12 +4,14 @@ from domain.event_listener import EventListener
 from domain.flake_build.git_add_failed import GitAddFailed
 from domain.flake_build.git_init_failed import GitInitFailed
 from domain.flake_build.nix_build_failed import NixBuildFailed
+from domain.flake_build.sha256_mismatch_error import Sha256MismatchError
 from domain.flake_built import FlakeBuilt
 from domain.flake_created import FlakeCreated
 from domain.flake_recipe import FlakeRecipe
 
 import logging
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -47,7 +49,12 @@ class FlakeBuilder(EventListener):
             cls.git_init(temp_dir)
             for file in os.listdir(temp_dir):
                 cls.git_add(temp_dir, file)
-            cls.nix_build(temp_dir)
+            try:
+                logging.getLogger(__name__).debug(f'Building the flake in {folder}')
+                cls.nix_build(temp_dir, firstAttempt=True)
+            except Sha256MismatchError as mismatch:
+                cls.replace_sha256_in_files(temp_dir, mismatch.sha256)
+                cls.nix_build(temp_dir, firstAttempt=False)
 
         return FlakeBuilt(event.package_name, event.package_version, flake_folder)
 
@@ -77,12 +84,44 @@ class FlakeBuilder(EventListener):
             raise GitAddFailed(file, output.stdout)
 
     @classmethod
-    def nix_build(cls, folder: str):
+    def nix_build(cls, folder: str, firstAttempt = True):
         try:
-            logging.getLogger(__name__).debug(f'Building the flake in {folder}')
             subprocess.run(['nix', 'build', '.'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=folder)
         except subprocess.CalledProcessError as err:
-            logging.getLogger(__name__).error(err.stdout)
-            logging.getLogger(__name__).error(err.stderr)
-            cls.copy_folder_contents(folder, cls._forensic_folder)
-            raise NixBuildFailed(cls._forensic_folder, err.stdout)
+            sha256 = cls.extract_sha256_from_output(err.stderr)
+            if sha256:
+                raise Sha256MismatchError(sha256)
+            else:
+                logging.getLogger(__name__).error(err.stdout)
+                logging.getLogger(__name__).error(err.stderr)
+                cls.copy_folder_contents(folder, cls._forensic_folder)
+                raise NixBuildFailed(cls._forensic_folder, err.stdout)
+
+    @classmethod
+    def extract_sha256_from_output(cls, output: str) -> str:
+        result = None
+        match = re.search(r'got:\s+(sha256-\S+)', output)
+        if match:
+            result = match.group(1)
+        return result
+
+    @classmethod
+    def replace_sha256_in_files(cls, directory: str, new_sha256: str):
+        # Define a pattern for a line containing 'sha256 = "[whatever]"'
+        pattern = re.compile(r'(sha256\s*=\s*)"([^"]*)"')
+
+        # Walk through the directory, including all subdirectories
+        for root, _, files in os.walk(directory):
+            for file in files:
+                # Only process .nix files
+                if file.endswith('.nix'):
+                    file_path = os.path.join(root, file)
+                    with open(file_path, 'r+') as f:
+                        content = f.read()
+                        # Replace all occurrences of the pattern with 'sha256 = "[new_sha256]"'
+                        new_content = pattern.sub(fr'\1"{new_sha256}"', content)
+                        if new_content != content:
+                            # If any replacements were made, overwrite the file with the new content
+                            f.seek(0)
+                            f.write(new_content)
+                            f.truncate()

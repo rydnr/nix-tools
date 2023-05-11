@@ -126,3 +126,7 @@ class GitRepo(Entity):
             subfolder = None
 
         return repo_url, subfolder
+
+    def in_github(self) -> bool:
+        parsed_url = urlparse(self.url)
+        return parsed_url.netloc == 'github.com'

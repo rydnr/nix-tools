@@ -226,15 +226,3 @@ class PythonPackage(Entity):
         Retrieves the type.
         """
         raise NotImplementedError('get_type() must be implemented by subclasses')
-
-    def _python_package_str(self):
-        return super().__str__()
-
-    def _python_package_setattr(self, varName, varValue):
-        return super().__setattr__(varName, varValue)
-
-    def _python_package_eq(self, other):
-        return super().__eq__(other)
-
-    def _python_package_hash(self):
-        return super().__hash__()

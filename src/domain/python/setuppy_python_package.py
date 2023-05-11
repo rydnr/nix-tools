@@ -238,15 +238,3 @@ class SetuppyPythonPackage(PythonPackage, SetupcfgUtils):
             raise MoreThanOneEggInfoFolder(egg_info_dirs)
 
         return result
-
-    def __str__(self):
-        return self._python_package_str()
-
-    def __setattr__(self, varName, varValue):
-        return self._python_package_setattr(varName, varValue)
-
-    def __eq__(self, other):
-        return self._python_package_eq(other)
-
-    def __hash__(self):
-        return self._python_package_hash()
