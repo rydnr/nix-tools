@@ -50,11 +50,14 @@ class FlakeBuilder(EventListener):
             for file in os.listdir(temp_dir):
                 cls.git_add(temp_dir, file)
             try:
-                logging.getLogger(__name__).debug(f'Building the flake in {folder}')
+                logging.getLogger(__name__).debug(f'Building the flake in {temp_dir}')
                 cls.nix_build(temp_dir, firstAttempt=True)
             except Sha256MismatchError as mismatch:
                 cls.replace_sha256_in_files(temp_dir, mismatch.sha256)
                 cls.nix_build(temp_dir, firstAttempt=False)
+                if os.path.exists(os.path.join(temp_dir, '.git')):
+                    shutil.rmtree(os.path.join(temp_dir, '.git'))
+                cls.copy_folder_contents(temp_dir, flake_folder)
 
         return FlakeBuilt(event.package_name, event.package_version, flake_folder)
 
