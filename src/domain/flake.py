@@ -171,7 +171,9 @@ class Flake(Entity, EventListener, EventEmitter):
 
     @classmethod
     def cleanup_nixpkgs_dependencies(cls, inputs: List[PythonPackage], inNixpkgs: List[PythonPackage]) -> List[PythonPackage]:
-        return list([input for input in inputs if not any((input.name == nixpkg.name) for nixpkg in inNixpkgs)]) + inNixpkgs
+        curatedInputs = list([input for input in inputs if not any((input.name == nixpkg.name) for nixpkg in inNixpkgs)])
+        curatedNixpkgs = list([nixpkg for nixpkg in inNixpkgs if any((input.name == nixpkg.name) for input in inputs)])
+        return curatedInputs + curatedNixpkgs
 
     def dependency_in_nixpkgs(self, dep) -> bool:
         return dep.in_nixpkgs() or dep in self.dependencies_in_nixpkgs

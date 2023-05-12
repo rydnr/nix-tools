@@ -4,7 +4,9 @@ from domain.git_repo import GitRepo
 from domain.git_repo_repo import GitRepoRepo
 from domain.nix_prefetch_url_failed import NixPrefetchUrlFailed
 from domain.nix_python_package import NixPythonPackage
+from domain.unsupported_python_package import UnsupportedPythonPackage
 
+import logging
 import os
 import re
 import subprocess
@@ -110,11 +112,14 @@ class PythonPackage(Entity):
     def find_dep(self, depInfo: str): # -> PythonPackage:
         result = None
         dep_name, _, dep_version, _ = self.__class__.extract_dep(depInfo)
-        if dep_name != self.name:
-            if dep_version:
-                result = Ports.instance().resolvePythonPackageRepo().find_by_name_and_version(dep_name, dep_version)
-            else:
-                result = Ports.instance().resolvePythonPackageRepo().find_by_name(dep_name)
+        try:
+            if dep_name != self.name:
+                if dep_version:
+                    result = Ports.instance().resolvePythonPackageRepo().find_by_name_and_version(dep_name, dep_version)
+                else:
+                    result = Ports.instance().resolvePythonPackageRepo().find_by_name(dep_name)
+        except UnsupportedPythonPackage as unsupported:
+            logging.getLogger(__name__).warning(unsupported.message)
 
         return result
 

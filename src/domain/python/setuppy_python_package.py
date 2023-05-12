@@ -6,6 +6,7 @@ from domain.python.more_than_one_egg_info_folder import MoreThanOneEggInfoFolder
 from domain.python.no_egg_info_folder_found import NoEggInfoFolderFound
 from domain.python.python_setuppy_egg_info_failed import PythonSetuppyEggInfoFailed
 from domain.python.setupcfg_utils import SetupcfgUtils
+from domain.python.requirementstxt_utils import RequirementstxtUtils
 from domain.python_package import PythonPackage
 
 import logging
@@ -15,7 +16,7 @@ import sys
 import tempfile
 from typing import Dict, List
 
-class SetuppyPythonPackage(PythonPackage, SetupcfgUtils):
+class SetuppyPythonPackage(PythonPackage, SetupcfgUtils, RequirementstxtUtils):
     """
     Represents a setup.py-based Python package.
     """
@@ -26,12 +27,19 @@ class SetuppyPythonPackage(PythonPackage, SetupcfgUtils):
         """Creates a new SetuppyPythonPackage instance"""
         super().__init__(name, version, info, release, gitRepo)
         self._requires_txt = None
+        self._dev_requirements_txt = None
 
     @property
     def requires_txt(self) -> Dict:
         if not self._requires_txt:
             self._requires_txt = self.__class__.parse_requires_txt(self.egg_info(self.git_repo))
         return self._requires_txt
+
+    @property
+    def dev_requirements_txt(self) -> List:
+        if not self._dev_requirements_txt:
+            self._dev_requirements_txt = self.__class__.read_dev_requirements_txt(self.git_repo)
+        return self._dev_requirements_txt
 
     @classmethod
     def git_repo_matches(cls, gitRepo: GitRepo) -> bool:
@@ -101,13 +109,18 @@ class SetuppyPythonPackage(PythonPackage, SetupcfgUtils):
             for dep in test_require:
                 pythonPackage = self.find_dep(dep)
                 if pythonPackage:
-                    setuptools_included = self.append_package(result, pythonPackage, setuptoolsIncluded)
+                    setuptools_included = self.append_package(result, pythonPackage, setuptools_included)
         test = self.requires_txt.get("test")
         if test:
             for dep in test:
                 pythonPackage = self.find_dep(dep)
                 if pythonPackage:
-                    setuptools_included = self.append_package(result, pythonPackage, setuptoolsIncluded)
+                    setuptools_included = self.append_package(result, pythonPackage, setuptools_included)
+        print(f'dev_requirements -> {self.dev_requirements_txt}')
+        for dep in self.dev_requirements_txt:
+            pythonPackage = self.find_dep(dep)
+            if pythonPackage:
+                setuptools_included = self.append_package(result, pythonPackage, setuptools_included)
 
         return result
 
