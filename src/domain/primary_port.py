@@ -8,6 +8,6 @@ class PrimaryPort(Port):
         """Retrieves the priority of the primary port."""
         raise NotImplementedError("priority() must be implemented by subclasses")
 
-    def accept(self, app):
+    async def accept(self, app):
         """Accepts input on behalf of the given application."""
         raise NotImplementedError("accept() must be implemented by subclasses")

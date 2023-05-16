@@ -36,7 +36,7 @@ class GithubRepo(GitRepo):
 
         return requests.get(f"https://api.github.com/repos/{owner}/{repo_name}/contents/{final_file}?ref={rev}", headers=headers)
 
-    def file_exists_in_github_repo(self, url: str, rev: str, file: str) -> bool:
-        file_info = self.request_file_in_github_repo(url, rev, file)
+    def file_exists_in_github_repo(self, url: str, rev: str, subfolder: str, file: str) -> bool:
+        file_info = self.request_file_in_github_repo(url, rev, subfolder, file)
 
         return file_info.status_code == 200

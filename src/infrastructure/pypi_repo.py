@@ -27,7 +27,7 @@ class PypiRepo(PythonPackageRepo):
             self.__class__._cached_package_data[package_name] = result
         return result
 
-    def find_by_name_and_version(self, package_name: str, package_version: str) -> PythonPackage:
+    async def find_by_name_and_version(self, package_name: str, package_version: str) -> PythonPackage:
         """
         Retrieves the PythonPackage matching given name and version.
         """
@@ -52,13 +52,13 @@ class PypiRepo(PythonPackageRepo):
                 latest_release = len(package_data.get("releases", [])[latest_version]) - 1
                 release_info = package_data.get("releases", [[]])[latest_version][latest_release]
 
-                result = PythonPackageFactory.create(package_name, latest_version, package_info, release_info)
+                result = await PythonPackageFactory().create(package_name, latest_version, package_info, release_info)
                 self.__class__._cached_packages[f'{package_name}-{latest_version}'] = result
                 self.__class__._cached_packages[f'{package_name}-{package_version}'] = result
 
         return result
 
-    def find_all_by_name(self, package_name: str) -> List[PythonPackage]:
+    async def find_all_by_name(self, package_name: str) -> List[PythonPackage]:
         """Retrieves all versions of the PythonPackage matching given name."""
         result = []
         logger = logging.getLogger(__name__)
@@ -74,14 +74,14 @@ class PypiRepo(PythonPackageRepo):
             release_info = package_data.get("releases", [[]])[version][latest_release]
             package = self.__class__._cached_packages.get(f'{package_name}-{latest_version}', None)
             if package is None:
-                package = PythonPackageFactory.create(package_name, latest_version, package_info, release_info)
+                package = await PythonPackageFactory().create(package_name, latest_version, package_info, release_info)
                 self.__class__._cached_packages[f'{package_name}-{latest_version}'] = package
 
             result.append(package)
 
         return result
 
-    def find_by_name(self, package_name: str) -> PythonPackage:
+    async def find_by_name(self, package_name: str) -> PythonPackage:
         """Retrieves latest version of the PythonPackage matching given name."""
         logger = logging.getLogger(__name__)
         package_data = self.retrieve_package_data(package_name)
@@ -95,7 +95,7 @@ class PypiRepo(PythonPackageRepo):
 
         result = self.__class__._cached_packages.get(f'{package_name}-{latest_version}', None)
         if result is None:
-            result = PythonPackageFactory.create(package_name, latest_version, package_info, release_info)
+            result = await PythonPackageFactory().create(package_name, latest_version, package_info, release_info)
             self.__class__._cached_packages[f'{package_name}-{latest_version}'] = result
 
         return result

@@ -2,6 +2,7 @@
 
 from application.bootstrap import get_interfaces, get_implementations
 
+import asyncio
 import importlib
 import importlib.util
 import logging
@@ -49,26 +50,28 @@ class PythonNixFlakeGenerator():
     def delegate_priority(cls, primaryPort) -> int:
         return primaryPort().priority()
 
-    def accept_input(self):
+    async def accept_input(self):
         for primaryPort in sorted(self.get_primary_ports(), key=PythonNixFlakeGenerator.delegate_priority):
-            primaryPort().accept(self)
+            port = primaryPort()
+            print(f'{port}.accept(me)')
+            await port.accept(self)
 
-    def accept_event(self, event): # : Event) -> Event:
+    async def accept(self, event): # : Event) -> Event:
         result = []
         if event:
             firstEvents = []
             logging.getLogger(__name__).info(f'Accepting event {event}')
             for listenerClass in EventListener.listeners_for(event.__class__):
-                resultingEvents = listenerClass.accept(listenerClass, event)
+                resultingEvents = await listenerClass.accept(listenerClass, event)
                 if resultingEvents and len(resultingEvents) > 0:
                     firstEvents.extend(resultingEvents)
             if len(firstEvents) > 0:
                 result.extend(firstEvents)
                 for event in firstEvents:
-                    result.extend(self.accept_event(event))
+                    result.extend(await self.accept(event))
         return result
 
-    def accept_configure_logging(self, logConfig: Dict[str, bool]):
+    async def accept_configure_logging(self, logConfig: Dict[str, bool]):
         for module_functions in self.get_log_configs():
             module_functions(logConfig["verbose"], logConfig["trace"], logConfig["quiet"])
 
@@ -86,21 +89,21 @@ class PythonNixFlakeGenerator():
             print(f"Error in src/infrastructure/_log_config.py: configure_logging")
         return result
 
-    def accept_github_token(self, token: str):
+    async def accept_github_token(self, token: str):
         GithubGitRepo.github_token(token)
 
-    def accept_flakes_folder(self, folder: str):
+    async def accept_flakes_folder(self, folder: str):
         FolderFlakeRepo.repo_folder(folder)
 
-    def accept_recipes_folder(self, folder: str):
+    async def accept_recipes_folder(self, folder: str):
         FileNixTemplateRepo.recipes_folder(folder)
         DynamicallyDiscoverableFlakeRecipeRepo.recipes_folder(folder)
         DynamicallyDiscoverableFlakeRecipeRepo.initialize()
 
-    def accept_forensic_folder(self, folder: str):
+    async def accept_forensic_folder(self, folder: str):
         FlakeBuilder.forensic_folder(folder)
 
-    def accept_flakes_url(self, url: str):
+    async def accept_flakes_url(self, url: str):
         FolderFlakeRepo.flakes_url(url)
 
 if __name__ == "__main__":
@@ -122,4 +125,5 @@ if __name__ == "__main__":
     from infrastructure.github_git_repo import GithubGitRepo
 
     PythonNixFlakeGenerator.initialize()
-    PythonNixFlakeGenerator.instance().accept_input()
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(PythonNixFlakeGenerator.instance().accept_input())

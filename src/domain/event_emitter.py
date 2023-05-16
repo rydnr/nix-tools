@@ -14,9 +14,14 @@ class EventEmitter:
             EventEmitter._receivers.append(receiver)
 
     @classmethod
-    def emit(cls, event: Event):
+    def unregister_receiver(cls, receiver):
+        if receiver in EventEmitter._receivers:
+            EventEmitter._receivers.remove(receiver)
+
+    @classmethod
+    async def emit(cls, event: Event):
         """
         Emits given event.
         """
         for receiver in EventEmitter._receivers:
-            receiver.accept_event(event)
+            await receiver.accept(event)

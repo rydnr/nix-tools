@@ -14,7 +14,7 @@ class FlakesFolderCli(PrimaryPort):
     def priority(self) -> int:
         return 1
 
-    def accept(self, app):
+    async def accept(self, app):
 
         parser = argparse.ArgumentParser(
             description="Parses the folder with the custom flakes"
@@ -23,4 +23,4 @@ class FlakesFolderCli(PrimaryPort):
             "-f", "--flakes_folder", required=True, help="The flakes folder"
         )
         args, unknown_args = parser.parse_known_args()
-        app.accept_flakes_folder(args.flakes_folder)
+        await app.accept_flakes_folder(args.flakes_folder)

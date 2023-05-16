@@ -14,11 +14,11 @@ class GithubTokenCli(PrimaryPort):
     def priority(self) -> int:
         return 0
 
-    def accept(self, app):
+    async def accept(self, app):
 
         parser = argparse.ArgumentParser(
             description="Parses the github token from the command line"
         )
         parser.add_argument("-t", "--github_token", required=True, help="The github token")
         args, unknown_args = parser.parse_known_args()
-        app.accept_github_token(args.github_token)
+        await app.accept_github_token(args.github_token)

@@ -1,4 +1,6 @@
-class BuildFlakeRequested:
+from domain.event import Event
+
+class BuildFlakeRequested(Event):
     """
     Represents the event when building a Nix flake for a Python package has been requested
     """

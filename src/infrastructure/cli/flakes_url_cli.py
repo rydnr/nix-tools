@@ -14,7 +14,7 @@ class FlakesUrlCli(PrimaryPort):
     def priority(self) -> int:
         return 2
 
-    def accept(self, app):
+    async def accept(self, app):
 
         parser = argparse.ArgumentParser(
             description="Parses the Flakes url"
@@ -23,4 +23,4 @@ class FlakesUrlCli(PrimaryPort):
             "-u", "--flakes_url", required=True, help="The flakes url"
         )
         args, unknown_args = parser.parse_known_args()
-        app.accept_flakes_url(args.flakes_url)
+        await app.accept_flakes_url(args.flakes_url)

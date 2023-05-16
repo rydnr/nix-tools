@@ -20,8 +20,10 @@
         packages = {
           python_nix_flake_generator-0_0_1 =
             (import ./python_nix_flake_generator-0.0.1.nix) {
-              inherit (pythonPackages) buildPythonApplication;
-              inherit (pkgs) lib;
+              inherit (pythonPackages)
+                buildPythonApplication grpcio grpcio-tools requests packaging
+                toml beautifulsoup4 mistune;
+              inherit (pkgs) lib gnumake;
               mkPoetryApplication = pkgs.poetry2nix.mkPoetryApplication;
             };
           python_nix_flake_generator =

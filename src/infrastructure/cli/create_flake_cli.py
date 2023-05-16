@@ -15,7 +15,7 @@ class CreateFlakeCli(PrimaryPort):
     def priority(self) -> int:
         return 100
 
-    def accept(self, app):
+    async def accept(self, app):
 
         parser = argparse.ArgumentParser(description="Generates a flake for a given Python package")
         parser.add_argument("command", choices=['create', 'build'], nargs='?', default=None, help="Whether to generate a nix flake")
@@ -34,4 +34,4 @@ class CreateFlakeCli(PrimaryPort):
 
             event = FlakeRequested(args.packageName, args.packageVersion)
             logging.getLogger(__name__).debug(f'Emitting {event}')
-            app.accept_event(event)
+            await app.accept(event)

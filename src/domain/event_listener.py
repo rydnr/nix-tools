@@ -1,4 +1,5 @@
 from domain.event import Event
+from domain.unsupported_event import UnsupportedEvent
 
 from typing import List,Type
 
@@ -34,9 +35,10 @@ class EventListener:
     @classmethod
     def listen(cls, listener: Type, eventClass: Type[Event]):
         eventListeners = EventListener.listeners_for(eventClass)
-        eventListeners.append(listener)
+        if listener not in eventListeners:
+            eventListeners.append(listener)
 
-    def accept(self, event: Event):
+    async def accept(self, event: Event):
         result = []
         listeners = EventListener.listeners_for(event.__class__)
         if len(listeners) == 0:
@@ -44,5 +46,5 @@ class EventListener:
         for listener in listeners:
             methodName = f'listen{event.__class__.__name__}'
             method = getattr(listener, methodName)
-            result.append(method(event))
+            result.append(await method(event))
         return result

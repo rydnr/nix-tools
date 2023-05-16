@@ -1,4 +1,5 @@
-{ buildPythonApplication, lib, mkPoetryApplication }:
+{ buildPythonApplication, lib, mkPoetryApplication, grpcio, grpcio-tools
+, requests, packaging, toml, beautifulsoup4, mistune, gnumake }:
 
 mkPoetryApplication rec {
   pname = "python_nix_flake_generator";
@@ -6,9 +7,9 @@ mkPoetryApplication rec {
   format = "pyproject";
   projectDir = ./.;
 
-  nativeBuildInputs = [ ];
+  nativeBuildInputs = [ grpcio grpcio-tools gnumake ];
 
-  propagatedBuildInputs = [ ];
+  propagatedBuildInputs = [ requests packaging toml beautifulsoup4 mistune ];
 
   buildInputs = [ ];
 

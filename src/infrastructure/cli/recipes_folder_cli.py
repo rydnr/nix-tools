@@ -16,7 +16,7 @@ class RecipesFolderCli(PrimaryPort):
     def priority(self) -> int:
         return 2
 
-    def accept(self, app):
+    async def accept(self, app):
 
         parser = argparse.ArgumentParser(
             description="Parses the folder with the custom flakes"
@@ -28,4 +28,4 @@ class RecipesFolderCli(PrimaryPort):
         recipes_folder = args.recipes_folder
         if not recipes_folder:
             recipes_folder = os.path.join(str(Path(__file__).resolve().parent.parent.parent.parent), "recipes")
-        app.accept_recipes_folder(recipes_folder)
+        await app.accept_recipes_folder(recipes_folder)

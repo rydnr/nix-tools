@@ -14,7 +14,7 @@ class PythonPackageRepo(Repo):
         """
         super().__init__(PythonPackage)
 
-    def find_by_name_and_version(
+    async def find_by_name_and_version(
         self, package_name: str, version_spec: str
     ) -> PythonPackage:
         """Retrieves the PythonPackage matching given name and version."""
@@ -22,13 +22,13 @@ class PythonPackageRepo(Repo):
             "find_by_name_and_version() must be implemented by subclasses"
         )
 
-    def find_by_name(self, package_name: str) -> PythonPackage:
+    async def find_by_name(self, package_name: str) -> PythonPackage:
         """Retrieves latest version of the PythonPackage matching given name."""
         raise NotImplementedError(
             "find_by_name() must be implemented by subclasses"
         )
 
-    def find_all_by_name(self, package_name: str) -> List[PythonPackage]:
+    async def find_all_by_name(self, package_name: str) -> List[PythonPackage]:
         """Retrieves all versions of the PythonPackage matching given name."""
         raise NotImplementedError(
             "find_all_by_name() must be implemented by subclasses"

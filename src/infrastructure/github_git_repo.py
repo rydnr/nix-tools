@@ -38,3 +38,15 @@ class GithubGitRepo(GitRepoRepo):
         response = requests.get(f"https://api.github.com/repos/{owner}/{repo_name}/git/refs/tags/{rev}", headers=headers)
 
         return response.status_code == 200
+
+    def get_latest_tag(self, url: str) -> str:
+        result = None
+        owner, repo_name = GitRepo.extract_repo_owner_and_repo_name(url)
+
+        headers = {"Authorization": f"token {self.__class__._github_token}"}
+        tagInfo = requests.get(f"https://api.github.com/repos/{owner}/{repo_name}/tags", headers=headers).json()
+
+        if tagInfo and len(tagInfo) > 0:
+            result = tagInfo[0]['name']
+
+        return result

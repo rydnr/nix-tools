@@ -10,14 +10,10 @@ class BuildFlakeCli(PrimaryPort):
     """
     A PrimaryPort that sends BuildFlake commands specified from the command line.
     """
-
-    def __init__(self):
-        super().__init__()
-
     def priority(self) -> int:
         return 100
 
-    def accept(self, app):
+    async def accept(self, app):
 
         parser = argparse.ArgumentParser(
             description="Builds a given flake"
@@ -41,4 +37,4 @@ class BuildFlakeCli(PrimaryPort):
         if args.command == "build":
             event = BuildFlakeRequested(args.packageName, args.packageVersion, args.flakes_folder)
             logging.getLogger(__name__).debug(f"Requesting the building of flake {event.package_name}-{event.package_version} to {app}")
-            app.accept_event(event)
+            await app.accept(event)

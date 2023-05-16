@@ -17,8 +17,8 @@ class GitRepoRepo(Repo):
         super().__init__(GitRepo)
 
     def find_by_url_and_rev(self, url: str, revision: str) -> Dict[str, str]:
-        """Must be implemented by subclasses"""
-        raise NotImplementedError("find_by_url() must be implemented by subclasses")
+        """Retrieves the git repository for given url and revision."""
+        raise NotImplementedError("find_by_url_and_rev() must be implemented by subclasses")
 
     def fix_rev(self, url: str, rev: str, subfolder: str) -> str:
         result = None
@@ -34,4 +34,12 @@ class GitRepoRepo(Repo):
             if self.revision_exists(url, tag):
                 result = tag
                 break
+
+        if not result:
+            result = self.get_latest_tag(url)
+
         return result
+
+    def get_latest_tag(self, user, repo):
+        """Retrieves the git repository for given url and revision."""
+        raise NotImplementedError("get_latest_tag() must be implemented by subclasses")
