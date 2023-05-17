@@ -3,6 +3,7 @@ from domain.event_listener import EventListener
 from domain.git_repo_found import GitRepoFound
 from domain.git_repo_requested import GitRepoRequested
 from domain.python_package import PythonPackage
+from domain.python_package_created import PythonPackageCreated
 from domain.unsupported_python_package import UnsupportedPythonPackage
 
 import asyncio
@@ -43,14 +44,16 @@ class PythonPackageFactory(EventEmitter, EventListener):
         else:
             for python_package_class in PythonPackage.__subclasses__():
                 if python_package_class.git_repo_matches(git_repo):
-                    self._package = python_package_class(name, version, info, release, git_repo)
+                    package = python_package_class(name, version, info, release, git_repo)
                     logging.getLogger(__name__).debug(f'Using {python_package_class.__name__} for {git_repo.url}')
                     break
 
-        if not self._package:
+        if not package:
             raise UnsupportedPythonPackage(name, version)
 
         self._event.set()
+
+        await self.__class__.emit(PythonPackageCreated(package))
 
     @classmethod
     def old_create(cls, name: str, version: str, info: Dict, release: Dict) -> PythonPackage:

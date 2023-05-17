@@ -16,19 +16,23 @@ from typing import Dict
 class Server(PrimaryPort, hello_pb2_grpc.GreeterServicer):
 
     """
-    A primary port that creates a server socket to accept messages.
+    Launches a gRPC server to receive incoming events.
     """
     def priority(self) -> int:
         return 100
 
-    def SayHello(self, request, context):
-        logging.getLogger(__name__).debug(f'Received "{data}"')
+    @property
+    def app(app):
+        return self._app
+
+    async def SayHello(self, request, context):
+        logging.getLogger(__name__).debug(f'Received "{request}", "{context}"')
         response = hello_pb2.HelloReply(message='Hello, %s!' % request.name)
         event = self.build_event(request)
-        app.accept_event(event)
+        await self._app.accept(event)
         return response
 
-    async def serve(self):
+    async def serve(self, app):
         server = grpc.aio.server()
         hello_pb2_grpc.add_GreeterServicer_to_server(self, server)
         server.add_insecure_port('[::]:50051')
@@ -37,7 +41,8 @@ class Server(PrimaryPort, hello_pb2_grpc.GreeterServicer):
         await server.wait_for_termination()
 #
     async def accept(self, app):
-        serve_task = asyncio.create_task(self.serve())
+        self._app = app
+        serve_task = asyncio.create_task(self.serve(app))
         asyncio.ensure_future(serve_task)
 
     def build_event(self, request) -> Event:

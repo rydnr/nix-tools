@@ -6,12 +6,6 @@ import requests
 
 class GithubGitRepo(GitRepoRepo):
 
-    """
-    A GitRepo that uses Github as store
-    """
-    def __init__(self):
-        super().__init__()
-
     _github_token = None
 
     @classmethod

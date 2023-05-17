@@ -53,7 +53,6 @@ class PythonNixFlakeGenerator():
     async def accept_input(self):
         for primaryPort in sorted(self.get_primary_ports(), key=PythonNixFlakeGenerator.delegate_priority):
             port = primaryPort()
-            print(f'{port}.accept(me)')
             await port.accept(self)
 
     async def accept(self, event): # : Event) -> Event:
@@ -62,7 +61,7 @@ class PythonNixFlakeGenerator():
             firstEvents = []
             logging.getLogger(__name__).info(f'Accepting event {event}')
             for listenerClass in EventListener.listeners_for(event.__class__):
-                resultingEvents = await listenerClass.accept(listenerClass, event)
+                resultingEvents = await listenerClass.accept(event)
                 if resultingEvents and len(resultingEvents) > 0:
                     firstEvents.extend(resultingEvents)
             if len(firstEvents) > 0:
