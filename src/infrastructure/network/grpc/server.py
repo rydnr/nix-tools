@@ -26,7 +26,7 @@ class Server(PrimaryPort, git_repo_found_pb2_grpc.GitRepoFoundServiceServicer):
     def app(app):
         return self._app
 
-    async def GitRepoFound(self, request, context):
+    async def GitRepoFoundNotifications(self, request, context):
         logging.getLogger(__name__).debug(f'Received "{request}", "{context}"')
         response = git_repo_found_pb2.Reply(code=200)
         event = self.build_event(request)
