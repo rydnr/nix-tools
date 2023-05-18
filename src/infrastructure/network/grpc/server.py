@@ -14,7 +14,7 @@ import json
 import logging
 from typing import Dict
 
-class Server(PrimaryPort, git_repo_found_pb2_grpc.EventNotificationsServicer):
+class Server(PrimaryPort, git_repo_found_pb2_grpc.GitRepoFoundServiceServicer):
 
     """
     Launches a gRPC server to receive incoming events.
@@ -35,7 +35,7 @@ class Server(PrimaryPort, git_repo_found_pb2_grpc.EventNotificationsServicer):
 
     async def serve(self, app):
         server = grpc.aio.server()
-        git_repo_found_pb2_grpc.add_EventNotificationsServicer_to_server(self, server)
+        git_repo_found_pb2_grpc.add_GitRepoFoundServiceServicer_to_server(self, server)
         server.add_insecure_port('[::]:50051')
         logging.getLogger(__name__).info(f'gRPC server listening at port 50051')
         await server.start()

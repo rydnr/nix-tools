@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package infrastructure.network.grpc;
 
-service EventNotifications {
+service GitRepoFoundService {
   // Receive a git_repo_found event
   rpc GitRepoFoundNotifications (GitRepoFound) returns (Reply) {}
 }
