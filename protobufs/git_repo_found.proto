@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package infrastructure.network.grpc;
+
+service GitRepoFound {
+  // Receive a git_repo_found event
+  rpc GitRepoFound (GitRepoFoundNotification) returns (Reply) {}
+}
+
+// The git_repo_found notification
+message GitRepoFoundNotification {
+  string package_name = 1;
+  string package_version = 2;
+  string url = 3;
+  string tag = 4;
+}
+
+// The response message containing a status code and
+message Reply {
+  int32 code = 1;
+  string message = 2;
+}
