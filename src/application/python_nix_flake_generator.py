@@ -7,7 +7,8 @@ import importlib
 import importlib.util
 import logging
 import os
-from typing import Dict, List
+import sys
+from typing import Callable, Dict
 
 class PythonNixFlakeGenerator():
 
@@ -21,21 +22,21 @@ class PythonNixFlakeGenerator():
         return self._primaryPorts
 
     @classmethod
-    def initialize(cls):
+    async def main(cls):
         cls._singleton = PythonNixFlakeGenerator()
         mappings = {}
         for port in cls.get_port_interfaces():
-            # this is to pass the infrastructure module, so I can get rid of the `import infrastructure`
-            infrastructureModule = importlib.import_module('.'.join(FileNixTemplateRepo.__module__.split('.')[:-1]))
-            implementations = get_implementations(port, infrastructureModule)
+            implementations = get_implementations(port)
             if len(implementations) == 0:
                 logging.getLogger(__name__).critical(f'No implementations found for {port}')
             else:
                 mappings.update({ port: implementations[0]() })
         Ports.initialize(mappings)
-        cls._singleton._primaryPorts = get_implementations(PrimaryPort, infrastructureModule)
+        cls._singleton._primaryPorts = get_implementations(PrimaryPort)
         EventListener.find_listeners()
         EventEmitter.register_receiver(cls._singleton)
+        loop = asyncio.get_running_loop()
+        loop.run_until_complete(await PythonNixFlakeGenerator.instance().accept_input())
 
     @classmethod
     def get_port_interfaces(cls):
@@ -53,7 +54,9 @@ class PythonNixFlakeGenerator():
     async def accept_input(self):
         for primaryPort in sorted(self.get_primary_ports(), key=PythonNixFlakeGenerator.delegate_priority):
             port = primaryPort()
+            print(f'Awaiting for {port}(accept(self))')
             await port.accept(self)
+        print(f'finished waiting')
 
     async def accept(self, event): # : Event) -> Event:
         result = []
@@ -71,11 +74,12 @@ class PythonNixFlakeGenerator():
         return result
 
     async def accept_configure_logging(self, logConfig: Dict[str, bool]):
-        for module_functions in self.get_log_configs():
-            module_functions(logConfig["verbose"], logConfig["trace"], logConfig["quiet"])
+        module_function = self.__class__.get_log_config()
+        module_function(logConfig["verbose"], logConfig["trace"], logConfig["quiet"])
 
-    def get_log_configs(self) -> List[Dict]:
-        result = []
+    @classmethod
+    def get_log_config(cls) -> Callable:
+        result = None
 
         spec = importlib.util.spec_from_file_location("_log_config", os.path.join("src", os.path.join("infrastructure", f"_log_config.py")))
         module = importlib.util.module_from_spec(spec)
@@ -83,7 +87,7 @@ class PythonNixFlakeGenerator():
         entry = {}
         configure_logging_function = getattr(module, "configure_logging", None)
         if callable(configure_logging_function):
-            result.append(configure_logging_function)
+            result = configure_logging_function
         else:
             print(f"Error in src/infrastructure/_log_config.py: configure_logging")
         return result
@@ -123,6 +127,4 @@ if __name__ == "__main__":
     from infrastructure.flake.folder_flake_repo import FolderFlakeRepo
     from infrastructure.git.github_git_repo import GithubGitRepo
 
-    PythonNixFlakeGenerator.initialize()
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(PythonNixFlakeGenerator.instance().accept_input())
+    asyncio.run(PythonNixFlakeGenerator.main())

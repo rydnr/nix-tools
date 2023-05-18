@@ -41,9 +41,10 @@ def get_interfaces(iface, package):
             pass
     return matches
 
-def get_implementations(interface, infrastructureModule):
+def get_implementations(interface):
     implementations = []
-    for module in iter_submodules(infrastructureModule):
+    submodules = iter_submodules(infrastructure)
+    for module in submodules:
         try:
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore', category=DeprecationWarning)
@@ -51,16 +52,9 @@ def get_implementations(interface, infrastructureModule):
                     if (issubclass(cls, interface) and
                         cls != interface):
                         implementations.append(cls)
-        except ImportError:
-            pass
+        except ImportError as err:
+            print(f'Error importing {module}: {err}')
+
     return implementations
 
-def resolve_port_implementations():
-    mappings = {}
-    for port in get_port_interfaces():
-        implementations = get_implementations(port)
-        if len(implementations) == 0:
-            logging.getLogger(__name__).critical(f'No implementations found for {port}')
-        else:
-            mappings.update({ port: implementations[0]() })
-    return mappings
+import infrastructure

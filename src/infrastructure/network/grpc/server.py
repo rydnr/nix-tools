@@ -20,7 +20,7 @@ class Server(PrimaryPort, git_repo_found_pb2_grpc.GitRepoFoundServiceServicer):
     Launches a gRPC server to receive incoming events.
     """
     def priority(self) -> int:
-        return 100
+        return 999
 
     @property
     def app(app):
@@ -45,6 +45,14 @@ class Server(PrimaryPort, git_repo_found_pb2_grpc.GitRepoFoundServiceServicer):
         self._app = app
         serve_task = asyncio.create_task(self.serve(app))
         asyncio.ensure_future(serve_task)
+        try:
+            await serve_task
+        except KeyboardInterrupt:
+            serve_task.cancel()
+            try:
+                await serve_task
+            except asyncio.CancelledError:
+                pass
 
     def build_event(self, request) -> Event:
         return GitRepoFound(request.package_name, request.package_version, request.url, request.tag)
