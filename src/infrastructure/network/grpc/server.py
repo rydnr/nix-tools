@@ -1,5 +1,5 @@
 from domain.event import Event
-from domain.git_repo_found import GitRepoFound
+from domain.git.git_repo_found import GitRepoFound
 from domain.primary_port import PrimaryPort
 
 import infrastructure.network.grpc.git_repo_found_pb2 as git_repo_found_pb2

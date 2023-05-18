@@ -1,4 +1,4 @@
-from domain.build_flake_requested import BuildFlakeRequested
+from domain.flake.build.build_flake_requested import BuildFlakeRequested
 from domain.primary_port import PrimaryPort
 
 import argparse

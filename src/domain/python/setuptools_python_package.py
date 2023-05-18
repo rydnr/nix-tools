@@ -1,7 +1,7 @@
 from domain.ports import Ports
-from domain.git_repo import GitRepo
-from domain.python.setupcfg_utils import SetupcfgUtils
-from domain.python_package import PythonPackage
+from domain.git.git_repo import GitRepo
+from domain.python.build.setupcfg_utils import SetupcfgUtils
+from domain.python.python_package import PythonPackage
 
 import logging
 from typing import Dict, List

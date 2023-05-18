@@ -1,4 +1,4 @@
-from domain.flake_requested import FlakeRequested
+from domain.flake.flake_requested import FlakeRequested
 from domain.primary_port import PrimaryPort
 
 import argparse

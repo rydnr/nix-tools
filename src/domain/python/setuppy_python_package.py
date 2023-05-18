@@ -1,13 +1,13 @@
-from domain.git_repo import GitRepo
+from domain.git.git_repo import GitRepo
 from domain.ports import Ports
-from domain.python.error_creating_a_virtual_environment import ErrorCreatingAVirtualEnvironment
-from domain.python.error_installing_setuptools import ErrorInstallingSetuptools
-from domain.python.more_than_one_egg_info_folder import MoreThanOneEggInfoFolder
-from domain.python.no_egg_info_folder_found import NoEggInfoFolderFound
-from domain.python.python_setuppy_egg_info_failed import PythonSetuppyEggInfoFailed
-from domain.python.setupcfg_utils import SetupcfgUtils
-from domain.python.requirementstxt_utils import RequirementstxtUtils
-from domain.python_package import PythonPackage
+from domain.python.build.error_creating_a_virtual_environment import ErrorCreatingAVirtualEnvironment
+from domain.python.build.error_installing_setuptools import ErrorInstallingSetuptools
+from domain.python.build.more_than_one_egg_info_folder import MoreThanOneEggInfoFolder
+from domain.python.build.no_egg_info_folder_found import NoEggInfoFolderFound
+from domain.python.build.python_setuppy_egg_info_failed import PythonSetuppyEggInfoFailed
+from domain.python.build.setupcfg_utils import SetupcfgUtils
+from domain.python.build.requirementstxt_utils import RequirementstxtUtils
+from domain.python.python_package import PythonPackage
 
 import logging
 import os

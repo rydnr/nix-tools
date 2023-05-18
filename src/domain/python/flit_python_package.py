@@ -1,6 +1,6 @@
 from domain.ports import Ports
-from domain.git_repo import GitRepo
-from domain.python_package import PythonPackage
+from domain.git.git_repo import GitRepo
+from domain.python.python_package import PythonPackage
 
 import toml
 from typing import Dict, List

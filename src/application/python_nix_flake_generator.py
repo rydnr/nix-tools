@@ -110,18 +110,18 @@ if __name__ == "__main__":
     from domain.event import Event
     from domain.event_emitter import EventEmitter
     from domain.event_listener import EventListener
-    from domain.flake import Flake
-    from domain.flake_builder import FlakeBuilder
-    from domain.flake_built import FlakeBuilt
-    from domain.flake_created import FlakeCreated
+    from domain.flake.flake import Flake
+    from domain.flake.build.flake_builder import FlakeBuilder
+    from domain.flake.build.flake_built import FlakeBuilt
+    from domain.flake.flake_created import FlakeCreated
     from domain.port import Port
     from domain.ports import Ports
     from domain.primary_port import PrimaryPort
 
-    from infrastructure.dynamically_discoverable_flake_recipe_repo import DynamicallyDiscoverableFlakeRecipeRepo
-    from infrastructure.file_nix_template_repo import FileNixTemplateRepo
-    from infrastructure.folder_flake_repo import FolderFlakeRepo
-    from infrastructure.github_git_repo import GithubGitRepo
+    from infrastructure.flake.recipe.dynamically_discoverable_flake_recipe_repo import DynamicallyDiscoverableFlakeRecipeRepo
+    from infrastructure.nix.file_nix_template_repo import FileNixTemplateRepo
+    from infrastructure.flake.folder_flake_repo import FolderFlakeRepo
+    from infrastructure.git.github_git_repo import GithubGitRepo
 
     PythonNixFlakeGenerator.initialize()
     loop = asyncio.get_event_loop()
