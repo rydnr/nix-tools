@@ -14,9 +14,7 @@ class PythonPackageRepo(Repo):
         """
         super().__init__(PythonPackage)
 
-    async def find_by_name_and_version(
-        self, package_name: str, version_spec: str
-    ) -> PythonPackage:
+    async def find_by_name_and_version(self, package_name: str, version_spec: str) -> PythonPackage:
         """Retrieves the PythonPackage matching given name and version."""
         raise NotImplementedError(
             "find_by_name_and_version() must be implemented by subclasses"

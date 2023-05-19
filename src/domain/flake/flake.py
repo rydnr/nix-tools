@@ -2,15 +2,19 @@ from domain.entity import Entity, primary_key_attribute, attribute
 from domain.event import Event
 from domain.event_emitter import EventEmitter
 from domain.event_listener import EventListener
+from domain.flake.flake_available import FlakeAvailable
+from domain.flake.flake_in_progress import FlakeInProgress
 from domain.flake.flake_requested import FlakeRequested
-from domain.python.python_package import PythonPackage
-from domain.python.python_package_created import PythonPackageCreated
-from domain.python.python_package_repo import PythonPackageRepo
 from domain.git.git_repo import GitRepo
 from domain.git.git_repo_repo import GitRepoRepo
-from domain.nix.python.nix_python_package_repo import NixPythonPackageRepo
-from domain.nix.nix_template import NixTemplate
 from domain.ports import Ports
+from domain.python.python_package import PythonPackage
+from domain.python.python_package_created import PythonPackageCreated
+from domain.python.python_package_in_nixpkgs import PythonPackageInNixpkgs
+from domain.python.python_package_repo import PythonPackageRepo
+from domain.python.python_package_requested import PythonPackageRequested
+from domain.nix.nix_template import NixTemplate
+from domain.nix.python.nix_python_package_repo import NixPythonPackageRepo
 
 from typing import Dict, List, Type
 import logging
@@ -86,11 +90,28 @@ class Flake(Entity, EventListener, EventEmitter):
         logger.info(f'Received "flake requested for {event.package_name}-{event.package_version}"')
 
         # 1, check if there's already a flake.
-        # 1a: emit FlakeAvailable
-        # 1b.1: check if the python package is already in nixpkgs.
-        # 1b.1a: emit PythonPackageInNixpkgs
-        # 1b.1b.1: annotate the flake as "in progress"
-        # 1b.1b.2: emit PythonPackageRequested
+        logging.getLogger('step-by-step').info(f'Checking if there is a flake for {event.package_name}-{event.package_version}')
+        flakeRepo = Ports.instance().resolveFlakeRepo()
+        existingFlake = flakeRepo.find_by_name_and_version(event.package_name, event.package_version)
+        if existingFlake:
+            # 1a: emit FlakeAvailable
+            logger.info(f'Flake for {event.package_name}-{event.package_version} already exists')
+            self.__class__.emit(FlakeAvailable(event.package_name, event.package_version))
+        else:
+            logging.getLogger('step-by-step').info(f'Retrieving the Python package for {event.package_name}-{event.package_version}')
+            # 1b.1: check if the python package is already in nixpkgs.
+            nixPythonPackageRepo = Ports.instance().resolve(NixPythonPackageRepo)
+            nixPythonPackage = await nixPythonPackageRepo.find_by_name_and_version(event.package_name, event.package_version)
+            if nixPythonPackage:
+                if pythonPackage:
+                    # 1b.1a: emit PythonPackageInNixpkgs
+                    logger.info(f'Python package {pythonPackage.nixpkgs_package_name()} compatible with version {event.package_version} already exists in nixpkgs.')
+                    self.__class__.emit(PythonPackageInNixpkgs(pythonPackage))
+                else:
+                    # 1b.1b.1: annotate the flake as "in progress"
+                    FlakeInProgress(event.package_name, event.package_version)
+                    # 1b.1b.2: emit PythonPackageRequested
+                    self.__class__.emit(PythonPackageRequested(event.package_name, event.package_version))
 
     @classmethod
     async def oldListenFlakeRequested(cls, event: FlakeRequested): # -> FlakeCreated:

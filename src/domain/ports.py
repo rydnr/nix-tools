@@ -26,20 +26,20 @@ class Ports():
         port = getattr(module, port_name)
         return self.resolve(port)
 
-    def resolvePythonPackageRepo(self):
-        return self.resolve_by_module_name("domain.python_package_repo", "PythonPackageRepo")
+    def resolvePythonPackageMetadataRepo(self):
+        return self.resolve_by_module_name("domain.python.python_package_metadata_repo", "PythonPackageMetadataRepo")
 
     def resolveFlakeRepo(self):
-        return self.resolve_by_module_name("domain.flake_repo", "FlakeRepo")
+        return self.resolve_by_module_name("domain.flake.flake_repo", "FlakeRepo")
 
     def resolveFlakeRecipeRepo(self):
-        return self.resolve_by_module_name("domain.flake_recipe_repo", "FlakeRecipeRepo")
+        return self.resolve_by_module_name("domain.flake.recipe.flake_recipe_repo", "FlakeRecipeRepo")
 
     def resolveNixTemplateRepo(self):
-        return self.resolve_by_module_name("domain.nix_template_repo", "NixTemplateRepo")
+        return self.resolve_by_module_name("domain.nix.nix_template_repo", "NixTemplateRepo")
 
     def resolveNixPythonPackageRepo(self):
-        return self.resolve_by_module_name("domain.nix_python_package_repo", "NixPythonPackageRepo")
+        return self.resolve_by_module_name("domain.nix.python.nix_python_package_repo", "NixPythonPackageRepo")
 
     def resolveGitRepoRepo(self):
-        return self.resolve_by_module_name("domain.git_repo_repo", "GitRepoRepo")
+        return self.resolve_by_module_name("domain.git.git_repo_repo", "GitRepoRepo")
