@@ -1,6 +1,7 @@
-from domain.entity import Entity, attribute
+from domain.entity import Entity
 from domain.git.error_cloning_git_repository import ErrorCloningGitRepository
 from domain.git.git_checkout_failed import GitCheckoutFailed
+from domain.value_object import attribute
 
 import logging
 import os

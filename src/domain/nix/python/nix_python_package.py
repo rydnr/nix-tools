@@ -1,4 +1,5 @@
-from domain.entity import Entity, primary_key_attribute
+from domain.entity import Entity
+from domain.value_object import primary_key_attribute
 
 import re
 

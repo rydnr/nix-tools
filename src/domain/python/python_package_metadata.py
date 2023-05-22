@@ -1,4 +1,5 @@
-from domain.entity import Entity, attribute, primary_key_attribute
+from domain.entity import Entity
+from domain.value_object import attribute, primary_key_attribute
 
 from typing import Dict
 

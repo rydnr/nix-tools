@@ -1,4 +1,5 @@
-from domain.entity import Entity, attribute, primary_key_attribute
+from domain.entity import Entity
+from domain.event import Event
 from domain.ports import Ports
 from domain.git.git_repo import GitRepo
 from domain.git.git_repo_found import GitRepoFound
@@ -7,6 +8,7 @@ from domain.git.git_repo_requested import GitRepoRequested
 from domain.nix.nix_prefetch_url_failed import NixPrefetchUrlFailed
 from domain.nix.python.nix_python_package import NixPythonPackage
 from domain.python.unsupported_python_package import UnsupportedPythonPackage
+from domain.value_object import attribute, primary_key_attribute
 
 import logging
 import os
@@ -207,3 +209,9 @@ class PythonPackage(Entity):
         Retrieves the type.
         """
         raise NotImplementedError('get_type() must be implemented by subclasses')
+
+    def build_strategy_event(self) -> Event:
+        """
+        Retrieves the associated build strategy event.
+        """
+        raise NotImplementedError('build_strategy_event() must be implemented by subclasses')

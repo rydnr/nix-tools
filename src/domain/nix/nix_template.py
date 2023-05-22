@@ -1,5 +1,6 @@
-from domain.entity import Entity, primary_key_attribute, attribute
+from domain.entity import Entity
 from domain.flake.recipe.recipe_does_not_support_placeholder import RecipeDoesNotSupportPlaceholder
+from domain.value_object import attribute, primary_key_attribute
 
 from datetime import datetime
 import logging

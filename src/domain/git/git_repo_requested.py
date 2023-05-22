@@ -1,3 +1,4 @@
+from domain.value_object import attribute, primary_key_attribute
 from domain.event import Event
 
 from typing import Dict
@@ -15,20 +16,21 @@ class GitRepoRequested(Event):
         self._release = release
 
     @property
+    @primary_key_attribute
     def package_name(self):
         return self._package_name
 
     @property
+    @primary_key_attribute
     def package_version(self):
         return self._package_version
 
     @property
+    @attribute
     def info(self):
         return self._info
 
     @property
+    @attribute
     def release(self):
         return self._release
-
-    def __str__(self):
-        return f'{{ "name": "{__name__}", "package_name": "{self.package_name}", "package_version": "{self.package_version}", "info": "{self.info}", "release": "{self.release}" }}'

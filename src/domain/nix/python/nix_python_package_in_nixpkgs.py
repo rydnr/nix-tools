@@ -1,4 +1,6 @@
 from domain.event import Event
+from domain.python.python_package import PythonPackage
+from domain.value_object import primary_key_attribute
 
 class NixPythonPackageInNixpkgs(Event):
     """
@@ -7,17 +9,12 @@ class NixPythonPackageInNixpkgs(Event):
 
     def __init__(
         self,
-        pythonPackage: pkg
+        pkg: PythonPackage
     ):
         """Creates a new NixPythonPackageInNixpkgs instance"""
         self._python_package = pkg
 
     @property
+    @primary_key_attribute
     def python_package(self):
         return self._python_package
-
-    def __str__(self):
-        return f'{{ "name": "{__name__}", "python_package": "{self._python_package}" }}'
-
-    def __repr__(self):
-        return f'{{ "name": "{__name__}", "python_package": "{self._python_package.__repr__()}" }}'

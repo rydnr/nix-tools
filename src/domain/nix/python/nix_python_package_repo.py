@@ -14,13 +14,13 @@ class NixPythonPackageRepo(Repo):
         """
         super().__init__(NixPythonPackage)
 
-    def find_by_name(self, package_name: str) -> List[NixPythonPackage]:
+    async def find_by_name(self, package_name: str) -> List[NixPythonPackage]:
         """
         Retrieves the NixPythonPackages matching given name and version.
         """
         raise NotImplementedError("find_by_name() must be implemented by subclasses")
 
-    def find_by_name_and_version(self, package_name: str, package_version: str) -> NixPythonPackage:
+    async def find_by_name_and_version(self, package_name: str, package_version: str) -> NixPythonPackage:
         """
         Retrieves the NixPythonPackages matching given name and version.
         """

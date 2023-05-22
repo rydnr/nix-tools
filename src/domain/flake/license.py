@@ -1,4 +1,6 @@
-from domain.entity import Entity, primary_key_attribute
+from domain.entity import Entity
+from domain.value_object import primary_key_attribute
+
 
 PYPI_TO_NIX_LICENSE_MAPPING = {
     "Apache-2.0": "asl20",

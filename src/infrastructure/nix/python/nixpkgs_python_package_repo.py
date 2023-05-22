@@ -38,7 +38,7 @@ class NixpkgsPythonPackageRepo(NixPythonPackageRepo):
     def __init__(self):
         super().__init__()
 
-    def find_by_name(self, package_name: str) -> List[NixPythonPackage]:
+    async def find_by_name(self, package_name: str) -> List[NixPythonPackage]:
         """
         Retrieves the NixPythonPackages matching given name.
         """
@@ -55,11 +55,11 @@ class NixpkgsPythonPackageRepo(NixPythonPackageRepo):
 
         return result
 
-    def find_by_name_and_version(self, package_name: str, package_version: str) -> NixPythonPackage:
+    async def find_by_name_and_version(self, package_name: str, package_version: str) -> NixPythonPackage:
         """
         Retrieves the NixPythonPackages matching given name and version.
         """
-        matches = [p for p in self.find_by_name(package_name) if p.is_compatible_with(package_version)]
+        matches = [p for p in await self.find_by_name(package_name) if p.is_compatible_with(package_version)]
         if len(matches) > 0:
             return matches[0]
         else:

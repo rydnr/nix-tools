@@ -1,4 +1,4 @@
-from domain.entity import primary_key_attribute
+from domain.value_object import primary_key_attribute
 from domain.entity_in_progress import EntityInProgress
 
 

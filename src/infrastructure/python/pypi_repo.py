@@ -8,9 +8,9 @@ import re
 import requests
 from typing import Dict, List
 
-class PypiRepo(PythonPackageRepo):
+class PypiRepo(PythonPackageMetadataRepo):
     """
-    A PythonPackageRepo that uses Pypi as store
+    A PythonPackageMetadataRepo that uses Pypi as store
     """
 
     _cached_packages = {}
@@ -29,7 +29,7 @@ class PypiRepo(PythonPackageRepo):
 
     async def find_by_name_and_version(self, package_name: str, package_version: str) -> PythonPackageMetadata:
         """
-        Retrieves the PythonPackage matching given name and version.
+        Retrieves the metadata of the PythonPackage matching given name and version.
         """
         result = self.__class__._cached_packages.get(f'{package_name}-{package_version}', None)
         if result is None:
@@ -59,7 +59,7 @@ class PypiRepo(PythonPackageRepo):
         return result
 
     async def find_all_by_name(self, package_name: str) -> List[PythonPackageMetadata]:
-        """Retrieves all versions of the PythonPackage matching given name."""
+        """Retrieves the metadata of all versions of the PythonPackage matching given name."""
         result = []
         logger = logging.getLogger(__name__)
         logger.debug(f"Looking for all versions of {package_name} in pypi.org")
@@ -82,7 +82,7 @@ class PypiRepo(PythonPackageRepo):
         return result
 
     async def find_by_name(self, package_name: str) -> PythonPackageMetadata:
-        """Retrieves latest version of the PythonPackage matching given name."""
+        """Retrieves the metadata of the latest version of the PythonPackage matching given name."""
         logger = logging.getLogger(__name__)
         package_data = self.retrieve_package_data(package_name)
 

@@ -1,19 +1,25 @@
 from domain.event import Event
+from domain.event_emitter import EventEmitter
 from domain.event_listener import EventListener
-from domain.python.python_build_strategy_requested import PythonBuildStrategyRequested
+from domain.python.build.python_build_strategy_requested import PythonBuildStrategyRequested
+from domain.python.build.setuppy_strategy_found import SetuppyStrategyFound
 from domain.python.python_package import PythonPackage
 from domain.python.python_package_in_progress import PythonPackageInProgress
 from domain.python.python_package_requested import PythonPackageRequested
-from domain.python.setuppy_strategy_found import SetuppyStrategyFound
+from domain.git.git_repo import GitRepo
 from domain.git.git_repo_found import GitRepoFound
 from domain.git.git_repo_requested import GitRepoRequested
+from domain.nix.python.nix_python_package_in_nixpkgs import NixPythonPackageInNixpkgs
+from domain.flake.flake_available import FlakeAvailable
+from domain.flake.flake_created import FlakeCreated
+from domain.flake.flake_in_progress import FlakeInProgress
 
-import asyncio
+
 import logging
 from typing import Dict, List, Type
 
 
-class PythonPackageResolver(EventListener):
+class PythonPackageResolver(EventListener, EventEmitter):
     """
     Resolves python packages.
     """
@@ -23,7 +29,7 @@ class PythonPackageResolver(EventListener):
         """
         Retrieves the list of supported event classes.
         """
-        return [PythonPackageRequested, GitRepoFound, SetuppyStrategyFound]
+        return [PythonPackageRequested, GitRepoFound, SetuppyStrategyFound, NixPythonPackageInNixpkgs, FlakeAvailable, FlakeCreated]
 
     @classmethod
     async def listenPythonPackageRequested(cls, event: PythonPackageRequested):
@@ -32,16 +38,42 @@ class PythonPackageResolver(EventListener):
         metadata = Ports.instance().resolvePythonPackageMetadataRepo().find_by_name_and_version(event.package_name, event.package_version)
         pythonPackageInProgress = PythonPackageInProgress(event.package_name, event.package_version, metadata)
         # 2. emit GitRepoRequested
-        self.__class__.emit(GitRepoRequested(metadata.info, metadata.release))
+        await self.__class__.emit(GitRepoRequested(metadata.info, metadata.release))
 
     @classmethod
     async def listenGitRepoFound(cls, event: GitRepoFound):
         logger = logging.getLogger(__name__)
         # 1. retrieve the python project "in-progress"
-        # 2. emit PythonBuildStrategyRequested
+        pythonPackageInProgress = PythonPackageInProgress.matching(name=event.package_name, version=event.package_version)
+        if pythonPackageInProgress:
+            # 2. emit PythonBuildStrategyRequested
+            await self.__class__.emit(PythonBuildStrategyRequested(event.package_name, event.package_version, GitRepo(event.url, event.tag, event.metadata, subfolder=event.subfolder)))
 
     @classmethod
     async def listenSetuppyStrategyFound(cls, event: SetuppyStrategyFound):
         logger = logging.getLogger(__name__)
-        # 1. instantiate SetuppyPythonProject
-        # 2. emit FlakeRequested
+        pythonPackage = SetuppyPythonPackage(event.package_name, event.package_version, event.pythonPackage.info, event.pythonPackage.release, event.pythonPackage.git_repo)
+        # 2. emit FlakeRequested for each dependency
+        for dep in list(
+                set(pythonPackage.native_build_inputs) |
+                set(pythonPackage.propagated_build_inputs) |
+                set(pythonPackage.build_inputs) |
+                set(pythonPackage.check_inputs) |
+                set(pythonPackage.optional_inputs)):
+            flakeInProgress = FlakeInProgress(dep.name, dep.version)
+            await self.__class__.emit(FlakeRequested(dep.name, dep.version))
+
+    @classmethod
+    async def listenNixPythonPackageInNixpkgs(cls, event: NixPythonPackageInNixpkgs):
+        flakeInProgress = FlakeInProgress.matching(name = event.python_package.package_name, version = event.python_package.package_version)
+
+    @classmethod
+    async def listenFlakeAvailable(cls, event: FlakeAvailable):
+        # TODO
+        pass
+
+
+    @classmethod
+    async def listenFlakeCreated(cls, event: FlakeCreated):
+        # TODO
+        pass

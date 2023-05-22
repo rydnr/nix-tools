@@ -1,4 +1,4 @@
-from domain.entity import Entity, primary_key_attribute, attribute
+from domain.entity import Entity
 from domain.event import Event
 from domain.event_emitter import EventEmitter
 from domain.event_listener import EventListener
@@ -10,11 +10,11 @@ from domain.git.git_repo_repo import GitRepoRepo
 from domain.ports import Ports
 from domain.python.python_package import PythonPackage
 from domain.python.python_package_created import PythonPackageCreated
-from domain.python.python_package_in_nixpkgs import PythonPackageInNixpkgs
-from domain.python.python_package_repo import PythonPackageRepo
 from domain.python.python_package_requested import PythonPackageRequested
 from domain.nix.nix_template import NixTemplate
+from domain.nix.python.nix_python_package_in_nixpkgs import NixPythonPackageInNixpkgs
 from domain.nix.python.nix_python_package_repo import NixPythonPackageRepo
+from domain.value_object import attribute, primary_key_attribute
 
 from typing import Dict, List, Type
 import logging
@@ -104,9 +104,9 @@ class Flake(Entity, EventListener, EventEmitter):
             nixPythonPackage = await nixPythonPackageRepo.find_by_name_and_version(event.package_name, event.package_version)
             if nixPythonPackage:
                 if pythonPackage:
-                    # 1b.1a: emit PythonPackageInNixpkgs
+                    # 1b.1a: emit NixPythonPackageInNixpkgs
                     logger.info(f'Python package {pythonPackage.nixpkgs_package_name()} compatible with version {event.package_version} already exists in nixpkgs.')
-                    self.__class__.emit(PythonPackageInNixpkgs(pythonPackage))
+                    await self.__class__.emit(NixPythonPackageInNixpkgs(pythonPackage))
                 else:
                     # 1b.1b.1: annotate the flake as "in progress"
                     FlakeInProgress(event.package_name, event.package_version)

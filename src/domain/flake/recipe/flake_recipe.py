@@ -1,4 +1,4 @@
-from domain.entity import Entity, primary_key_attribute
+from domain.entity import Entity
 from domain.flake.flake import Flake
 from domain.flake.recipe.empty_flake_metadata_section_in_recipe_toml import EmptyFlakeMetadataSectionInRecipeToml
 from domain.flake.recipe.empty_flake_section_in_recipe_toml import EmptyFlakeSectionInRecipeToml
@@ -7,6 +7,7 @@ from domain.flake.recipe.missing_flake_version_spec_in_recipe_toml import Missin
 from domain.flake.recipe.missing_recipe_toml import MissingRecipeToml
 from domain.flake.recipe.missing_type_in_flake_metadata_section_in_recipe_toml import MissingTypeInFlakeMetadataSectionInRecipeToml
 from domain.flake.recipe.more_than_one_flake_in_recipe_toml import MoreThanOneFlakeInRecipeToml
+from domain.value_object import primary_key_attribute
 
 import inspect
 import logging

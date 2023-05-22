@@ -1,6 +1,6 @@
-from domain.entity import attribute, primary_key_attribute
 from domain.entity_in_progress import EntityInProgress
 from domain.python.python_package_metadata import PythonPackageMetadata
+from domain.value_object import attribute, primary_key_attribute
 
 
 class PythonPackageInProgress(EntityInProgress):

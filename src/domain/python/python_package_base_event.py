@@ -1,3 +1,4 @@
+from domain.value_object import attribute, primary_key_attribute
 from domain.event import Event
 from domain.git.git_repo import GitRepo
 
@@ -19,36 +20,16 @@ class PythonPackageBaseEvent(Event):
         self._git_repo = gitRepo
 
     @property
+    @primary_key_attribute
     def package_name(self):
         return self._package_name
 
     @property
+    @primary_key_attribute
     def package_version(self):
         return self._package_version
 
     @property
+    @attribute
     def git_repo(self):
         return self._git_repo
-
-    def __str__(self):
-        if self.git_repo:
-            return f'{{ "name": "{self.__class__.__name__}", "package_name": "{self.package_name}", "package_version": "{self.package_version}", "git_repo": "{self.git_repo}" }}'
-        else:
-            return f'{{ "name": "{self.__class__.__name__}", "package_name": "{self.package_name}", "package_version": "{self.package_version}" }}'
-
-    def __repr__(self):
-        if self.git_repo:
-            return f'{{ "name": "{self.__class__.__name__}", "package_name": "{self.package_name}", "package_version": "{self.package_version}", "git_repo": "{self.git_repo.__repr__()}" }}'
-        else:
-            return f'{{ "name": "{self.__class__.__name__}", "package_name": "{self.package_name}", "package_version": "{self.package_version}" }}'
-
-    def __eq__(self, other):
-        result = False
-        if other is not None:
-            if isinstance(other, self.__class__):
-                result = (self.package_name == other.package_name) and (self.package_version == other.package_version) and (self.git_repo == other.git_repo)
-
-        return result
-
-    def __hash__(self):
-        return hash(tuple([self.package_name, self.package_version, self.git_repo]))
