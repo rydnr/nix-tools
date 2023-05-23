@@ -55,4 +55,4 @@ class Server(PrimaryPort, git_repo_found_pb2_grpc.GitRepoFoundServiceServicer):
                 pass
 
     def build_event(self, request) -> Event:
-        return GitRepoFound(request.package_name, request.package_version, request.url, request.tag)
+        return GitRepoFound(request.package_name, request.package_version, request.url, request.tag, request.metadata, request.subfolder)

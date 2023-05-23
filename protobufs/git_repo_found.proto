@@ -13,6 +13,8 @@ message GitRepoFound {
   string package_version = 2;
   string url = 3;
   string tag = 4;
+  map<string, string> metadata = 5;
+  string subfolder = 6;
 }
 
 // The response message containing a status code and
