@@ -8,7 +8,7 @@ packages = [{include = "src/domain"}, {include = "src/infrastructure"}, {include
 
 [tool.poetry.dependencies]
 python = "^3.10"
-requests = "^2.28.1"
+requests = "^2.31.0"
 packaging = "^21.3"
 toml = "^0.10.2"
 beautifulsoup4 = "^4.11.1"
