@@ -18,6 +18,7 @@ class GitRepoFound(Event):
         subfolder: str
     ):
         """Creates a new GitRepoFound instance"""
+        super().__init__()
         self._package_name = packageName
         self._package_version = packageVersion
         self._url = url
