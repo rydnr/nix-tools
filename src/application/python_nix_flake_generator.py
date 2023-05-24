@@ -54,9 +54,10 @@ class PythonNixFlakeGenerator():
     async def accept_input(self):
         for primaryPort in sorted(self.get_primary_ports(), key=PythonNixFlakeGenerator.delegate_priority):
             port = primaryPort()
-            print(f'Awaiting for {port}(accept(self))')
             await port.accept(self)
-        print(f'finished waiting')
+
+    async def acceptFlakeRequested(self, event): # : Event) -> Event:
+        return await self.accept(event)
 
     async def accept(self, event): # : Event) -> Event:
         result = []

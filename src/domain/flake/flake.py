@@ -2,6 +2,7 @@ from domain.entity import Entity
 from domain.event import Event
 from domain.event_emitter import EventEmitter
 from domain.event_listener import EventListener
+from domain.flake.build.build_flake_requested import BuildFlakeRequested
 from domain.flake.flake_available import FlakeAvailable
 from domain.flake.flake_in_progress import FlakeInProgress
 from domain.flake.flake_requested import FlakeRequested
@@ -11,6 +12,7 @@ from domain.ports import Ports
 from domain.python.python_package import PythonPackage
 from domain.python.python_package_created import PythonPackageCreated
 from domain.python.python_package_requested import PythonPackageRequested
+from domain.python.python_package_resolved import PythonPackageResolved
 from domain.nix.nix_template import NixTemplate
 from domain.nix.python.nix_python_package_in_nixpkgs import NixPythonPackageInNixpkgs
 from domain.nix.python.nix_python_package_repo import NixPythonPackageRepo
@@ -81,7 +83,7 @@ class Flake(Entity, EventListener, EventEmitter):
         """
         Retrieves the list of supported event classes.
         """
-        return [ FlakeRequested ]
+        return [ FlakeRequested, PythonPackageResolved ]
 
     @classmethod
     async def listenFlakeRequested(cls, event: FlakeRequested): # -> FlakeCreated:
@@ -98,6 +100,8 @@ class Flake(Entity, EventListener, EventEmitter):
             logger.info(f'Flake for {event.package_name}-{event.package_version} already exists')
             self.__class__.emit(FlakeAvailable(event.package_name, event.package_version))
         else:
+            # annotate the flake as in-progress
+            FlakeInProgress(event.package_name, event.package_version, event.flakes_folder)
             logging.getLogger('step-by-step').info(f'Retrieving the Python package for {event.package_name}-{event.package_version}')
             # 1b.1: check if the python package is already in nixpkgs.
             nixPythonPackageRepo = Ports.instance().resolve(NixPythonPackageRepo)
@@ -112,6 +116,12 @@ class Flake(Entity, EventListener, EventEmitter):
                     FlakeInProgress(event.package_name, event.package_version)
                     # 1b.1b.2: emit PythonPackageRequested
                     self.__class__.emit(PythonPackageRequested(event.package_name, event.package_version))
+
+    @classmethod
+    async def listenPythonPackageResolved(cls, event: PythonPackageResolved):
+        flakeInProgress = FlakeInProgress.matching(name=event.package_name, version=event.package_version)
+        flakeInProgress.set_python_package(event.python_package)
+        self.__class__.emit(BuildFlakeRequested(event.package_name, event.package_version, flakeInProgress.flakes_folder, event.python_package))
 
     @classmethod
     async def oldListenFlakeRequested(cls, event: FlakeRequested): # -> FlakeCreated:

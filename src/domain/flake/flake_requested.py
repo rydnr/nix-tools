@@ -1,4 +1,6 @@
 from domain.event import Event
+from domain.value_object import attribute, primary_key_attribute
+
 
 class FlakeRequested(Event):
     """
@@ -9,18 +11,25 @@ class FlakeRequested(Event):
         self,
         packageName: str,
         packageVersion: str,
+        flakesFolder: str
     ):
         """Creates a new FlakeRequested instance"""
+        super().__init__()
         self._package_name = packageName
         self._package_version = packageVersion
+        self._flakes_folder = flakesFolder
 
     @property
+    @primary_key_attribute
     def package_name(self):
         return self._package_name
 
     @property
+    @primary_key_attribute
     def package_version(self):
         return self._package_version
 
-    def __str__(self):
-        return f'{{ "name": "{__name__}", "package_name": "{self._package_name}", "package_version": "{self._package_version}" }}'
+    @property
+    @attribute
+    def flakes_folder(self):
+        return self._flakes_folder

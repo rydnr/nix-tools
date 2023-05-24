@@ -5,4 +5,6 @@ class Event(ValueObject):
     """
     The base event class.
     """
-    pass
+    def __init__(self):
+        """Creates a new event instance"""
+        super().__init__()

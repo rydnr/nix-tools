@@ -1,8 +1,7 @@
-from domain.entity import Entity
-from domain.value_object import attribute, primary_key_attribute
+from domain.value_object import attribute, primary_key_attribute, ValueObject
 
 
-class EntityInProgress(Entity):
+class EntityInProgress(ValueObject):
 
     """
     Represents an Entity which doesn't have all information yet.
@@ -18,7 +17,7 @@ class EntityInProgress(Entity):
     @classmethod
     def register(cls, entityInProgress):
         if entityInProgress not in cls._pending:
-            cls._pending[cls.build_key_from_entity(entityInProgress), entityInProgress]
+            cls._pending[cls.build_key_from_entity(entityInProgress)] = entityInProgress
 
     @classmethod
     def matching(cls, **kwargs):
@@ -29,12 +28,13 @@ class EntityInProgress(Entity):
         """Builds a key"""
         items = []
         for key in cls.primary_key():
-            items.append(f'"{key}": "{kwargs.items().get(key, "")}"')
+            items.append(f'"{key}": "{kwargs.get(key, "")}"')
         return f'{{ {", ".join(items)} }}'
 
     @classmethod
     def build_key_from_entity(cls, entityInProgress) -> str:
         """Builds a key"""
+        items = []
         for key in cls.primary_key():
             items.append(f'"{key}": "{getattr(entityInProgress, key, "")}"')
         return f'{{ {", ".join(items)} }}'

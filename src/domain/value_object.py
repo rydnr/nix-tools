@@ -12,46 +12,51 @@ _filter_attributes = {}
 _attributes = {}
 
 
-def _add_attribute(self, func):
-    key = self.__class__
-    if not key in _attributes:
-        _attributes[key] = []
-    if not func.__name__ in _attributes[key]:
-        _attributes[key].append(func.__name__)
+def _build_func_key(func):
+    return func.__module__
+
+def _build_cls_key(cls):
+    return cls.__module__
+
+def _classes_by_key(key):
+    return [m[1] for m in inspect.getmembers(key, inspect.isclass)]
+
+def _add_attribute_to_dictionary(func, dictionary):
+    key = _build_func_key(func)
+    if not key in dictionary.keys():
+        dictionary[key] = []
+    value = func.__name__
+    if not value in dictionary[key]:
+        dictionary[key].append(value)
+
+def _add_attribute(func):
+    _add_attribute_to_dictionary(func, _attributes)
 
 
 def attribute(func):
+    _add_attribute(func)
     @functools.wraps(func)
     def wrapper(self, *args, **kwargs):
-        _add_attribute(self, func)
         return func(self, *args, **kwargs)
 
     return wrapper
 
 
 def primary_key_attribute(func):
+    _add_attribute_to_dictionary(func, _primary_key_attributes)
+    _add_attribute(func)
     @functools.wraps(func)
     def wrapper(self, *args, **kwargs):
-        key = self.__class__
-        if not key in _primary_key_attributes:
-            _primary_key_attributes[key] = []
-        if not func.__name__ in _primary_key_attributes[key]:
-            _primary_key_attributes[key].append(func.__name__)
-        _add_attribute(self, func)
         return func(self, *args, **kwargs)
 
     return wrapper
 
 
 def filter_attribute(func):
+    _add_attribute_to_dictionary(func, _filter_attributes)
+    _add_attribute(func)
     @functools.wraps(func)
     def wrapper(self, *args, **kwargs):
-        key = self.__class__
-        if not key in _filter_attributes:
-            _filter_attributes[key] = []
-        if not func.__name__ in _filter_attributes[key]:
-            _filter_attributes[key].append(func.__name__)
-        _add_attribute(self, func)
         return func(self, *args, **kwargs)
 
     return wrapper
@@ -61,7 +66,7 @@ class ValueObject:
     @classmethod
     def primary_key(cls) -> List:
         result = []
-        key = cls
+        key = _build_cls_key(cls)
         if key in _primary_key_attributes:
             result = _primary_key_attributes[key]
         return result
@@ -69,7 +74,7 @@ class ValueObject:
     @classmethod
     def filter_attributes(cls) -> List:
         result = []
-        key = cls
+        key = _build_cls_key(cls)
         if key in _filter_attributes:
             result = _filter_attributes[key]
         return result
@@ -77,7 +82,7 @@ class ValueObject:
     @classmethod
     def attributes(cls) -> List:
         result = []
-        key = cls
+        key = _build_cls_key(cls)
         if key in _attributes:
             result = _attributes[key]
         return ["id"] + result + ["_created", "_updated"]
@@ -106,10 +111,12 @@ class ValueObject:
 
     @classmethod
     def _propagate_attributes(cls):
-        for cls in _attributes.keys():
+        cls_key = _build_cls_key(cls)
+        if cls_key in _attributes.keys():
             for subclass in cls.__subclasses__():
-                if subclass not in _attributes:
-                    _attributes[subclass] = _attributes[cls].copy()
+                subclass_key = _build_cls_key(subclass)
+                if subclass_key not in _attributes.keys():
+                    _attributes[subclass_key] = _attributes[cls_key].copy()
 
     @classmethod
     def __init_subclass__(cls, **kwargs):
@@ -117,27 +124,31 @@ class ValueObject:
         cls._propagate_attributes()
 
     def __str__(self):
-        result = []
-        key = self.__class__
-        if key in _attributes:
-            result.append(f"'id': '{self._id}'")
-            result.append(f"'class': '{self.__class__.__name__}'")
+        aux = []
+        key = _build_cls_key(self.__class__)
+        if key in _attributes.keys():
             for attr in _attributes[key]:
-                result.append(f"'{attr}': '" + str(getattr(self, f"_{attr}")) + "'")
+                aux.append(f"'{attr}': '" + str(getattr(self, f"_{attr}")) + "'")
+            internal = []
+            internal.append(f"'id': '{self._id}'")
+            internal.append(f"'class': '{self.__class__.__name__}'")
             if self._created:
-                result.append(f"'_created': '{self._created}'")
+                internal.append(f"'_created': '{self._created}'")
             if self._updated:
-                result.append(f"'_updated': '{self._updated}'")
+                internal.append(f"'_updated': '{self._updated}'")
+            aux.append("'_internal': { " + ", ".join(internal) + " }")
 
-        if len(result) > 0:
-            return "{ " + ", ".join(result) + " }"
+        if len(aux) > 0:
+            result = "{ " + ", ".join(aux) + " }"
         else:
-            return super().__str__()
+            result = super().__str__()
+
+        return result
 
     def __repr__(self):
         result = []
-        key = self.__class__
-        if key in _primary_key_attributes:
+        key = _build_cls_key(self.__class__)
+        if key in _primary_key_attributes.keys():
             for attr in _primary_key_attributes[key]:
                 result.append(f"'{attr}': '" + str(getattr(self, f"_{attr}")) + "'")
 
@@ -147,8 +158,8 @@ class ValueObject:
             return super().__repr__()
 
     def __setattr__(self, varName, varValue):
-        key = self.__class__
-        if key in _attributes:
+        key = _build_cls_key(self.__class__)
+        if key in _attributes.keys():
             if varName in [x for x in _attributes[key]]:
                 self._updated = datetime.now()
         super(ValueObject, self).__setattr__(varName, varValue)

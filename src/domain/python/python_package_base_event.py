@@ -15,6 +15,7 @@ class PythonPackageBaseEvent(Event):
         gitRepo: GitRepo
     ):
         """Creates a new PythonPackageBaseEvent instance"""
+        super().__init__()
         self._package_name = packageName
         self._package_version = packageVersion
         self._git_repo = gitRepo

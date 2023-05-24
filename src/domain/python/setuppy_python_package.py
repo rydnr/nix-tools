@@ -118,7 +118,6 @@ class SetuppyPythonPackage(PythonPackage, SetupcfgUtils, RequirementstxtUtils):
                 pythonPackage = self.find_dep(dep)
                 if pythonPackage:
                     setuptools_included = self.append_package(result, pythonPackage, setuptools_included)
-        print(f'dev_requirements -> {self.dev_requirements_txt}')
         for dep in self.dev_requirements_txt:
             pythonPackage = self.find_dep(dep)
             if pythonPackage:

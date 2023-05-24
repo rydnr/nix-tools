@@ -30,11 +30,7 @@ class FlakeBuilder(EventListener):
         """
         Retrieves the list of supported event classes.
         """
-        return [ FlakeCreated, BuildFlakeRequested ]
-
-    @classmethod
-    def listenFlakeCreated(cls, event: FlakeCreated) -> FlakeBuilt:
-        return cls.build_flake(event, event.flake_folder)
+        return [ BuildFlakeRequested ]
 
     @classmethod
     def listenBuildFlakeRequested(cls, event: BuildFlakeRequested) -> FlakeBuilt:

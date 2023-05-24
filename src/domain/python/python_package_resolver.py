@@ -6,13 +6,11 @@ from domain.python.build.setuppy_strategy_found import SetuppyStrategyFound
 from domain.python.python_package import PythonPackage
 from domain.python.python_package_in_progress import PythonPackageInProgress
 from domain.python.python_package_requested import PythonPackageRequested
+from domain.python.python_package_resolved import PythonPackageResolved
 from domain.git.git_repo import GitRepo
 from domain.git.git_repo_found import GitRepoFound
 from domain.git.git_repo_requested import GitRepoRequested
 from domain.nix.python.nix_python_package_in_nixpkgs import NixPythonPackageInNixpkgs
-from domain.flake.flake_available import FlakeAvailable
-from domain.flake.flake_created import FlakeCreated
-from domain.flake.flake_in_progress import FlakeInProgress
 
 
 import logging
@@ -29,7 +27,7 @@ class PythonPackageResolver(EventListener, EventEmitter):
         """
         Retrieves the list of supported event classes.
         """
-        return [PythonPackageRequested, GitRepoFound, SetuppyStrategyFound, NixPythonPackageInNixpkgs, FlakeAvailable, FlakeCreated]
+        return [PythonPackageRequested, GitRepoFound, SetuppyStrategyFound, NixPythonPackageInNixpkgs ]
 
     @classmethod
     async def listenPythonPackageRequested(cls, event: PythonPackageRequested):
@@ -53,27 +51,17 @@ class PythonPackageResolver(EventListener, EventEmitter):
     async def listenSetuppyStrategyFound(cls, event: SetuppyStrategyFound):
         logger = logging.getLogger(__name__)
         pythonPackage = SetuppyPythonPackage(event.package_name, event.package_version, event.pythonPackage.info, event.pythonPackage.release, event.pythonPackage.git_repo)
-        # 2. emit FlakeRequested for each dependency
+        # 2. emit PythonPackageRequested for each dependency
         for dep in list(
                 set(pythonPackage.native_build_inputs) |
                 set(pythonPackage.propagated_build_inputs) |
                 set(pythonPackage.build_inputs) |
                 set(pythonPackage.check_inputs) |
                 set(pythonPackage.optional_inputs)):
-            flakeInProgress = FlakeInProgress(dep.name, dep.version)
-            await self.__class__.emit(FlakeRequested(dep.name, dep.version))
+            pythonPackageInProgress = PythonPackageInProgress(dep.name, dep.version)
+            await self.__class__.emit(PythonPackageRequested(dep.name, dep.version))
+        await self.__class__.emit(PythonPackageResolved(dep.name, dep.version, pythonPackage))
 
     @classmethod
     async def listenNixPythonPackageInNixpkgs(cls, event: NixPythonPackageInNixpkgs):
-        flakeInProgress = FlakeInProgress.matching(name = event.python_package.package_name, version = event.python_package.package_version)
-
-    @classmethod
-    async def listenFlakeAvailable(cls, event: FlakeAvailable):
-        # TODO
-        pass
-
-
-    @classmethod
-    async def listenFlakeCreated(cls, event: FlakeCreated):
-        # TODO
-        pass
+        pythonPackageInProgress = PythonPackageInProgress.matching(name = event.python_package.package_name, version = event.python_package.package_version)

@@ -32,6 +32,6 @@ class CreateFlakeCli(PrimaryPort):
 
         if args.command == 'create':
 
-            event = FlakeRequested(args.packageName, args.packageVersion)
+            event = FlakeRequested(args.packageName, args.packageVersion, args.flakes_folder)
             logging.getLogger(__name__).debug(f'Emitting {event}')
-            await app.accept(event)
+            await app.acceptFlakeRequested(event)
