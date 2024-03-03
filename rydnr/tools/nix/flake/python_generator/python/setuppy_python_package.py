@@ -1,11 +1,36 @@
+# vim: set fileencoding=utf-8
+"""
+rydnr/tools/nix/flake/python_generator/python/settuppy_python_package.py
+
+This file defines the SetuppyPythonPackage class.
+
+Copyright (C) 2023-today rydnr's rydnr/python-nix-flake-generator
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
 from domain.event import Event
 from domain.git.git_repo import GitRepo
 from domain.ports import Ports
-from domain.python.build.error_creating_a_virtual_environment import ErrorCreatingAVirtualEnvironment
+from domain.python.build.error_creating_a_virtual_environment import (
+    ErrorCreatingAVirtualEnvironment,
+)
 from domain.python.build.error_installing_setuptools import ErrorInstallingSetuptools
 from domain.python.build.more_than_one_egg_info_folder import MoreThanOneEggInfoFolder
 from domain.python.build.no_egg_info_folder_found import NoEggInfoFolderFound
-from domain.python.build.python_setuppy_egg_info_failed import PythonSetuppyEggInfoFailed
+from domain.python.build.python_setuppy_egg_info_failed import (
+    PythonSetuppyEggInfoFailed,
+)
 from domain.python.build.requirementstxt_utils import RequirementstxtUtils
 from domain.python.build.setupcfg_utils import SetupcfgUtils
 from domain.python.build.setuppy_strategy_found import SetuppyStrategyFound
@@ -17,6 +42,7 @@ import subprocess
 import sys
 import tempfile
 from typing import Dict, List
+
 
 class SetuppyPythonPackage(PythonPackage, SetupcfgUtils, RequirementstxtUtils):
     """
@@ -34,18 +60,25 @@ class SetuppyPythonPackage(PythonPackage, SetupcfgUtils, RequirementstxtUtils):
     @property
     def requires_txt(self) -> Dict:
         if not self._requires_txt:
-            self._requires_txt = self.__class__.parse_requires_txt(self.egg_info(self.git_repo))
+            self._requires_txt = self.__class__.parse_requires_txt(
+                self.egg_info(self.git_repo)
+            )
         return self._requires_txt
 
     @property
     def dev_requirements_txt(self) -> List:
         if not self._dev_requirements_txt:
-            self._dev_requirements_txt = self.__class__.read_dev_requirements_txt(self.git_repo)
+            self._dev_requirements_txt = self.__class__.read_dev_requirements_txt(
+                self.git_repo
+            )
         return self._dev_requirements_txt
 
     @classmethod
     def git_repo_matches(cls, gitRepo: GitRepo) -> bool:
-        return gitRepo.get_file("setup.py") is not None or gitRepo.get_file(f'{gitRepo.subfolder}/setup.py') is not None
+        return (
+            gitRepo.get_file("setup.py") is not None
+            or gitRepo.get_file(f"{gitRepo.subfolder}/setup.py") is not None
+        )
 
     def get_type(self) -> str:
         """
@@ -53,12 +86,18 @@ class SetuppyPythonPackage(PythonPackage, SetupcfgUtils, RequirementstxtUtils):
         """
         return "setup.py"
 
-    def append_package(self, packages: List, pythonPackage: PythonPackage, setuptoolsIncluded: bool) -> bool:
+    def append_package(
+        self, packages: List, pythonPackage: PythonPackage, setuptoolsIncluded: bool
+    ) -> bool:
         result = False
-        if pythonPackage.name != 'setuptools':
+        if pythonPackage.name != "setuptools":
             packages.append(pythonPackage)
             result = setuptoolsIncluded
-        elif pythonPackage.name == 'setuptools' and not setuptoolsIncluded and self.name != "setuptools":
+        elif (
+            pythonPackage.name == "setuptools"
+            and not setuptoolsIncluded
+            and self.name != "setuptools"
+        ):
             packages.append(pythonPackage)
             result = True
         else:
@@ -71,12 +110,14 @@ class SetuppyPythonPackage(PythonPackage, SetupcfgUtils, RequirementstxtUtils):
         sections = self.requires_txt.keys()
         deps = []
         for section in sections:
-            if section not in [ "extras_require", "test_require", "test", "dev" ]:
+            if section not in ["extras_require", "test_require", "test", "dev"]:
                 deps.extend(self.requires_txt[section])
         for dep in deps:
             pythonPackage = self.find_dep(dep)
             if pythonPackage:
-                setuptools_included = self.append_package(result, pythonPackage, setuptools_included)
+                setuptools_included = self.append_package(
+                    result, pythonPackage, setuptools_included
+                )
         return result
 
     def get_propagated_build_inputs(self) -> List:
@@ -93,13 +134,17 @@ class SetuppyPythonPackage(PythonPackage, SetupcfgUtils, RequirementstxtUtils):
             for dep in extras_require:
                 pythonPackage = self.find_dep(dep)
                 if pythonPackage:
-                    setuptools_included = self.append_package(result, pythonPackage, setuptools_included)
+                    setuptools_included = self.append_package(
+                        result, pythonPackage, setuptools_included
+                    )
         dev = self.requires_txt.get("dev")
         if dev:
             for dep in dev:
                 pythonPackage = self.find_dep(dep)
                 if pythonPackage:
-                    setuptools_included = self.append_package(result, pythonPackage, setuptools_included)
+                    setuptools_included = self.append_package(
+                        result, pythonPackage, setuptools_included
+                    )
 
         return result
 
@@ -111,25 +156,31 @@ class SetuppyPythonPackage(PythonPackage, SetupcfgUtils, RequirementstxtUtils):
             for dep in test_require:
                 pythonPackage = self.find_dep(dep)
                 if pythonPackage:
-                    setuptools_included = self.append_package(result, pythonPackage, setuptools_included)
+                    setuptools_included = self.append_package(
+                        result, pythonPackage, setuptools_included
+                    )
         test = self.requires_txt.get("test")
         if test:
             for dep in test:
                 pythonPackage = self.find_dep(dep)
                 if pythonPackage:
-                    setuptools_included = self.append_package(result, pythonPackage, setuptools_included)
+                    setuptools_included = self.append_package(
+                        result, pythonPackage, setuptools_included
+                    )
         for dep in self.dev_requirements_txt:
             pythonPackage = self.find_dep(dep)
             if pythonPackage:
-                setuptools_included = self.append_package(result, pythonPackage, setuptools_included)
+                setuptools_included = self.append_package(
+                    result, pythonPackage, setuptools_included
+                )
 
         return result
 
     @classmethod
     def parse_requires_txt(cls, contents: str):
-        lines = contents.split('\n')
+        lines = contents.split("\n")
 
-        current_section = 'default'
+        current_section = "default"
         sections = {}
         sections[current_section] = []
 
@@ -137,7 +188,7 @@ class SetuppyPythonPackage(PythonPackage, SetupcfgUtils, RequirementstxtUtils):
             line = line.strip()
             if not line:  # Skip empty lines
                 continue
-            elif line.startswith('[') and line.endswith(']'):  # This is a section line
+            elif line.startswith("[") and line.endswith("]"):  # This is a section line
                 current_section = line[1:-1]  # Remove brackets to get section name
                 sections[current_section] = []
             else:  # This is a dependency line
@@ -147,7 +198,7 @@ class SetuppyPythonPackage(PythonPackage, SetupcfgUtils, RequirementstxtUtils):
 
     @classmethod
     def python_path(cls, venvFolder: str) -> str:
-        if sys.platform == 'win32':
+        if sys.platform == "win32":
             result = os.path.join(venvFolder, "Scripts", "python.exe")
         else:
             result = os.path.join(venvFolder, "bin", "python")
@@ -170,7 +221,14 @@ class SetuppyPythonPackage(PythonPackage, SetupcfgUtils, RequirementstxtUtils):
     @classmethod
     def create_venv(cls, folder: str) -> str:
         try:
-            output = subprocess.run([sys.executable, '-m', 'venv', folder], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=folder)
+            output = subprocess.run(
+                [sys.executable, "-m", "venv", folder],
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                cwd=folder,
+            )
         except subprocess.CalledProcessError as err:
             logging.getLogger(__name__).error(err.stdout)
             logging.getLogger(__name__).error(err.stderr)
@@ -181,7 +239,14 @@ class SetuppyPythonPackage(PythonPackage, SetupcfgUtils, RequirementstxtUtils):
     @classmethod
     def install_setuptools(cls, folder: str) -> str:
         try:
-            output = subprocess.run([cls.python_path(folder), '-m', 'pip', 'install', 'setuptools'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=folder)
+            output = subprocess.run(
+                [cls.python_path(folder), "-m", "pip", "install", "setuptools"],
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                cwd=folder,
+            )
         except subprocess.CalledProcessError as err:
             logging.getLogger(__name__).error(err.stdout)
             logging.getLogger(__name__).error(err.stderr)
@@ -191,9 +256,18 @@ class SetuppyPythonPackage(PythonPackage, SetupcfgUtils, RequirementstxtUtils):
 
     @classmethod
     def run_egg_info(cls, venv_folder: str, repo_folder: str) -> str:
-        logging.getLogger(__name__).info(f'Running "python setup.py egg_info" from {repo_folder}')
+        logging.getLogger(__name__).info(
+            f'Running "python setup.py egg_info" from {repo_folder}'
+        )
         try:
-            output = subprocess.run([cls.python_path(venv_folder), 'setup.py', 'egg_info'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=repo_folder)
+            output = subprocess.run(
+                [cls.python_path(venv_folder), "setup.py", "egg_info"],
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                cwd=repo_folder,
+            )
         except subprocess.CalledProcessError as err:
             logging.getLogger(__name__).error(err.stdout)
             logging.getLogger(__name__).error(err.stderr)
@@ -212,9 +286,11 @@ class SetuppyPythonPackage(PythonPackage, SetupcfgUtils, RequirementstxtUtils):
 
     @classmethod
     def normalize(cls, s: str) -> str:
-        return ''.join(c if c.isalnum() else '_' for c in s).lower()
+        return "".join(c if c.isalnum() else "_" for c in s).lower()
 
-    def cat_requires_txt(self, gitRepo: GitRepo, folder: str, eggInfoOutput: str) -> str:
+    def cat_requires_txt(
+        self, gitRepo: GitRepo, folder: str, eggInfoOutput: str
+    ) -> str:
         result = None
 
         # Retrieve the package dir
@@ -232,11 +308,17 @@ class SetuppyPythonPackage(PythonPackage, SetupcfgUtils, RequirementstxtUtils):
         normalized_name = self.__class__.normalize(name)
         normalized_package_name = self.__class__.normalize(self.name)
 
-        logging.getLogger(__name__).info(f'name: {normalized_name}, package_name: {normalized_package_name}, folder: {folder}, subfolder: {subfolder}, dirs: {dirs}')
-
+        logging.getLogger(__name__).info(
+            f"name: {normalized_name}, package_name: {normalized_package_name}, folder: {folder}, subfolder: {subfolder}, dirs: {dirs}"
+        )
 
         # Filter the list to only include .egg-info directories.
-        egg_info_dirs = [d for d in dirs if d.endswith('.egg-info') and (normalized_name in d or normalized_package_name in d)]
+        egg_info_dirs = [
+            d
+            for d in dirs
+            if d.endswith(".egg-info")
+            and (normalized_name in d or normalized_package_name in d)
+        ]
 
         # There should be only one .egg-info directory.
         # If not, you might need to handle this situation.
@@ -245,7 +327,9 @@ class SetuppyPythonPackage(PythonPackage, SetupcfgUtils, RequirementstxtUtils):
             raise NoEggInfoFolderFound()
         if len(egg_info_dirs) == 1:
             egg_info_dir = egg_info_dirs[0]
-            with open(os.path.join(subfolder, egg_info_dir, "requires.txt"), "r") as file:
+            with open(
+                os.path.join(subfolder, egg_info_dir, "requires.txt"), "r"
+            ) as file:
                 result = file.read()
         else:
             logging.getLogger(__name__).error(eggInfoOutput)
@@ -258,3 +342,13 @@ class SetuppyPythonPackage(PythonPackage, SetupcfgUtils, RequirementstxtUtils):
         Retrieves the associated build strategy event.
         """
         return SetuppyStrategyFound(self)
+
+
+# vim: syntax=python ts=4 sw=4 sts=4 tw=79 sr et
+# Local Variables:
+# mode: python
+# python-indent-offset: 4
+# tab-width: 4
+# indent-tabs-mode: nil
+# fill-column: 79
+# End:

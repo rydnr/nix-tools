@@ -1,7 +1,29 @@
-from domain.entity import Entity
-from domain.git.error_cloning_git_repository import ErrorCloningGitRepository
-from domain.git.git_checkout_failed import GitCheckoutFailed
-from domain.value_object import attribute
+# vim: set fileencoding=utf-8
+"""
+rydnr/tools/nix/flake/python_generator/git/git_repo.py
+
+This file defines the GitRepo class.
+
+Copyright (C) 2023-today rydnr's rydnr/python-nix-flake-generator
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
+from pythoneda.shared import attribute, Entity
+from rydnr.tools.nix.flake.python_generator.git import (
+    ErrorCloningGitRepository,
+    GitCheckoutFailed,
+)
 
 import logging
 import os
@@ -10,10 +32,12 @@ import subprocess
 from urllib.parse import urlparse
 from typing import Dict
 
+
 class GitRepo(Entity):
     """
     Represents a Git repository.
     """
+
     def __init__(self, url: str, rev: str, repo_info: Dict, subfolder=None):
         """Creates a new Git repository instance"""
         super().__init__()
@@ -69,7 +93,7 @@ class GitRepo(Entity):
     @classmethod
     def url_is_a_git_repo(cls, url: str) -> bool:
         try:
-            subprocess.check_output(['git', 'ls-remote', url], stderr=subprocess.STDOUT)
+            subprocess.check_output(["git", "ls-remote", url], stderr=subprocess.STDOUT)
             return True
         except subprocess.CalledProcessError:
             return False
@@ -87,9 +111,16 @@ class GitRepo(Entity):
 
     def sha256(self):
         # Use nix-prefetch-git to compute the hash
-        result = subprocess.run(['nix-prefetch-git', '--deepClone', f'{self.url}/tree/{self.rev}'], check=True, capture_output=True, text=True)
+        result = subprocess.run(
+            ["nix-prefetch-git", "--deepClone", f"{self.url}/tree/{self.rev}"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
         output = result.stdout
-        logging.getLogger(__name__).debug(f'nix-prefetch-git --deepClone {self.url}/tree/{self.rev} -> {output}')
+        logging.getLogger(__name__).debug(
+            f"nix-prefetch-git --deepClone {self.url}/tree/{self.rev} -> {output}"
+        )
 
         return output.splitlines()[-1]
 
@@ -97,13 +128,27 @@ class GitRepo(Entity):
         result = os.path.join(folder, subfolder)
 
         try:
-            subprocess.run(['git', 'clone', self.url, subfolder], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=folder)
+            subprocess.run(
+                ["git", "clone", self.url, subfolder],
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                cwd=folder,
+            )
         except subprocess.CalledProcessError as err:
             logging.getLogger(__name__).error(err.stdout)
             logging.getLogger(__name__).error(err.stderr)
             raise ErrorCloningGitRepository(self.url, folder)
         try:
-            subprocess.run(['git', 'checkout', self.rev], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=result)
+            subprocess.run(
+                ["git", "checkout", self.rev],
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                cwd=result,
+            )
         except subprocess.CalledProcessError as err:
             logging.getLogger(__name__).error(err.stdout)
             logging.getLogger(__name__).error(err.stderr)
@@ -114,14 +159,14 @@ class GitRepo(Entity):
     @classmethod
     def extract_url_and_subfolder(cls, url: str) -> tuple:
         parsed_url = urlparse(url)
-        path_parts = parsed_url.path.split('/')
+        path_parts = parsed_url.path.split("/")
 
-        if len(path_parts) > 4 and path_parts[3] == 'tree':
+        if len(path_parts) > 4 and path_parts[3] == "tree":
             repo_url = f"{parsed_url.scheme}://{parsed_url.netloc}/{path_parts[1]}/{path_parts[2]}"
-            subfolder = '/'.join(path_parts[5:])
+            subfolder = "/".join(path_parts[5:])
         elif len(path_parts) > 3:
             repo_url = f"{parsed_url.scheme}://{parsed_url.netloc}/{path_parts[1]}/{path_parts[2]}"
-            subfolder = '/'.join(path_parts[3:])
+            subfolder = "/".join(path_parts[3:])
         else:
             repo_url = url
             subfolder = None
@@ -130,4 +175,14 @@ class GitRepo(Entity):
 
     def in_github(self) -> bool:
         parsed_url = urlparse(self.url)
-        return parsed_url.netloc == 'github.com'
+        return parsed_url.netloc == "github.com"
+
+
+# vim: syntax=python ts=4 sw=4 sts=4 tw=79 sr et
+# Local Variables:
+# mode: python
+# python-indent-offset: 4
+# tab-width: 4
+# indent-tabs-mode: nil
+# fill-column: 79
+# End:

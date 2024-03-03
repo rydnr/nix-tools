@@ -1,13 +1,35 @@
-from domain.entity import Entity
-from domain.flake.flake import Flake
-from domain.flake.recipe.empty_flake_metadata_section_in_recipe_toml import EmptyFlakeMetadataSectionInRecipeToml
-from domain.flake.recipe.empty_flake_section_in_recipe_toml import EmptyFlakeSectionInRecipeToml
-from domain.flake.recipe.missing_flake_section_in_recipe_toml import MissingFlakeSectionInRecipeToml
-from domain.flake.recipe.missing_flake_version_spec_in_recipe_toml import MissingFlakeVersionSpecInRecipeToml
-from domain.flake.recipe.missing_recipe_toml import MissingRecipeToml
-from domain.flake.recipe.missing_type_in_flake_metadata_section_in_recipe_toml import MissingTypeInFlakeMetadataSectionInRecipeToml
-from domain.flake.recipe.more_than_one_flake_in_recipe_toml import MoreThanOneFlakeInRecipeToml
-from domain.value_object import primary_key_attribute
+# vim: set fileencoding=utf-8
+"""
+rydnr/tools/nix/flake/python_generator/flake/recipe/flake_recipe.py
+
+This file defines the FlakeRecipe class.
+
+Copyright (C) 2023-today rydnr's rydnr/python-nix-flake-generator
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
+from pythoneda.shared import Entity, primary_key_attribute
+from rydnr.tools.nix.flake.python_generator.flake import Flake
+from rydnr.tools.nix.flake.python_generator.flake.recipe import (
+    EmptyFlakeMetadataSectionInRecipeToml,
+    EmptyFlakeSectionInRecipeToml,
+    MissingFlakeSectionInRecipeToml,
+    MissingFlakeVersionSpecInRecipeToml,
+    MissingRecipeToml,
+    MissingTypeInFlakeMetadataSectionInRecipeToml,
+    MoreThanOneFlakeInRecipeToml,
+)
 
 import inspect
 import logging
@@ -15,6 +37,7 @@ import os
 from pathlib import Path
 import toml
 from typing import Dict, List
+
 
 class FlakeRecipe(Entity):
 
@@ -88,10 +111,12 @@ class FlakeRecipe(Entity):
         if flake_metadata:
             result = flake_metadata.get("type", None)
             if not result:
-                raise MissingTypeInFlakeMetadataSectionInRecipeToml(cls.recipe_toml_file())
+                raise MissingTypeInFlakeMetadataSectionInRecipeToml(
+                    cls.recipe_toml_file()
+                )
         return result
 
-    def process(self): # -> FlakeCreated:
+    def process(self):  # -> FlakeCreated:
         "Performs the recipe tasks"
         raise NotImplementedError()
 
@@ -130,7 +155,9 @@ class FlakeRecipe(Entity):
                     partialResult = 0.7
             partialResults.append(partialResult)
         result = max(partialResults)
-        logging.getLogger(cls.__name__).debug(f'Similarity between recipe {cls.__name__} and flake {flake.name}-{flake.version}: {result}')
+        logging.getLogger(cls.__name__).debug(
+            f"Similarity between recipe {cls.__name__} and flake {flake.name}-{flake.version}: {result}"
+        )
         return result
 
     def usesGitrepoSha256(self):
@@ -146,3 +173,13 @@ class FlakeRecipe(Entity):
                 if item not in result:
                     result.append(item)
         return result
+
+
+# vim: syntax=python ts=4 sw=4 sts=4 tw=79 sr et
+# Local Variables:
+# mode: python
+# python-indent-offset: 4
+# tab-width: 4
+# indent-tabs-mode: nil
+# fill-column: 79
+# End:

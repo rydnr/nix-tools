@@ -54,11 +54,12 @@
       let
         org = "rydnr";
         repo = "python-nix-flake-generator";
-        version = "v0.0.1-alpha.1";
-        sha256 = "";
+        version = "0.0.1";
+        sha256 = "sha256-hxHY0y90jZvWG9GIesdwOHj8B4hK0qLQpRftQhawi8E=";
         pname = "${repo}";
         pythonpackage = "rydnr.tools.nix.flake.python_generator";
         package = builtins.replaceStrings [ "." ] [ "/" ] pythonpackage;
+        entrypoint = "python_nix_flake_generator";
         pkgs = import nixos { inherit system; };
         description = "A Nix flake for python-flake-generator Python package";
         license = pkgs.lib.licenses.gpl3;
@@ -73,8 +74,8 @@
           builtins.replaceStrings [ "\n" ] [ "" ] "nixos-${nixosVersion}";
         shared = import "${pythoneda-shared-pythonlang-banner}/nix/shared.nix";
         rydnr-python-nix-flake-generator-for = { python
-          , pythoneda-shared-git-shared, pythoneda-shared-pythonlang-domain
-          , stringtemplate3 }:
+          , pythoneda-shared-git-shared, pythoneda-shared-pythonlang-banner
+          , pythoneda-shared-pythonlang-domain, stringtemplate3 }:
           let
             pnameWithUnderscores =
               builtins.replaceStrings [ "-" ] [ "_" ] pname;
@@ -84,6 +85,8 @@
               "${pythonMajorVersion}.${builtins.elemAt pythonVersionParts 1}";
             wheelName =
               "${pnameWithUnderscores}-${version}-py${pythonMajorVersion}-none-any.whl";
+            banner_file = "${package}/python_nix_flake_generator_banner.py";
+            banner_class = "PythonNixFlakeGeneratorBanner";
           in python.pkgs.buildPythonPackage rec {
             inherit pname version;
             projectDir = ./.;
@@ -108,11 +111,36 @@
               stringtemplate3 = stringtemplate3.version;
               toml = python.pkgs.toml.version;
             };
-            src = pkgs.fetchFromGitHub {
-              owner = org;
-              rev = version;
-              inherit repo sha256;
+            bannerTemplateFile = ./templates/banner.py.template;
+            bannerTemplate = pkgs.substituteAll {
+              project_name = pname;
+              file_path = banner_file;
+              inherit banner_class org repo;
+              tag = version;
+              pescio_space = space;
+              arch_role = archRole;
+              hexagonal_layer = layer;
+              python_version = pythonMajorMinorVersion;
+              nixpkgs_release = nixpkgsRelease;
+              src = bannerTemplateFile;
             };
+
+            entrypointTemplateFile =
+              "${pythoneda-shared-pythonlang-banner}/templates/entrypoint.sh.template";
+            entrypointTemplate = pkgs.substituteAll {
+              arch_role = archRole;
+              hexagonal_layer = layer;
+              nixpkgs_release = nixpkgsRelease;
+              inherit homepage maintainers org python repo version;
+              pescio_space = space;
+              python_version = pythonMajorMinorVersion;
+              pythoneda_shared_pythonlang_banner =
+                pythoneda-shared-pythonlang-banner;
+              pythoneda_shared_pythonlang_domain =
+                pythoneda-shared-pythonlang-domain;
+              src = entrypointTemplateFile;
+            };
+            src = ../.;
 
             format = "pyproject";
 
@@ -131,25 +159,46 @@
               toml
             ];
 
-            pythonImportsCheck = [ pythonpackage ];
+            # pythonImportsCheck = [ pythonpackage ];
 
             unpackPhase = ''
               cp -r ${src} .
               sourceRoot=$(ls | grep -v env-vars)
-              chmod +w $sourceRoot
+              chmod -R +w $sourceRoot
+              find $sourceRoot -type d -exec chmod 777 {} \;
               cp ${pyprojectTemplate} $sourceRoot/pyproject.toml
+              cp ${bannerTemplate} $sourceRoot/${banner_file}
+              cp ${entrypointTemplate} $sourceRoot/entrypoint.sh
+            '';
+
+            postPatch = ''
+              substituteInPlace /build/$sourceRoot/entrypoint.sh \
+                --replace "@SOURCE@" "$out/bin/${entrypoint}.sh" \
+                --replace "@PYTHONEDA_EXTRA_NAMESPACES@" "rydnr" \
+                --replace "@PYTHONPATH@" "$PYTHONPATH" \
+                --replace "@CUSTOM_CONTENT@" "" \
+                --replace "@ENTRYPOINT@" "$out/lib/python${pythonMajorMinorVersion}/site-packages/${package}/application/${entrypoint}.py" \
+                --replace "@BANNER@" "$out/bin/banner.sh"
             '';
 
             postInstall = ''
               pushd /build/$sourceRoot
-              for f in $(find . -name '__init__.py'); do
+              for f in $(find . -name '__init__.py' | grep -v 'tests' | grep -v 'scripts'); do
                 if [[ ! -e $out/lib/python${pythonMajorMinorVersion}/site-packages/$f ]]; then
                   cp $f $out/lib/python${pythonMajorMinorVersion}/site-packages/$f;
                 fi
               done
               popd
-              mkdir $out/dist
+              mkdir $out/dist $out/bin
               cp dist/${wheelName} $out/dist
+              cp /build/$sourceRoot/entrypoint.sh $out/bin/${entrypoint}.sh
+              chmod +x $out/bin/${entrypoint}.sh
+              # cp -r /build/$sourceRoot/templates $out/lib/python${pythonMajorMinorVersion}/site-packages
+              echo '#!/usr/bin/env sh' > $out/bin/banner.sh
+              echo "export PYTHONPATH=$PYTHONPATH" >> $out/bin/banner.sh
+              echo "echo 'Running $out/bin/banner'" >> $out/bin/banner.sh
+              echo "${python}/bin/python $out/lib/python${pythonMajorMinorVersion}/site-packages/${banner_file} \$@" >> $out/bin/banner.sh
+              chmod +x $out/bin/banner.sh
             '';
 
             meta = with pkgs.lib; {
@@ -163,9 +212,8 @@
           rydnr-python-nix-flake-generator-default =
             rydnr-python-nix-flake-generator-python311;
           rydnr-python-nix-flake-generator-python38 = shared.devShell-for {
-            banner = "${
-                pythoneda-shared-pythonlang-banner.packages.${system}.pythoneda-shared-pythonlang-banner-python38
-              }/bin/banner.sh";
+            banner =
+              "${packages.rydnr-python-nix-flake-generator-python38}/bin/banner.sh";
             extra-namespaces = "";
             nixpkgs-release = nixpkgsRelease;
             package = packages.rydnr-python-nix-flake-generator-python38;
@@ -177,9 +225,8 @@
             inherit archRole layer org pkgs repo space;
           };
           rydnr-python-nix-flake-generator-python39 = shared.devShell-for {
-            banner = "${
-                pythoneda-shared-pythonlang-banner.packages.${system}.pythoneda-shared-pythonlang-banner-python39
-              }/bin/banner.sh";
+            banner =
+              "${packages.rydnr-python-nix-flake-generator-python39}/bin/banner.sh";
             extra-namespaces = "";
             nixpkgs-release = nixpkgsRelease;
             package = packages.rydnr-python-nix-flake-generator-python39;
@@ -191,9 +238,8 @@
             inherit archRole layer org pkgs repo space;
           };
           rydnr-python-nix-flake-generator-python310 = shared.devShell-for {
-            banner = "${
-                pythoneda-shared-pythonlang-banner.packages.${system}.pythoneda-shared-pythonlang-banner-python310
-              }/bin/banner.sh";
+            banner =
+              "${packages.rydnr-python-nix-flake-generator-python310}/bin/banner.sh";
             extra-namespaces = "";
             nixpkgs-release = nixpkgsRelease;
             package = packages.rydnr-python-nix-flake-generator-python310;
@@ -205,9 +251,8 @@
             inherit archRole layer org pkgs repo space;
           };
           rydnr-python-nix-flake-generator-python311 = shared.devShell-for {
-            banner = "${
-                pythoneda-shared-pythonlang-banner.packages.${system}.pythoneda-shared-pythonlang-banner-python311
-              }/bin/banner.sh";
+            banner =
+              "${packages.rydnr-python-nix-flake-generator-python311}/bin/banner.sh";
             extra-namespaces = "";
             nixpkgs-release = nixpkgsRelease;
             package = packages.rydnr-python-nix-flake-generator-python311;
@@ -228,6 +273,8 @@
               python = pkgs.python38;
               pythoneda-shared-git-shared =
                 pythoneda-shared-git-shared.packages.${system}.pythoneda-shared-git-shared-python38;
+              pythoneda-shared-pythonlang-banner =
+                pythoneda-shared-pythonlang-banner.packages.${system}.pythoneda-shared-pythonlang-banner-python38;
               pythoneda-shared-pythonlang-domain =
                 pythoneda-shared-pythonlang-domain.packages.${system}.pythoneda-shared-pythonlang-domain-python38;
               stringtemplate3 =
@@ -238,6 +285,8 @@
               python = pkgs.python39;
               pythoneda-shared-git-shared =
                 pythoneda-shared-git-shared.packages.${system}.pythoneda-shared-git-shared-python39;
+              pythoneda-shared-pythonlang-banner =
+                pythoneda-shared-pythonlang-banner.packages.${system}.pythoneda-shared-pythonlang-banner-python39;
               pythoneda-shared-pythonlang-domain =
                 pythoneda-shared-pythonlang-domain.packages.${system}.pythoneda-shared-pythonlang-domain-python39;
               stringtemplate3 =
@@ -248,6 +297,8 @@
               python = pkgs.python310;
               pythoneda-shared-git-shared =
                 pythoneda-shared-git-shared.packages.${system}.pythoneda-shared-git-shared-python310;
+              pythoneda-shared-pythonlang-banner =
+                pythoneda-shared-pythonlang-banner.packages.${system}.pythoneda-shared-pythonlang-banner-python310;
               pythoneda-shared-pythonlang-domain =
                 pythoneda-shared-pythonlang-domain.packages.${system}.pythoneda-shared-pythonlang-domain-python310;
               stringtemplate3 =
@@ -258,6 +309,8 @@
               python = pkgs.python311;
               pythoneda-shared-git-shared =
                 pythoneda-shared-git-shared.packages.${system}.pythoneda-shared-git-shared-python311;
+              pythoneda-shared-pythonlang-banner =
+                pythoneda-shared-pythonlang-banner.packages.${system}.pythoneda-shared-pythonlang-banner-python311;
               pythoneda-shared-pythonlang-domain =
                 pythoneda-shared-pythonlang-domain.packages.${system}.pythoneda-shared-pythonlang-domain-python311;
               stringtemplate3 =

@@ -1,3 +1,24 @@
+# vim: set fileencoding=utf-8
+"""
+rydnr/tools/nix/flake/python_generator/infrastructure/python/pypi_repo.py
+
+This file defines the PypiRepo class.
+
+Copyright (C) 2023-today rydnr's rydnr/python-nix-flake-generator
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
 from domain.python.python_package_factory import PythonPackageFactory
 from domain.python.python_package_metadata import PythonPackageMetadata
 from domain.python.python_package_metadata_repo import PythonPackageMetadataRepo
@@ -7,6 +28,7 @@ from packaging.specifiers import SpecifierSet
 import re
 import requests
 from typing import Dict, List
+
 
 class PypiRepo(PythonPackageMetadataRepo):
     """
@@ -22,16 +44,22 @@ class PypiRepo(PythonPackageMetadataRepo):
     def retrieve_package_data(self, package_name: str) -> Dict:
         result = self.__class__._cached_package_data.get(package_name, None)
         if result is None:
-            logging.getLogger(__name__).debug(f"Retrieving {package_name} info from https://pypi.org/pypi/{package_name}/json")
+            logging.getLogger(__name__).debug(
+                f"Retrieving {package_name} info from https://pypi.org/pypi/{package_name}/json"
+            )
             result = requests.get(f"https://pypi.org/pypi/{package_name}/json").json()
             self.__class__._cached_package_data[package_name] = result
         return result
 
-    async def find_by_name_and_version(self, package_name: str, package_version: str) -> PythonPackageMetadata:
+    async def find_by_name_and_version(
+        self, package_name: str, package_version: str
+    ) -> PythonPackageMetadata:
         """
         Retrieves the metadata of the PythonPackage matching given name and version.
         """
-        result = self.__class__._cached_packages.get(f'{package_name}-{package_version}', None)
+        result = self.__class__._cached_packages.get(
+            f"{package_name}-{package_version}", None
+        )
         if result is None:
             logger = logging.getLogger(__name__)
             package_data = self.retrieve_package_data(package_name)
@@ -49,12 +77,22 @@ class PypiRepo(PythonPackageMetadataRepo):
 
             if compatible_versions:
                 latest_version = max(compatible_versions)
-                latest_release = len(package_data.get("releases", [])[latest_version]) - 1
-                release_info = package_data.get("releases", [[]])[latest_version][latest_release]
+                latest_release = (
+                    len(package_data.get("releases", [])[latest_version]) - 1
+                )
+                release_info = package_data.get("releases", [[]])[latest_version][
+                    latest_release
+                ]
 
-                result = await PythonPackageMetadata(package_name, latest_version, package_info, release_info)
-                self.__class__._cached_packages[f'{package_name}-{latest_version}'] = result
-                self.__class__._cached_packages[f'{package_name}-{package_version}'] = result
+                result = await PythonPackageMetadata(
+                    package_name, latest_version, package_info, release_info
+                )
+                self.__class__._cached_packages[
+                    f"{package_name}-{latest_version}"
+                ] = result
+                self.__class__._cached_packages[
+                    f"{package_name}-{package_version}"
+                ] = result
 
         return result
 
@@ -72,10 +110,16 @@ class PypiRepo(PythonPackageMetadataRepo):
         for version in versions:
             latest_release = len(package_data.get("releases", [])[version]) - 1
             release_info = package_data.get("releases", [[]])[version][latest_release]
-            package = self.__class__._cached_packages.get(f'{package_name}-{latest_version}', None)
+            package = self.__class__._cached_packages.get(
+                f"{package_name}-{latest_version}", None
+            )
             if package is None:
-                await PythonPackageMetadata(package_name, latest_version, package_info, release_info)
-                self.__class__._cached_packages[f'{package_name}-{latest_version}'] = package
+                await PythonPackageMetadata(
+                    package_name, latest_version, package_info, release_info
+                )
+                self.__class__._cached_packages[
+                    f"{package_name}-{latest_version}"
+                ] = package
 
             result.append(package)
 
@@ -91,11 +135,27 @@ class PypiRepo(PythonPackageMetadataRepo):
 
         latest_version = max(versions)
         latest_release = len(package_data.get("releases", [])[latest_version]) - 1
-        release_info = package_data.get("releases", [[]])[latest_version][latest_release]
+        release_info = package_data.get("releases", [[]])[latest_version][
+            latest_release
+        ]
 
-        result = self.__class__._cached_packages.get(f'{package_name}-{latest_version}', None)
+        result = self.__class__._cached_packages.get(
+            f"{package_name}-{latest_version}", None
+        )
         if result is None:
-            result = PythonPackageMetadata(package_name, latest_version, package_info, release_info)
-            self.__class__._cached_packages[f'{package_name}-{latest_version}'] = result
+            result = PythonPackageMetadata(
+                package_name, latest_version, package_info, release_info
+            )
+            self.__class__._cached_packages[f"{package_name}-{latest_version}"] = result
 
         return result
+
+
+# vim: syntax=python ts=4 sw=4 sts=4 tw=79 sr et
+# Local Variables:
+# mode: python
+# python-indent-offset: 4
+# tab-width: 4
+# indent-tabs-mode: nil
+# fill-column: 79
+# End:
