@@ -19,8 +19,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from domain.python.python_package import PythonPackage
-from domain.flake.recipe.formatted_python_package import FormattedPythonPackage
+from .formatted_python_package import FormattedPythonPackage
+
+# from rydnr.tools.nix.flake.python_generator.python import PythonPackage
 
 
 class FormattedFlakePythonPackage(FormattedPythonPackage):
@@ -28,7 +29,7 @@ class FormattedFlakePythonPackage(FormattedPythonPackage):
     Augments PythonPackage class for flake-based packages to include formatting logic required by recipe templates.
     """
 
-    def __init__(self, pkg: PythonPackage):
+    def __init__(self, pkg):  #: PythonPackage):
         """Creates a new instance"""
         super().__init__(pkg)
 

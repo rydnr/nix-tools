@@ -21,13 +21,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 __path__ = __import__("pkgutil").extend_path(__path__, __name__)
 
-from .base_flake_recipe import BaseFlakeRecipe
+from .recipe_does_not_support_placeholder import RecipeDoesNotSupportPlaceholder
 from .empty_flake_metadata_section_in_recipe_toml import (
     EmptyFlakeMetadataSectionInRecipeToml,
 )
 from .empty_flake_section_in_recipe_toml import EmptyFlakeSectionInRecipeToml
-from .flake_recipe import FlakeRecipe
-from .flake_recipe_repo import FlakeRecipeRepo
 from .formatted_flake import FormattedFlake
 from .formatted_flake_python_package import FormattedFlakePythonPackage
 from .formatted_nixpkgs_python_package import FormattedNixpkgsPythonPackage
@@ -42,7 +40,9 @@ from .missing_type_in_flake_metadata_section_in_recipe_toml import (
     MissingTypeInFlakeMetadataSectionInRecipeToml,
 )
 from .more_than_one_flake_in_recipe_toml import MoreThanOneFlakeInRecipeToml
-from .recipe_does_not_support_placeholder import RecipeDoesNotSupportPlaceholder
+from .flake_recipe import FlakeRecipe
+from .flake_recipe_repo import FlakeRecipeRepo
+from .base_flake_recipe import BaseFlakeRecipe
 
 # vim: syntax=python ts=4 sw=4 sts=4 tw=79 sr et
 # Local Variables:

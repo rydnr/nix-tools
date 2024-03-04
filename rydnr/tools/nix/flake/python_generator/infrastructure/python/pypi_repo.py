@@ -19,9 +19,15 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from domain.python.python_package_factory import PythonPackageFactory
-from domain.python.python_package_metadata import PythonPackageMetadata
-from domain.python.python_package_metadata_repo import PythonPackageMetadataRepo
+from rydnr.tools.nix.flake.python_generator.python.python_package_factory import (
+    PythonPackageFactory,
+)
+from rydnr.tools.nix.flake.python_generator.python.python_package_metadata import (
+    PythonPackageMetadata,
+)
+from rydnr.tools.nix.flake.python_generator.python.python_package_metadata_repo import (
+    PythonPackageMetadataRepo,
+)
 
 import logging
 from packaging.specifiers import SpecifierSet

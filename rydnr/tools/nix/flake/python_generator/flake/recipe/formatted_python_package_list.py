@@ -19,9 +19,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from domain.formatting import Formatting
-from domain.flake.recipe.formatted_python_package import FormattedPythonPackage
-
+from .formatted_python_package import FormattedPythonPackage
+from pythoneda.shared import Formatting
 from typing import Callable, List
 
 

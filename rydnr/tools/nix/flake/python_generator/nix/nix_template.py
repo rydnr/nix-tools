@@ -20,7 +20,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from pythoneda.shared import attribute, Entity, primary_key_attribute
-from rydnr.tools.nix.flake.python_generator.flake.recipe import (
+from rydnr.tools.nix.flake.python_generator.flake.recipe.recipe_does_not_support_placeholder import (
     RecipeDoesNotSupportPlaceholder,
 )
 from datetime import datetime

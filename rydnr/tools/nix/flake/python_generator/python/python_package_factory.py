@@ -19,13 +19,18 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from domain.event_emitter import EventEmitter
-from domain.event_listener import EventListener
-from domain.git.git_repo_found import GitRepoFound
-from domain.git.git_repo_requested import GitRepoRequested
-from domain.python.python_package import PythonPackage
-from domain.python.python_package_created import PythonPackageCreated
-from domain.python.unsupported_python_package import UnsupportedPythonPackage
+from pythoneda.shared import EventEmitter, EventListener
+from rydnr.tools.nix.flake.python_generator.git.git_repo_found import GitRepoFound
+from rydnr.tools.nix.flake.python_generator.git.git_repo_requested import (
+    GitRepoRequested,
+)
+from rydnr.tools.nix.flake.python_generator.python.python_package import PythonPackage
+from rydnr.tools.nix.flake.python_generator.python.python_package_created import (
+    PythonPackageCreated,
+)
+from rydnr.tools.nix.flake.python_generator.python.unsupported_python_package import (
+    UnsupportedPythonPackage,
+)
 
 import asyncio
 import logging

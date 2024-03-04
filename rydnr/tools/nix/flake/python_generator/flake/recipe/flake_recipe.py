@@ -20,7 +20,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from pythoneda.shared import Entity, primary_key_attribute
-from rydnr.tools.nix.flake.python_generator.flake import Flake
+
+# from rydnr.tools.nix.flake.python_generator.flake import Flake
 from rydnr.tools.nix.flake.python_generator.flake.recipe import (
     EmptyFlakeMetadataSectionInRecipeToml,
     EmptyFlakeSectionInRecipeToml,
@@ -47,7 +48,7 @@ class FlakeRecipe(Entity):
 
     _flakes = []
 
-    def __init__(self, flake: Flake):
+    def __init__(self, flake):
         """Creates a new flake recipe instance"""
         super().__init__()
         self._flake = flake
@@ -135,7 +136,7 @@ class FlakeRecipe(Entity):
         return cls._type == flake.python_package.get_type()
 
     @classmethod
-    def similarity(cls, flake: Flake) -> float:
+    def similarity(cls, flake) -> float:  #: Flake) -> float:
         result = 0.0
         partialResults = []
         if cls.supports(flake):

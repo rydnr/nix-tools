@@ -19,8 +19,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from domain.entity import Entity
-from domain.value_object import primary_key_attribute
+from pythoneda.shared import Entity, primary_key_attribute
 
 
 PYPI_TO_NIX_LICENSE_MAPPING = {

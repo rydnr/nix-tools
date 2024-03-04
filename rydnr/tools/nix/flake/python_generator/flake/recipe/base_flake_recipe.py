@@ -25,9 +25,10 @@ from .formatted_flake_python_package import FormattedFlakePythonPackage
 from .formatted_nixpkgs_python_package import FormattedNixpkgsPythonPackage
 from .formatted_python_package_list import FormattedPythonPackageList
 from pythoneda.shared import Ports
-from rydnr.tools.nix.flake.python_generator.flake import Flake, FlakeCreated, License
-from rydnr.tools.nix.flake.python_generator.nix import NixTemplate
-from rydnr.tools.nix.flake.python_generator.python import PythonPackage
+
+# from rydnr.tools.nix.flake.python_generator.flake import Flake, FlakeCreated, License
+# from rydnr.tools.nix.flake.python_generator.nix import NixTemplate
+# from rydnr.tools.nix.flake.python_generator.python import PythonPackage
 
 from enum import Enum
 import inspect
@@ -42,7 +43,7 @@ class BaseFlakeRecipe(FlakeRecipe):
     Represents a base nix flake recipe.
     """
 
-    def __init__(self, flake: Flake):
+    def __init__(self, flake):  #: Flake):
         """Creates a new base nix flake recipe instance"""
         super().__init__(flake)
         self._native_build_inputs_subtemplates = self.extract_dep_templates(
@@ -94,11 +95,11 @@ class BaseFlakeRecipe(FlakeRecipe):
         return cls != BaseFlakeRecipe and super().should_initialize()
 
     @classmethod
-    def supports(cls, flake: Flake) -> bool:
+    def supports(cls, flake) -> bool:  #: Flake) -> bool:
         "Checks if the recipe class supports given flake"
         return False
 
-    def process(self) -> FlakeCreated:
+    def process(self):  # -> FlakeCreated:
         result = None
         renderedTemplates = []
         templates = (
@@ -107,6 +108,8 @@ class BaseFlakeRecipe(FlakeRecipe):
             .find_flake_templates_by_recipe(self)
         )
         if templates:
+            from rydnr.tools.nix.flake.python_generator.nix import NixTemplate
+
             for template in [
                 NixTemplate(t["folder"], t["path"], t["contents"]) for t in templates
             ]:
@@ -129,7 +132,7 @@ class BaseFlakeRecipe(FlakeRecipe):
         return result
 
     def extract_dep_templates(
-        self, flake, inputs: List[PythonPackage]
+        self, flake, inputs: List  # [PythonPackage])
     ) -> Dict[str, str]:
         if inputs:
             nixpkgs_deps = FormattedPythonPackageList(

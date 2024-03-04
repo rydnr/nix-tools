@@ -19,22 +19,33 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from domain.event import Event
-from domain.git.git_repo import GitRepo
-from domain.ports import Ports
-from domain.python.build.error_creating_a_virtual_environment import (
+from pythoneda.shared import Event, Ports
+from rydnr.tools.nix.flake.python_generator.git.git_repo import GitRepo
+from rydnr.tools.nix.flake.python_generator.python.build.error_creating_a_virtual_environment import (
     ErrorCreatingAVirtualEnvironment,
 )
-from domain.python.build.error_installing_setuptools import ErrorInstallingSetuptools
-from domain.python.build.more_than_one_egg_info_folder import MoreThanOneEggInfoFolder
-from domain.python.build.no_egg_info_folder_found import NoEggInfoFolderFound
-from domain.python.build.python_setuppy_egg_info_failed import (
+from rydnr.tools.nix.flake.python_generator.python.build.error_installing_setuptools import (
+    ErrorInstallingSetuptools,
+)
+from rydnr.tools.nix.flake.python_generator.python.build.more_than_one_egg_info_folder import (
+    MoreThanOneEggInfoFolder,
+)
+from rydnr.tools.nix.flake.python_generator.python.build.no_egg_info_folder_found import (
+    NoEggInfoFolderFound,
+)
+from rydnr.tools.nix.flake.python_generator.python.build.python_setuppy_egg_info_failed import (
     PythonSetuppyEggInfoFailed,
 )
-from domain.python.build.requirementstxt_utils import RequirementstxtUtils
-from domain.python.build.setupcfg_utils import SetupcfgUtils
-from domain.python.build.setuppy_strategy_found import SetuppyStrategyFound
-from domain.python.python_package import PythonPackage
+from rydnr.tools.nix.flake.python_generator.python.build.requirementstxt_utils import (
+    RequirementstxtUtils,
+)
+from rydnr.tools.nix.flake.python_generator.python.build.setupcfg_utils import (
+    SetupcfgUtils,
+)
+from rydnr.tools.nix.flake.python_generator.python.build.setuppy_strategy_found import (
+    SetuppyStrategyFound,
+)
+from rydnr.tools.nix.flake.python_generator.python.python_package import PythonPackage
 
 import logging
 import os

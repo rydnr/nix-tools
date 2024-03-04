@@ -19,9 +19,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from domain.nix.python.nix_python_package import NixPythonPackage
-from domain.repo import Repo
-
+from .nix_python_package import NixPythonPackage
+from pythoneda.shared import Repo
 from typing import List
 
 

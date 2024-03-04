@@ -19,9 +19,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from domain.nix.nix_template import NixTemplate
-from domain.flake.recipe.flake_recipe import FlakeRecipe
-from domain.repo import Repo
+from .nix_template import NixTemplate
+from pythoneda.shared import Repo
+from rydnr.tools.nix.flake.python_generator.flake.recipe import FlakeRecipe
 
 from typing import Dict
 

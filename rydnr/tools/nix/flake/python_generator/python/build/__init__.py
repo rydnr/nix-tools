@@ -24,7 +24,7 @@ __path__ = __import__("pkgutil").extend_path(__path__, __name__)
 from .error_creating_a_virtual_environment import ErrorCreatingAVirtualEnvironment
 from .error_installing_setuptools import ErrorInstallingSetuptools
 from .more_than_one_egg_info_folder import MoreThanOneEggInfoFolder
-from .no_egg_info_folder import NoEggInfoFolder
+from .no_egg_info_folder_found import NoEggInfoFolderFound
 from .pyprojecttoml_utils import PyprojecttomlUtils
 from .python_build_resolver import PythonBuildResolver
 from .python_build_strategy_requested import PythonBuildStrategyRequested

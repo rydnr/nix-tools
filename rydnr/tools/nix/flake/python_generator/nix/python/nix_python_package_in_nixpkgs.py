@@ -19,9 +19,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from domain.event import Event
-from domain.python.python_package import PythonPackage
-from domain.value_object import primary_key_attribute
+from pythoneda.shared import Event, primary_key_attribute
+
+# from rydnr.tools.nix.flake.python_generator.python import PythonPackage
 
 
 class NixPythonPackageInNixpkgs(Event):
@@ -29,7 +29,7 @@ class NixPythonPackageInNixpkgs(Event):
     Represents the event when a Nix flake for a Python package is already available
     """
 
-    def __init__(self, pkg: PythonPackage):
+    def __init__(self, pkg):  #: PythonPackage):
         """Creates a new NixPythonPackageInNixpkgs instance"""
         self._python_package = pkg
 

@@ -19,10 +19,12 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from domain.ports import Ports
-from domain.git.git_repo import GitRepo
-from domain.python.build.pyprojecttoml_utils import PyprojecttomlUtils
-from domain.python.python_package import PythonPackage
+from pythoneda.shared import Ports
+from rydnr.tools.nix.flake.python_generator.git.git_repo import GitRepo
+from rydnr.tools.nix.flake.python_generator.python.build.pyprojecttoml_utils import (
+    PyprojecttomlUtils,
+)
+from rydnr.tools.nix.flake.python_generator.python.python_package import PythonPackage
 
 from typing import Dict, List
 

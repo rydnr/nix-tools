@@ -19,15 +19,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from domain.event import Event
-from domain.event_emitter import EventEmitter
-from domain.event_listener import EventListener
-from domain.python.build.python_build_strategy_requested import (
-    PythonBuildStrategyRequested,
-)
-from domain.python.python_package import PythonPackage
-from domain.python.python_package_in_progress import PythonPackageInProgress
+from pythoneda.shared import Event, EventEmitter, EventListener
 
+# from rydnr.tools.nix.flake.python_generator.python.build import PythonBuildStrategyRequested
+# from rydnr.tools.nix.flake.python_generator.python import PythonPackage, PythonPackageInProgress
 import logging
 from typing import List, Type
 
@@ -42,17 +37,27 @@ class PythonBuildResolver(EventListener, EventEmitter):
         """
         Retrieves the list of supported event classes.
         """
+        from rydnr.tools.nix.flake.python_generator.python.build import (
+            PythonBuildStrategyRequested,
+        )
+
         return [PythonBuildStrategyRequested]
 
     @classmethod
     async def listenPythonBuildStrategyRequested(
-        cls, event: PythonBuildStrategyRequested
+        cls, event  # : PythonBuildStrategyRequested
     ):
         logger = logging.getLogger(__name__)
         package = None
+        from rydnr.tools.nix.flake.python_generator.python import (
+            PythonPackage,
+            PythonPackageInProgress,
+        )
+
         pythonPackageInProgress = PythonPackageInProgress(
             event.package_name, event.package_version, metadata
         )
+
         for python_package_class in PythonPackage.__subclasses__():
             if python_package_class.git_repo_matches(git_repo):
                 package = python_package_class(

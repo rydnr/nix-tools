@@ -19,9 +19,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from domain.git.git_repo import GitRepo
-from domain.git.git_repo_repo import GitRepoRepo
-from infrastructure.git.github_repo import GithubRepo
+from rydnr.tools.nix.flake.python_generator.git.git_repo import GitRepo
+from rydnr.tools.nix.flake.python_generator.git.git_repo_repo import GitRepoRepo
+from rydnr.tools.nix.flake.python_generator.infrastructure.git.github_repo import (
+    GithubRepo,
+)
 
 import requests
 

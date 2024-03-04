@@ -19,7 +19,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from pythoneda.shared import attribute, Entity, Event, primary_key_attribute, Ports
+from pythoneda.shared import attribute, Entity, Event, Ports, primary_key_attribute
 from rydnr.tools.nix.flake.python_generator.git import (
     GitRepo,
     GitRepoFound,

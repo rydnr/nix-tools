@@ -23,11 +23,11 @@ __path__ = __import__("pkgutil").extend_path(__path__, __name__)
 
 from .description import Description
 from .flake_available import FlakeAvailable
-from .flake_created import FlakeCreated
 from .flake_requested import FlakeRequested
 from .flake_in_progress import FlakeInProgress
 from .flake import Flake
 from .flake_repo import FlakeRepo
+from .flake_created import FlakeCreated
 from .license import License
 
 # vim: syntax=python ts=4 sw=4 sts=4 tw=79 sr et

@@ -19,10 +19,14 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from domain.flake.flake import Flake
-from domain.flake.recipe.flake_recipe import FlakeRecipe
-from domain.flake.recipe.flake_recipe_repo import FlakeRecipeRepo
-from domain.flake.recipe.base_flake_recipe import BaseFlakeRecipe
+from rydnr.tools.nix.flake.python_generator.flake.flake import Flake
+from rydnr.tools.nix.flake.python_generator.flake.recipe.flake_recipe import FlakeRecipe
+from rydnr.tools.nix.flake.python_generator.flake.recipe.flake_recipe_repo import (
+    FlakeRecipeRepo,
+)
+from rydnr.tools.nix.flake.python_generator.flake.recipe.base_flake_recipe import (
+    BaseFlakeRecipe,
+)
 
 import importlib
 from pathlib import Path

@@ -19,16 +19,19 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from domain.event import Event
-from domain.event_listener import EventListener
-from domain.flake.build.build_flake_requested import BuildFlakeRequested
-from domain.flake.build.flake_built import FlakeBuilt
-from domain.flake.flake_created import FlakeCreated
-from domain.flake.recipe.flake_recipe import FlakeRecipe
-from domain.git.git_add_failed import GitAddFailed
-from domain.git.git_init_failed import GitInitFailed
-from domain.nix.nix_build_failed import NixBuildFailed
-from domain.nix.sha256_mismatch_error import Sha256MismatchError
+from pythoneda.shared import Event, EventListener
+from rydnr.tools.nix.flake.python_generator.flake.build.build_flake_requested import (
+    BuildFlakeRequested,
+)
+from rydnr.tools.nix.flake.python_generator.flake.build.flake_built import FlakeBuilt
+from rydnr.tools.nix.flake.python_generator.flake.flake_created import FlakeCreated
+from rydnr.tools.nix.flake.python_generator.flake.recipe.flake_recipe import FlakeRecipe
+from rydnr.tools.nix.flake.python_generator.git.git_add_failed import GitAddFailed
+from rydnr.tools.nix.flake.python_generator.git.git_init_failed import GitInitFailed
+from rydnr.tools.nix.flake.python_generator.nix.nix_build_failed import NixBuildFailed
+from rydnr.tools.nix.flake.python_generator.nix.sha256_mismatch_error import (
+    Sha256MismatchError,
+)
 
 import logging
 import os

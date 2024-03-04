@@ -19,21 +19,25 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from domain.event import Event
-from domain.event_emitter import EventEmitter
-from domain.event_listener import EventListener
-from domain.python.build.python_build_strategy_requested import (
+from pythoneda.shared import Event, EventEmitter, EventListener
+from rydnr.tools.nix.flake.python_generator.python.build import (
     PythonBuildStrategyRequested,
+    SetuppyStrategyFound,
 )
-from domain.python.build.setuppy_strategy_found import SetuppyStrategyFound
-from domain.python.python_package import PythonPackage
-from domain.python.python_package_in_progress import PythonPackageInProgress
-from domain.python.python_package_requested import PythonPackageRequested
-from domain.python.python_package_resolved import PythonPackageResolved
-from domain.git.git_repo import GitRepo
-from domain.git.git_repo_found import GitRepoFound
-from domain.git.git_repo_requested import GitRepoRequested
-from domain.nix.python.nix_python_package_in_nixpkgs import NixPythonPackageInNixpkgs
+from rydnr.tools.nix.flake.python_generator.python.python_package import PythonPackage
+from rydnr.tools.nix.flake.python_generator.python.python_package_in_progress import (
+    PythonPackageInProgress,
+)
+from rydnr.tools.nix.flake.python_generator.python import (
+    PythonPackageRequested,
+    PythonPackageResolved,
+)
+from rydnr.tools.nix.flake.python_generator.git import (
+    GitRepo,
+    GitRepoFound,
+    GitRepoRequested,
+)
+from rydnr.tools.nix.flake.python_generator.nix.python import NixPythonPackageInNixpkgs
 
 
 import logging

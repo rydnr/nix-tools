@@ -19,12 +19,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from domain.event import Event
-from domain.git.git_repo_found import GitRepoFound
-from domain.primary_port import PrimaryPort
+from pythoneda.shared import Event, PrimaryPort
+from rydnr.tools.nix.flake.python_generator.git.git_repo_found import GitRepoFound
 
-import infrastructure.network.grpc.git_repo_found_pb2 as git_repo_found_pb2
-import infrastructure.network.grpc.git_repo_found_pb2_grpc as git_repo_found_pb2_grpc
+import rydnr.tools.nix.flake.python_generator.infrastructure.network.grpc.git_repo_found_pb2 as git_repo_found_pb2
+import rydnr.tools.nix.flake.python_generator.infrastructure.network.grpc.git_repo_found_pb2_grpc as git_repo_found_pb2_grpc
 
 from concurrent import futures
 import grpc

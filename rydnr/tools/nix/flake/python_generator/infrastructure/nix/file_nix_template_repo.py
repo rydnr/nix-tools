@@ -19,9 +19,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from domain.flake.recipe.flake_recipe import FlakeRecipe
-from domain.nix.nix_template_repo import NixTemplateRepo
-from domain.nix.nix_template import NixTemplate
+from rydnr.tools.nix.flake.python_generator.flake.recipe.flake_recipe import FlakeRecipe
+from rydnr.tools.nix.flake.python_generator.nix.nix_template_repo import NixTemplateRepo
+from rydnr.tools.nix.flake.python_generator.nix.nix_template import NixTemplate
 
 import os
 from pathlib import Path

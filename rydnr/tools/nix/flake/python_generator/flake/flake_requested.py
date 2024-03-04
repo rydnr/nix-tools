@@ -19,8 +19,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from domain.event import Event
-from domain.value_object import attribute, primary_key_attribute
+from pythoneda.shared import attribute, Event, primary_key_attribute
 
 
 class FlakeRequested(Event):

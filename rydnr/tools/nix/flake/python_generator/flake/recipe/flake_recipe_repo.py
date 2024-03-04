@@ -19,10 +19,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from domain.flake.flake import Flake
-from domain.flake.recipe.flake_recipe import FlakeRecipe
-from domain.repo import Repo
+from pythoneda.shared import Repo
 
+# from rydnr.tools.nix.flake.python_generator.flake import Flake
+from rydnr.tools.nix.flake.python_generator.flake.recipe import FlakeRecipe
 from typing import List
 
 
@@ -37,7 +37,9 @@ class FlakeRecipeRepo(Repo):
         """
         super().__init__(FlakeRecipe)
 
-    def find_recipe_classes_by_flake(self, flake: Flake) -> List[FlakeRecipe]:
+    def find_recipe_classes_by_flake(
+        self, flake
+    ) -> List[FlakeRecipe]:  # Flake) -> List[FlakeRecipe]:
         """
         Retrieves the recipe classes matching given flake, if any.
         """

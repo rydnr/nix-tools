@@ -19,9 +19,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from domain.flake.flake import Flake
-from domain.formatting import Formatting
-from domain.flake.license import License
+# from rydnr.tools.nix.flake.python_generator.flake import Flake, License
+from pythoneda.shared import Formatting
 
 
 class FormattedFlake(Formatting):
@@ -29,12 +28,12 @@ class FormattedFlake(Formatting):
     Augments Flake class to include formatting logic required by recipe templates.
     """
 
-    def __init__(self, flk: Flake):
+    def __init__(self, flk):  #: Flake):
         """Creates a new instance"""
         super().__init__(flk)
 
     @property
-    def flake(self) -> Flake:
+    def flake(self):  # -> Flake:
         return self._fmt
 
     def version_with_underscores(self):
@@ -44,6 +43,8 @@ class FormattedFlake(Formatting):
         return self.flake.python_package.info["description"]
 
     def license(self):
+        from rydnr.tools.nix.flake.python_generator.flake import License
+
         return License.from_pypi(self.flake.python_package.info.get("license", "")).nix
 
     def sha256(self):

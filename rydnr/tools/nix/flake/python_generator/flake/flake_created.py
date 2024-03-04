@@ -54,7 +54,7 @@ class FlakeCreated(Event):
         return self._flake_folder
 
     @property
-    def flake_recipe(self):
+    def flake_recipe(self) -> FlakeRecipe:
         return self._flake_recipe
 
     def __str__(self):

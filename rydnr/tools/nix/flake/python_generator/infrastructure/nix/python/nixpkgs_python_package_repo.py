@@ -19,8 +19,12 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from domain.nix.python.nix_python_package import NixPythonPackage
-from domain.nix.python.nix_python_package_repo import NixPythonPackageRepo
+from rydnr.tools.nix.flake.python_generator.nix.python.nix_python_package import (
+    NixPythonPackage,
+)
+from rydnr.tools.nix.flake.python_generator.nix.python.nix_python_package_repo import (
+    NixPythonPackageRepo,
+)
 
 import ast
 import json

@@ -19,8 +19,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from domain.git.git_repo import GitRepo
-from domain.python.python_package_base_event import PythonPackageBaseEvent
+from rydnr.tools.nix.flake.python_generator.git import GitRepo
+from rydnr.tools.nix.flake.python_generator.python import PythonPackageBaseEvent
 
 
 class PythonBuildStrategyRequested(PythonPackageBaseEvent):

@@ -19,9 +19,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from domain.python.python_package import PythonPackage
-from domain.python.python_package_base_event import PythonPackageBaseEvent
-from domain.value_object import attribute
+from pythoneda.shared import attribute
+from rydnr.tools.nix.flake.python_generator.python.python_package_base_event import (
+    PythonPackageBaseEvent,
+)
 
 
 class SetuppyStrategyFound(PythonPackageBaseEvent):
@@ -29,7 +30,7 @@ class SetuppyStrategyFound(PythonPackageBaseEvent):
     Represents the event triggered when a Python package can be built using setup.py.
     """
 
-    def __init__(self, pythonPackage: PythonPackage):
+    def __init__(self, pythonPackage):  #: PythonPackage):
         """Creates a new PythonBuildStrategyRequested instance"""
         super().__init__(
             pythonPackage.name, pythonPackage.version, pythonPackage.git_repo
@@ -38,7 +39,7 @@ class SetuppyStrategyFound(PythonPackageBaseEvent):
 
     @property
     @attribute
-    def pythonPackage() -> PythonPackage:
+    def pythonPackage():  # -> PythonPackage:
         return self._pythonPackage
 
 

@@ -19,8 +19,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from domain.formatting import Formatting
-from domain.python.python_package import PythonPackage
+from pythoneda.shared import Formatting
 
 
 class FormattedPythonPackage(Formatting):
@@ -28,12 +27,12 @@ class FormattedPythonPackage(Formatting):
     Augments PythonPackage class to include formatting logic required by recipe templates.
     """
 
-    def __init__(self, pkg: PythonPackage):
+    def __init__(self, pkg):  #: PythonPackage):
         """Creates a new instance"""
         super().__init__(pkg)
 
     @property
-    def pkg(self) -> PythonPackage:
+    def pkg(self):  # -> PythonPackage:
         return self._fmt
 
     def as_parameter_to_package_nix() -> str:

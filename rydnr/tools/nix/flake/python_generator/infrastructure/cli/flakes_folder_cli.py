@@ -19,9 +19,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from domain.primary_port import PrimaryPort
-
 import argparse
+from pythoneda.shared import PrimaryPort
 
 
 class FlakesFolderCli(PrimaryPort):

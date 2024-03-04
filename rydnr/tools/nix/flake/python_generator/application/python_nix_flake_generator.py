@@ -61,7 +61,7 @@ class PythonNixFlakeGenerator:
 
     @classmethod
     def get_port_interfaces(cls):
-        # this is to pass the domain module, so I can get rid of the `import domain`
+        # this is to pass the rydnr.tools.nix.flake.python_generator module, so I can get rid of the `import rydnr.tools.nix.flake.python_generator`
         return get_interfaces(
             Port, importlib.import_module(".".join(Event.__module__.split(".")[:-1]))
         )
@@ -140,23 +140,35 @@ class PythonNixFlakeGenerator:
 
 
 if __name__ == "__main__":
-    from domain.event import Event
-    from domain.event_emitter import EventEmitter
-    from domain.event_listener import EventListener
-    from domain.flake.flake import Flake
-    from domain.flake.build.flake_builder import FlakeBuilder
-    from domain.flake.build.flake_built import FlakeBuilt
-    from domain.flake.flake_created import FlakeCreated
-    from domain.port import Port
-    from domain.ports import Ports
-    from domain.primary_port import PrimaryPort
+    from pythoneda.shared import (
+        Event,
+        EventEmitter,
+        EventListener,
+        Port,
+        Ports,
+        PrimaryPort,
+    )
+    from rydnr.tools.nix.flake.python_generator.flake.flake import Flake
+    from rydnr.tools.nix.flake.python_generator.flake.build.flake_builder import (
+        FlakeBuilder,
+    )
+    from rydnr.tools.nix.flake.python_generator.flake.build.flake_built import (
+        FlakeBuilt,
+    )
+    from rydnr.tools.nix.flake.python_generator.flake.flake_created import FlakeCreated
 
-    from infrastructure.flake.recipe.dynamically_discoverable_flake_recipe_repo import (
+    from rydnr.tools.nix.flake.python_generator.infrastructure.flake.recipe.dynamically_discoverable_flake_recipe_repo import (
         DynamicallyDiscoverableFlakeRecipeRepo,
     )
-    from infrastructure.nix.file_nix_template_repo import FileNixTemplateRepo
-    from infrastructure.flake.folder_flake_repo import FolderFlakeRepo
-    from infrastructure.git.github_git_repo import GithubGitRepo
+    from rydnr.tools.nix.flake.python_generator.infrastructure.nix.file_nix_template_repo import (
+        FileNixTemplateRepo,
+    )
+    from rydnr.tools.nix.flake.python_generator.infrastructure.flake.folder_flake_repo import (
+        FolderFlakeRepo,
+    )
+    from rydnr.tools.nix.flake.python_generator.infrastructure.git.github_git_repo import (
+        GithubGitRepo,
+    )
 
     asyncio.run(PythonNixFlakeGenerator.main())
 # vim: syntax=python ts=4 sw=4 sts=4 tw=79 sr et

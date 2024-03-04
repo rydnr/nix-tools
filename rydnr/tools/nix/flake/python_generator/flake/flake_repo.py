@@ -19,10 +19,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from domain.flake.flake import Flake
-from domain.flake.flake_created import FlakeCreated
-from domain.flake.recipe.flake_recipe import FlakeRecipe
-from domain.repo import Repo
+from rydnr.tools.nix.flake.python_generator.flake.flake import Flake
+from rydnr.tools.nix.flake.python_generator.flake.flake_created import FlakeCreated
+from rydnr.tools.nix.flake.python_generator.flake.recipe.flake_recipe import FlakeRecipe
+from pythoneda.shared import Repo
 
 from typing import Dict, List
 
