@@ -33,7 +33,6 @@ from pythoneda.shared import (
 )
 from rydnr.tools.nix.flake.python_generator.flake.build import BuildFlakeRequested
 from rydnr.tools.nix.flake.python_generator.git import GitRepo, GitRepoRepo
-from rydnr.tools.nix.flake.python_generator.nix import NixTemplate
 from rydnr.tools.nix.flake.python_generator.nix.python import (
     NixPythonPackageInNixpkgs,
     NixPythonPackageRepo,

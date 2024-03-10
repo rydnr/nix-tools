@@ -20,9 +20,29 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import asyncio
-from pythoneda.shared.application import PythonEDA
+from pythoneda.shared.application import enable, PythonEDA
+from rydnr.tools.nix.flake.python_generator.infrastructure.cli import (
+    BuildFlakeCli,
+    CreateFlakeCli,
+    FlakesFolderCli,
+    FlakesUrlCli,
+    ForensicFolderCli,
+    GithubTokenCli,
+    PackageNameCli,
+    PackageVersionCli,
+    RecipesFolderCli,
+)
 
 
+@enable(PackageNameCli)
+@enable(PackageVersionCli)
+@enable(BuildFlakeCli)
+@enable(CreateFlakeCli)
+@enable(FlakesFolderCli)
+@enable(FlakesUrlCli)
+@enable(ForensicFolderCli)
+@enable(GithubTokenCli)
+@enable(RecipesFolderCli)
 class PythonNixFlakeGenerator(PythonEDA):
     """
     Runs the Python Nix flake generator.
@@ -50,6 +70,118 @@ class PythonNixFlakeGenerator(PythonEDA):
         except ImportError:
             banner = None
         super().__init__(banner, __file__)
+        self._github_token = None
+        self._flakes_folder = None
+        self._flakes_url = None
+        self._recipes_folder = None
+        self._forensic_folder = None
+        self._package_name = None
+        self._package_version = None
+
+    async def accept_github_token(self, token: str):
+        """
+        Accepts a GitHub token.
+        :param token: The GitHub token.
+        """
+        self._github_token = token
+
+    @property
+    def github_token(self):
+        """
+        Returns the GitHub token.
+        :return: The GitHub token.
+        """
+        return self._github_token
+
+    async def accept_flakes_folder(self, folder: str):
+        """
+        Accepts the folder where the flakes will be created.
+        :param folder: The folder where the flakes will be created.
+        """
+        self._flakes_folder = folder
+
+    @property
+    def flakes_folder(self):
+        """
+        Returns the folder where the flakes will be created.
+        :return: The folder where the flakes will be created.
+        """
+        return self._flakes_folder
+
+    async def accept_flakes_url(self, url: str):
+        """
+        Accepts the URL of the flakes.
+        :param url: The URL of the flakes.
+        """
+        self._flakes_url = url
+
+    @property
+    def flakes_url(self):
+        """
+        Returns the URL of the flakes.
+        :return: The URL of the flakes.
+        """
+        return self._flakes_url
+
+    async def accept_recipes_folder(self, folder: str):
+        """
+        Accepts the folder where the recipes are located.
+        :param folder: The folder where the recipes are located.
+        """
+        self._recipes_folder = folder
+
+    @property
+    def recipes_folder(self):
+        """
+        Returns the folder where the recipes are located.
+        :return: The folder where the recipes are located.
+        """
+        return self._recipes_folder
+
+    async def accept_forensic_folder(self, folder: str):
+        """
+        Accepts the folder where the forensic information is located.
+        :param folder: The folder where the forensic information is located.
+        """
+        self._forensic_folder = folder
+
+    @property
+    def forensic_folder(self):
+        """
+        Returns the folder where the forensic information is located.
+        :return: The folder where the forensic information is located.
+        """
+        return self._forensic_folder
+
+    async def accept_package_name(self, name: str):
+        """
+        Accepts the name of the package name.
+        :param name: The package name.
+        """
+        self._package_name = name
+
+    @property
+    def package_name(self):
+        """
+        Returns the name of the package.
+        :return: The name of the package.
+        """
+        return self._package_name
+
+    async def accept_package_version(self, version: str):
+        """
+        Accepts the package version.
+        :param version: The package version.
+        """
+        self._package_version = version
+
+    @property
+    def package_version(self):
+        """
+        Returns the package version.
+        :return: The package version.
+        """
+        return self._package_version
 
 
 if __name__ == "__main__":

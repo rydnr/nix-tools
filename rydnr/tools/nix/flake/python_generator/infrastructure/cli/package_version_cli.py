@@ -1,10 +1,10 @@
 # vim: set fileencoding=utf-8
 """
-rydnr/tools/nix/flake/python_generator/infrastructure/cli/flakes_url_cli.py
+rydnr/tools/nix/flake/python_generator/infrastructure/cli/package_version_cli.py
 
-This file defines the FlakesUrlCli class.
+This file defines the PackageVersionCli class.
 
-Copyright (C) 2023-today rydnr's rydnr/python-nix-flake-generator
+Copyright (C) 2024-today rydnr's rydnr/python-nix-flake-generator
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,15 +25,15 @@ from pythoneda.shared.application import PythonEDA
 from pythoneda.shared.infrastructure.cli import CliHandler
 
 
-class FlakesUrlCli(CliHandler, PrimaryPort):
+class PackageVersionCli(CliHandler, PrimaryPort):
 
     """
-    A PrimaryPort that configures the flakes url from the command line.
+    A PrimaryPort used to get the version of the desired Python package from the CLI.
 
-    Class name: FlakesUrlCli
+    Class name: PackageVersionCli
 
     Responsibilities:
-        - Parse the command-line to retrieve the url of the flakes.
+        - Parse the command-line to retrieve the information about the version of the Python package.
 
     Collaborators:
         - PythonEDA subclasses: They are notified back with the information retrieved from the command line.
@@ -41,9 +41,9 @@ class FlakesUrlCli(CliHandler, PrimaryPort):
 
     def __init__(self):
         """
-        Creates a new FlakesUrlCli instance.
+        Creates a new PackageVersionCli instance.
         """
-        super().__init__("Provide the url of the flakes")
+        super().__init__("The version of the Python package")
 
     @classmethod
     def priority(cls) -> int:
@@ -73,7 +73,12 @@ class FlakesUrlCli(CliHandler, PrimaryPort):
         :param parser: The parser.
         :type parser: argparse.ArgumentParser
         """
-        parser.add_argument("-u", "--flakes_url", required=True, help="The flakes url")
+        parser.add_argument(
+            "-pv",
+            "--package-version",
+            required=False,
+            help="The version of the Python package",
+        )
 
     async def handle(self, app: PythonEDA, args):
         """
@@ -83,7 +88,8 @@ class FlakesUrlCli(CliHandler, PrimaryPort):
         :param args: The CLI args.
         :type args: argparse.args
         """
-        await app.accept_flakes_url(args.flakes_url)
+        if args.package_version:
+            await app.accept_package_version(args.package_version)
 
 
 # vim: syntax=python ts=4 sw=4 sts=4 tw=79 sr et

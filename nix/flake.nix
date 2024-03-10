@@ -28,7 +28,7 @@
         "pythoneda-shared-pythonlang-banner";
       inputs.pythoneda-shared-pythonlang-domain.follows =
         "pythoneda-shared-pythonlang-domain";
-      url = "github:pythoneda-shared-git-def/shared/0.0.41";
+      url = "github:pythoneda-shared-git-def/shared/0.0.43";
     };
     pythoneda-shared-pythonlang-application = {
       inputs.flake-utils.follows = "flake-utils";
@@ -37,7 +37,7 @@
         "pythoneda-shared-pythonlang-banner";
       inputs.pythoneda-shared-pythonlang-domain.follows =
         "pythoneda-shared-pythonlang-domain";
-      url = "github:pythoneda-shared-pythonlang-def/application/0.0.58";
+      url = "github:pythoneda-shared-pythonlang-def/application/0.0.60";
     };
     pythoneda-shared-pythonlang-banner = {
       inputs.flake-utils.follows = "flake-utils";
@@ -49,7 +49,7 @@
       inputs.nixos.follows = "nixos";
       inputs.pythoneda-shared-pythonlang-banner.follows =
         "pythoneda-shared-pythonlang-banner";
-      url = "github:pythoneda-shared-pythonlang-def/domain/0.0.37";
+      url = "github:pythoneda-shared-pythonlang-def/domain/0.0.39";
     };
     pythoneda-shared-pythonlang-infrastructure = {
       inputs.flake-utils.follows = "flake-utils";
@@ -58,7 +58,7 @@
         "pythoneda-shared-pythonlang-banner";
       inputs.pythoneda-shared-pythonlang-domain.follows =
         "pythoneda-shared-pythonlang-domain";
-      url = "github:pythoneda-shared-pythonlang-def/infrastructure/0.0.32";
+      url = "github:pythoneda-shared-pythonlang-def/infrastructure/0.0.34";
     };
     stringtemplate3 = {
       inputs.flake-utils.follows = "flake-utils";
@@ -90,7 +90,8 @@
         nixosVersion = builtins.readFile "${nixos}/.version";
         nixpkgsRelease =
           builtins.replaceStrings [ "\n" ] [ "" ] "nixos-${nixosVersion}";
-        shared = import "${pythoneda-shared-pythonlang-banner}/nix/shared.nix";
+        # shared = import "${pythoneda-shared-pythonlang-banner}/nix/shared.nix";
+        shared = import ./shared.nix;
         rydnr-python-nix-flake-generator-for = { python
           , pythoneda-shared-git-shared, pythoneda-shared-pythonlang-application
           , pythoneda-shared-pythonlang-banner
@@ -223,7 +224,6 @@
               # cp -r /build/$sourceRoot/templates $out/lib/python${pythonMajorMinorVersion}/site-packages
               echo '#!/usr/bin/env sh' > $out/bin/banner.sh
               echo "export PYTHONPATH=$PYTHONPATH" >> $out/bin/banner.sh
-              echo "echo 'Running $out/bin/banner'" >> $out/bin/banner.sh
               echo "${python}/bin/python $out/lib/python${pythonMajorMinorVersion}/site-packages/${banner_file} \$@" >> $out/bin/banner.sh
               chmod +x $out/bin/banner.sh
             '';

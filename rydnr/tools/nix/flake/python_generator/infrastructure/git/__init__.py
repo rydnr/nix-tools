@@ -21,7 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 __path__ = __import__("pkgutil").extend_path(__path__, __name__)
 
-from .github_git_repo import GitHubGitRepo
+from .github_git_repo import GithubGitRepo
 from .github_repo import GithubRepo
 
 # vim: syntax=python ts=4 sw=4 sts=4 tw=79 sr et

@@ -19,30 +19,72 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import argparse
+from argparse import ArgumentParser
 from pythoneda.shared import PrimaryPort
+from pythoneda.shared.application import PythonEDA
+from pythoneda.shared.infrastructure.cli import CliHandler
 
 
-class GithubTokenCli(PrimaryPort):
+class GithubTokenCli(CliHandler, PrimaryPort):
 
     """
     A PrimaryPort that configures the github token from the command line.
+
+    Class name: GithubTokenCli
+
+    Responsibilities:
+        - Parse the command-line to retrieve the information about the repository folder.
+
+    Collaborators:
+        - PythonEDA subclasses: They are notified back with the information retrieved from the command line.
     """
 
     def __init__(self):
-        super().__init__()
+        """
+        Creates a new GithubTokenCli instance.
+        """
+        super().__init__("Provide the github token")
 
-    def priority(self) -> int:
-        return 0
+    @classmethod
+    def priority(cls) -> int:
+        """
+        Retrieves the priority of this port.
+        :return: The priority.
+        :rtype: int
+        """
+        return 1
 
-    async def accept(self, app):
-        parser = argparse.ArgumentParser(
-            description="Parses the github token from the command line"
-        )
+    @classmethod
+    @property
+    def is_one_shot_compatible(cls) -> bool:
+        """
+        Retrieves whether this primary port should be instantiated when
+        "one-shot" behavior is active.
+        It should return False unless the port listens to future messages
+        from outside.
+        :return: True in such case.
+        :rtype: bool
+        """
+        return True
+
+    def add_arguments(self, parser: ArgumentParser):
+        """
+        Defines the specific CLI arguments.
+        :param parser: The parser.
+        :type parser: argparse.ArgumentParser
+        """
         parser.add_argument(
             "-t", "--github_token", required=True, help="The github token"
         )
-        args, unknown_args = parser.parse_known_args()
+
+    async def handle(self, app: PythonEDA, args):
+        """
+        Processes the command specified from the command line.
+        :param app: The PythonEDA instance.
+        :type app: pythoneda.shared.application.PythonEDA
+        :param args: The CLI args.
+        :type args: argparse.args
+        """
         await app.accept_github_token(args.github_token)
 
 

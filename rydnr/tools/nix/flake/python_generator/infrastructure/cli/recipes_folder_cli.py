@@ -19,32 +19,74 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import argparse
+from argparse import ArgumentParser
 import os
 from pathlib import Path
 from pythoneda.shared import PrimaryPort
+from pythoneda.shared.application import PythonEDA
+from pythoneda.shared.infrastructure.cli import CliHandler
 
 
-class RecipesFolderCli(PrimaryPort):
+class RecipesFolderCli(CliHandler, PrimaryPort):
 
     """
     A PrimaryPort that configures the recipes folder from the command line.
+
+    Class name: RecipesFolderCli
+
+    Responsibilities:
+        - Parse the command-line to retrieve the information about the recipes folder.
+
+    Collaborators:
+        - PythonEDA subclasses: They are notified back with the information retrieved from the command line.
     """
 
     def __init__(self):
-        super().__init__()
+        """
+        Creates a new RecipesFolderCli instance.
+        """
+        super().__init__("Provide the folder with the recipes")
 
-    def priority(self) -> int:
+    @classmethod
+    def priority(cls) -> int:
+        """
+        Retrieves the priority of this port.
+        :return: The priority.
+        :rtype: int
+        """
         return 2
 
-    async def accept(self, app):
-        parser = argparse.ArgumentParser(
-            description="Parses the folder with the custom flakes"
-        )
+    @classmethod
+    @property
+    def is_one_shot_compatible(cls) -> bool:
+        """
+        Retrieves whether this primary port should be instantiated when
+        "one-shot" behavior is active.
+        It should return False unless the port listens to future messages
+        from outside.
+        :return: True in such case.
+        :rtype: bool
+        """
+        return True
+
+    def add_arguments(self, parser: ArgumentParser):
+        """
+        Defines the specific CLI arguments.
+        :param parser: The parser.
+        :type parser: argparse.ArgumentParser
+        """
         parser.add_argument(
             "-r", "--recipes_folder", required=False, help="The flakes folder"
         )
-        args, unknown_args = parser.parse_known_args()
+
+    async def handle(self, app: PythonEDA, args):
+        """
+        Processes the command specified from the command line.
+        :param app: The PythonEDA instance.
+        :type app: pythoneda.shared.application.PythonEDA
+        :param args: The CLI args.
+        :type args: argparse.args
+        """
         recipes_folder = args.recipes_folder
         if not recipes_folder:
             recipes_folder = os.path.join(

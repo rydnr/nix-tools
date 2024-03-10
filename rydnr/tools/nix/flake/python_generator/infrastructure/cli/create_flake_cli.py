@@ -19,59 +19,88 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import argparse
-import logging
+from argparse import ArgumentParser
 from pythoneda.shared import PrimaryPort
-from rydnr.tools.nix.flake.python_generator.flake.flake_requested import FlakeRequested
+from pythoneda.shared.application import PythonEDA
+from pythoneda.shared.infrastructure.cli import CliHandler
+from rydnr.tools.nix.flake.python_generator.flake import FlakeRequested
 
 
-class CreateFlakeCli(PrimaryPort):
+class CreateFlakeCli(CliHandler, PrimaryPort):
 
     """
     A PrimaryPort that emits FlakeRequested events specified from the command line.
+
+    Class name: CreateFlakeCli
+
+    Responsibilities:
+        - Parse the command-line to create flakes.
+
+    Collaborators:
+        - PythonEDA subclasses: They are notified back with the information retrieved from the command line.
     """
 
     def __init__(self):
-        super().__init__()
+        """
+        Creates a new CreateFlakeCli instance.
+        """
+        super().__init__("Generates a flake for a given Python package")
 
-    def priority(self) -> int:
-        return 100
+    @classmethod
+    def priority(cls) -> int:
+        """
+        Retrieves the priority of this port.
+        :return: The priority.
+        :rtype: int
+        """
+        return 90
 
-    async def accept(self, app):
-        parser = argparse.ArgumentParser(
-            description="Generates a flake for a given Python package"
-        )
-        parser.add_argument(
-            "command",
-            choices=["create", "build"],
-            nargs="?",
-            default=None,
-            help="Whether to generate a nix flake",
-        )
-        parser.add_argument("packageName", help="The name of the Python package")
-        parser.add_argument("packageVersion", help="The version of the Python package")
-        # TODO: Check how to avoid including flags from other cli handlers such as the following
-        parser.add_argument(
-            "-t", "--github_token", required=False, help="The github token"
-        )
-        parser.add_argument(
-            "-f", "--flakes_folder", required=False, help="The flakes folder"
-        )
-        parser.add_argument("-u", "--flakes_url", required=False, help="The flakes url")
-        parser.add_argument(
-            "-x",
-            "--forensic_folder",
-            required=False,
-            help="The folder where to copy the contents of flakes whose build failed",
-        )
-        args, unknown_args = parser.parse_known_args()
+    @classmethod
+    @property
+    def is_one_shot_compatible(cls) -> bool:
+        """
+        Retrieves whether this primary port should be instantiated when
+        "one-shot" behavior is active.
+        It should return False unless the port listens to future messages
+        from outside.
+        :return: True in such case.
+        :rtype: bool
+        """
+        return True
 
-        if args.command == "create":
-            event = FlakeRequested(
-                args.packageName, args.packageVersion, args.flakes_folder
-            )
-            logging.getLogger(__name__).debug(f"Emitting {event}")
-            await app.acceptFlakeRequested(event)
+    def add_arguments(self, parser: ArgumentParser):
+        """
+        Defines the specific CLI arguments.
+        :param parser: The parser.
+        :type parser: argparse.ArgumentParser
+        """
+        parser.add_argument(
+            "-c",
+            "--create",
+            action="store_true",
+            help="Whether to build a Nix flake",
+        )
+
+    async def handle(self, app: PythonEDA, args):
+        """
+        Processes the command specified from the command line.
+        :param app: The PythonEDA instance.
+        :type app: pythoneda.shared.application.PythonEDA
+        :param args: The CLI args.
+        :type args: argparse.args
+        """
+        if args.create:
+            if app.package_name and app.package_version and app.flakes_folder:
+                event = FlakeRequested(
+                    app.package_name,
+                    app.package_version,
+                    app.flakes_folder,
+                )
+                await app.accept(event)
+            else:
+                self.__class__.logger().error(
+                    f"-pn|--package-name ({app.package_name}), -pv|--package-version ({app.package_version}) and -f|--flakes-folder ({app.flakes_folder}) are required"
+                )
 
 
 # vim: syntax=python ts=4 sw=4 sts=4 tw=79 sr et

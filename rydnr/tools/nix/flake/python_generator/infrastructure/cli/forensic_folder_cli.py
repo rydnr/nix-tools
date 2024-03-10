@@ -19,31 +19,75 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import argparse
+from argparse import ArgumentParser
 from pythoneda.shared import PrimaryPort
+from pythoneda.shared.application import PythonEDA
+from pythoneda.shared.infrastructure.cli import CliHandler
 
 
-class ForensicFolderCli(PrimaryPort):
+class ForensicFolderCli(CliHandler, PrimaryPort):
 
     """
     A PrimaryPort that configures the forensic folder from the command line.
+
+    Class name: ForensicFolderCli
+
+    Responsibilities:
+        - Parse the command-line to retrieve the information about the forensic folder.
+
+    Collaborators:
+        - PythonEDA subclasses: They are notified back with the information retrieved from the command line.
     """
 
     def __init__(self):
-        super().__init__()
+        """
+        Creates a new ForensicFolderCli instance.
+        """
+        super().__init__("Provide the forensic folder")
 
-    def priority(self) -> int:
+    @classmethod
+    def priority(cls) -> int:
+        """
+        Retrieves the priority of this port.
+        :return: The priority.
+        :rtype: int
+        """
         return 1
 
-    async def accept(self, app):
-        parser = argparse.ArgumentParser(description="Parses the forensic folder")
+    @classmethod
+    @property
+    def is_one_shot_compatible(cls) -> bool:
+        """
+        Retrieves whether this primary port should be instantiated when
+        "one-shot" behavior is active.
+        It should return False unless the port listens to future messages
+        from outside.
+        :return: True in such case.
+        :rtype: bool
+        """
+        return True
+
+    def add_arguments(self, parser: ArgumentParser):
+        """
+        Defines the specific CLI arguments.
+        :param parser: The parser.
+        :type parser: argparse.ArgumentParser
+        """
         parser.add_argument(
             "-x",
             "--forensic_folder",
             required=True,
             help="The folder where to copy the contents of flakes whose build failed",
         )
-        args, unknown_args = parser.parse_known_args()
+
+    async def handle(self, app: PythonEDA, args):
+        """
+        Processes the command specified from the command line.
+        :param app: The PythonEDA instance.
+        :type app: pythoneda.shared.application.PythonEDA
+        :param args: The CLI args.
+        :type args: argparse.args
+        """
         await app.accept_forensic_folder(args.forensic_folder)
 
 
