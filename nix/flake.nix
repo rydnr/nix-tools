@@ -20,7 +20,7 @@
   description = "A Nix flake for python-flake-generator Python package";
   inputs = rec {
     flake-utils.url = "github:numtide/flake-utils/v1.0.0";
-    nixos.url = "github:NixOS/nixpkgs/23.11";
+    nixos.url = "github:NixOS/nixpkgs/24.05";
     pythoneda-shared-git-shared = {
       inputs.flake-utils.follows = "flake-utils";
       inputs.nixos.follows = "nixos";
@@ -63,7 +63,7 @@
     stringtemplate3 = {
       inputs.flake-utils.follows = "flake-utils";
       inputs.nixos.follows = "nixos";
-      url = "github:rydnr/nix-flakes/stringtemplate3-3.1?dir=stringtemplate3";
+      url = "github:rydnr/nix-flakes/stringtemplate3-3.1b?dir=stringtemplate3";
     };
   };
   outputs = inputs:
@@ -237,7 +237,7 @@
         devShells = rec {
           default = rydnr-python-nix-flake-generator-default;
           rydnr-python-nix-flake-generator-default =
-            rydnr-python-nix-flake-generator-python311;
+            rydnr-python-nix-flake-generator-python312;
           rydnr-python-nix-flake-generator-python38 = shared.devShell-for {
             banner =
               "${packages.rydnr-python-nix-flake-generator-python38}/bin/banner.sh";
@@ -290,11 +290,24 @@
               pythoneda-shared-pythonlang-domain.packages.${system}.pythoneda-shared-pythonlang-domain-python311;
             inherit archRole layer org pkgs repo space;
           };
+          rydnr-python-nix-flake-generator-python312 = shared.devShell-for {
+            banner =
+              "${packages.rydnr-python-nix-flake-generator-python312}/bin/banner.sh";
+            extra-namespaces = "rydnr";
+            nixpkgs-release = nixpkgsRelease;
+            package = packages.rydnr-python-nix-flake-generator-python312;
+            python = pkgs.python312;
+            pythoneda-shared-pythonlang-banner =
+              pythoneda-shared-pythonlang-banner.packages.${system}.pythoneda-shared-pythonlang-banner-python312;
+            pythoneda-shared-pythonlang-domain =
+              pythoneda-shared-pythonlang-domain.packages.${system}.pythoneda-shared-pythonlang-domain-python312;
+            inherit archRole layer org pkgs repo space;
+          };
         };
         packages = rec {
           default = rydnr-python-nix-flake-generator-default;
           rydnr-python-nix-flake-generator-default =
-            rydnr-python-nix-flake-generator-python311;
+            rydnr-python-nix-flake-generator-python312;
           rydnr-python-nix-flake-generator-python38 =
             rydnr-python-nix-flake-generator-for {
               python = pkgs.python38;
@@ -358,6 +371,22 @@
                 pythoneda-shared-pythonlang-infrastructure.packages.${system}.pythoneda-shared-pythonlang-infrastructure-python311;
               stringtemplate3 =
                 stringtemplate3.packages.${system}.stringtemplate3-python311;
+            };
+          rydnr-python-nix-flake-generator-python312 =
+            rydnr-python-nix-flake-generator-for {
+              python = pkgs.python312;
+              pythoneda-shared-git-shared =
+                pythoneda-shared-git-shared.packages.${system}.pythoneda-shared-git-shared-python312;
+              pythoneda-shared-pythonlang-application =
+                pythoneda-shared-pythonlang-application.packages.${system}.pythoneda-shared-pythonlang-application-python312;
+              pythoneda-shared-pythonlang-banner =
+                pythoneda-shared-pythonlang-banner.packages.${system}.pythoneda-shared-pythonlang-banner-python312;
+              pythoneda-shared-pythonlang-domain =
+                pythoneda-shared-pythonlang-domain.packages.${system}.pythoneda-shared-pythonlang-domain-python312;
+              pythoneda-shared-pythonlang-infrastructure =
+                pythoneda-shared-pythonlang-infrastructure.packages.${system}.pythoneda-shared-pythonlang-infrastructure-python312;
+              stringtemplate3 =
+                stringtemplate3.packages.${system}.stringtemplate3-python312;
             };
         };
       });

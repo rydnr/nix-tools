@@ -15,11 +15,11 @@
       },
       "locked": {
         "dir": "esdbclient",
-        "lastModified": 1707207617,
-        "narHash": "sha256-1Zii05PANOJ0UtbrIFDoKP46aZX3+PA6t1QLoN/GsJE=",
+        "lastModified": 1709013782,
+        "narHash": "sha256-FKPKV5n997R/g+87THSHzSrIDs5ZQqPeEwkxU9QOy44=",
         "owner": "rydnr",
         "repo": "nix-flakes",
-        "rev": "4827d53cc8799be263b5048eb250eaee1e32e1bc",
+        "rev": "f9431ef419af65458c92afe1ebc6ca2c7294aacf",
         "type": "github"
       },
       "original": {
@@ -42,11 +42,11 @@
       },
       "locked": {
         "dir": "esdbclient",
-        "lastModified": 1707207617,
-        "narHash": "sha256-1Zii05PANOJ0UtbrIFDoKP46aZX3+PA6t1QLoN/GsJE=",
+        "lastModified": 1709013782,
+        "narHash": "sha256-FKPKV5n997R/g+87THSHzSrIDs5ZQqPeEwkxU9QOy44=",
         "owner": "rydnr",
         "repo": "nix-flakes",
-        "rev": "4827d53cc8799be263b5048eb250eaee1e32e1bc",
+        "rev": "f9431ef419af65458c92afe1ebc6ca2c7294aacf",
         "type": "github"
       },
       "original": {
@@ -74,16 +74,16 @@
     },
     "nixos": {
       "locked": {
-        "lastModified": 1701282334,
-        "narHash": "sha256-MxCVrXY6v4QmfTwIysjjaX0XUhqBbxTWWB4HXtDYsdk=",
+        "lastModified": 1717179513,
+        "narHash": "sha256-vboIEwIQojofItm2xGCdZCzW96U85l9nDW3ifMuAIdM=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "057f9aecfb71c4437d2b27d3323df7f93c010b7e",
+        "rev": "63dacb46bf939521bdc93981b4cbb7ecb58427a0",
         "type": "github"
       },
       "original": {
         "owner": "NixOS",
-        "ref": "23.11",
+        "ref": "24.05",
         "repo": "nixpkgs",
         "type": "github"
       }
@@ -742,17 +742,17 @@
       },
       "locked": {
         "dir": "stringtemplate3",
-        "lastModified": 1695028695,
-        "narHash": "sha256-nEyAQq8IJ8Cn8Rnf0jOqfhQ9ya6qtbmf5vuhsDN+KKw=",
+        "lastModified": 1731678097,
+        "narHash": "sha256-mihO0h8u3p6ko9lnAN02h21Yh/SHAw1kJ3Up9hlEk04=",
         "owner": "rydnr",
         "repo": "nix-flakes",
-        "rev": "81e0f7168b7d949c1e1f85897645cba7be7f325c",
+        "rev": "9c9fd2d996b13deed4e30aec0b1a868e9b87f512",
         "type": "github"
       },
       "original": {
         "dir": "stringtemplate3",
         "owner": "rydnr",
-        "ref": "stringtemplate3-3.1",
+        "ref": "stringtemplate3-3.1b",
         "repo": "nix-flakes",
         "type": "github"
       }
