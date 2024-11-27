@@ -2,3 +2,6 @@ __pycache__
 result
 src/infrastructure/network/grpc/*_pb2_grpc.py
 src/infrastructure/network/grpc/*_pb2.py
+bin/*
+*.sh
+*.nix
